@@ -1,0 +1,401 @@
+
+        @import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a472a 0%, #0d2818 50%, #1a472a 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            color: #fff;
+        }
+
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            z-index: 9999;
+            color: #fff;
+            font-size: 1em;
+            font-family: Arial, sans-serif;
+            text-shadow: 0 0 5px #000;
+            pointer-events: none;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                top: -10%;
+                opacity: 1;
+            }
+            100% {
+                top: 100%;
+                opacity: 0.3;
+            }
+        }
+
+        /* Christmas Lights */
+        .christmas-lights {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 20px;
+        }
+
+        .light {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+
+        .light:nth-child(1) { background: #ff0000; animation-delay: 0s; }
+        .light:nth-child(2) { background: #00ff00; animation-delay: 0.3s; }
+        .light:nth-child(3) { background: #0000ff; animation-delay: 0.6s; }
+        .light:nth-child(4) { background: #ffff00; animation-delay: 0.9s; }
+        .light:nth-child(5) { background: #ff00ff; animation-delay: 1.2s; }
+
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; box-shadow: 0 0 10px currentColor; }
+            25%, 75% { opacity: 0.3; }
+        }
+
+        .sidebar {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #1a472a 0%, #0d2818 50%, #1a472a 100%);
+        color: white;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+        position: relative;
+        border-right: 3px solid #ffd700;
+    }
+
+    .sidebar::before {
+        content: '🎄';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 2rem;
+        animation: rotate 4s linear infinite;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .sidebar h4 {
+        font-family: 'Mountains of Christmas', cursive;
+        font-weight: 700;
+        font-size: 1.8rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        border-bottom: 2px solid #ffd700;
+        padding-bottom: 10px;
+    }
+
+    .sidebar .nav-link {
+        color: rgba(255, 255, 255, 0.9);
+        padding: 12px 20px;
+        margin: 5px 0;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        border: 2px solid transparent;
+    }
+
+    .sidebar .nav-link:hover {
+        background: rgba(255, 215, 0, 0.2);
+        border-color: #ffd700;
+        transform: translateX(5px);
+        color: #ffd700;
+    }
+
+    .sidebar .nav-link.active {
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        color: #8b0000;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    }
+
+    .sidebar .nav-link i {
+        margin-right: 10px;
+        width: 20px;
+        text-align: center;
+        color: #FFD700;
+    }
+    .sidebar hr {
+        border-color: rgba(255, 215, 0, 0.3);
+        margin: 15px 0;
+    }
+
+    .sidebar .text-muted {
+        color: rgba(255, 255, 255, 0.6) !important;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+    }
+
+        /* Main Content */
+        .main-content {
+            padding: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header Styling */
+        .main-content h2 {
+            font-family: 'Mountains of Christmas', cursive;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        /* Statistics Cards */
+        .stat-card {
+            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            border: 3px solid #ffd700;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card::before {
+            content: '❄️';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 2rem;
+            opacity: 0.2;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(255, 215, 0, 0.5);
+        }
+
+        .stat-card h3 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card p {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .user-card {
+            border: 3px solid #ffd700;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-card::before {
+            content: '🎁';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 1.5rem;
+            opacity: 0.4;
+        }
+
+        .user-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(255, 215, 0, 0.5);
+        }
+
+        .user-card .card-body {
+            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+            padding: 20px;
+        }
+
+        .user-card h5 {
+            font-weight: 600;
+            font-size: 1.3rem;
+        }
+
+        /* Role Badges */
+        .role-badge {
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .role-badge.bg-danger {
+            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%) !important;
+            border: 2px solid #ffd700;
+        }
+
+        .role-badge.bg-success {
+            background: linear-gradient(135deg, #2d5016 0%, #1a472a 100%) !important;
+            border: 2px solid #90ee90;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+            border: 2px solid #ffd700;
+            color: white;
+            font-weight: 600;
+            padding: 10px 25px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5);
+        }
+
+        .btn-outline-primary {
+            border: 2px solid #ffd700;
+            color: white;
+            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+            font-weight: 600;
+            padding: 10px 25px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-primary:hover {
+            border: 2px solid #ffd700;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 215, 0, 0.5);
+        }
+
+        .btn-outline-danger {
+            border: 2px solid red;
+            color: white;
+            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-danger:hover {
+            border: #2px solid #dc3545;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 0, 0, 0.5);
+        }
+
+        /* Search */
+        .search-box {
+            border-radius: 25px;
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #ffd700;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+        }
+
+        .search-box:focus {
+            border-color: #ffd700;
+            box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3);
+        }
+
+        /* Modal Styling */
+        .modal-content {
+            border-radius: 20px;
+            border: 3px solid #ffd700;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+            border-bottom: none;
+        }
+
+        .modal-header {
+            color: white;
+            border-radius: 20px 20px 0 0 !important;
+            border-bottom: none;
+
+        }
+
+        .modal-footer {
+            border-radius: 0 0 20px 20px;
+            border-top: none;
+        }
+
+        /* Footer */
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sidebar h4 {
+                font-size: 1.5rem;
+            }
+
+            .main-content h2 {
+                font-size: 2rem;
+            }
+
+            .stat-card h3 {
+                font-size: 2rem;
+            }
+        }
+    .input-group-text{
+        background-color: #320303;
+        color: white;
+        border: 2px solid #ffd700;
+        }
+    .btn-outline-primary:focus{
+        box-shadow: none;
+    }
+.modal-body{
+    box-shadow: none;
+    }
+
+.form-select:focus {
+    box-shadow: none;
+    outline: none;
+    border-color: #ffd700;
+}
+
+.form-select option {
+    background-color: #320303 !important;
+    color: white !important;
+}
+
+.form-select option:hover {
+    background-color: rgba(255, 215, 0, 0.15) !important;
+    color: white !important;
+}
+
+.form-select option:checked {
+    background-color: #320303 !important;
+    color: white !important;
+    font-weight: 600;
+}
+.form-select {
+    background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+    color: white;
+    border: 2px solid #ffd700;
+    cursor: pointer;
+}
+.input-group>.form-control, .input-group>.form-select{
+    color: white;
+    }

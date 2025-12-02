@@ -1,0 +1,74 @@
+.sidebar {
+        min-height: 100vh;
+        background: linear-gradient(180deg, #165B33 0%, #0F3D23 100%);
+        color: white;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+        position: relative;
+        border-right: 3px solid #ffd700;
+    }
+
+    .sidebar::before {
+        content: '🎄';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 2rem;
+        animation: rotate 4s linear infinite;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .sidebar h4 {
+        font-family: 'Mountains of Christmas', cursive;
+        font-weight: 700;
+        font-size: 1.8rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        border-bottom: 2px solid #ffd700;
+        padding-bottom: 10px;
+    }
+
+    .sidebar .nav-link {
+        color: rgba(255, 255, 255, 0.9);
+        padding: 12px 20px;
+        margin: 5px 0;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        border: 2px solid transparent;
+    }
+
+    .sidebar .nav-link:hover {
+        background: rgba(255, 215, 0, 0.2);
+        border-color: #ffd700;
+        transform: translateX(5px);
+        color: #ffd700;
+    }
+
+    .sidebar .nav-link.active {
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        color: #8b0000;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    }
+
+    .sidebar .nav-link i {
+        margin-right: 10px;
+        width: 20px;
+        text-align: center;
+    }
+
+    .sidebar hr {
+        border-color: rgba(255, 215, 0, 0.3);
+        margin: 15px 0;
+    }
+
+    .sidebar .text-muted {
+        color: rgba(255, 255, 255, 0.6) !important;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+    }
