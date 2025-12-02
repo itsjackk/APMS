@@ -1,7 +1,7 @@
 
         .form-control, .form-select {
             border: 2px solid #C41E3A;
-            border-radius: 10px;
+            border-radius: 15px;
             padding: 0.75rem;
             transition: all 0.3s ease;
         }
@@ -28,7 +28,7 @@
             background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
             color: white;
             padding: 2rem;
-            border-radius: 20px;
+            border-radius: 15px;
             margin-bottom: 2rem;
             border: 3px solid #FFD700;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
@@ -102,6 +102,6 @@
 
         .role-badge {
             padding: 0.3rem 0.6rem;
-            border-radius: 20px;
+            border-radius: 15px;
             font-weight: bold;
         }

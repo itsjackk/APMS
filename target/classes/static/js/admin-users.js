@@ -12,7 +12,8 @@
         USER_STATS: '/api/admin/users/stats',
         USERS: '/api/admin/users',
         USER_ROLE: (userId) => `/api/admin/users/${userId}/role`,
-        DELETE_USER: (userId) => `/api/admin/users/${userId}`
+        DELETE_USER: (userId) => `/api/admin/users/${userId}`,
+        REGISTER: '/api/auth/register'
     };
 
     const ELEMENTS = {
@@ -26,7 +27,8 @@
         deleteUsername: 'deleteUsername',
         roleSelect: 'roleSelect',
         editRoleModal: 'editRoleModal',
-        deleteUserModal: 'deleteUserModal'
+        deleteUserModal: 'deleteUserModal',
+        createUserModal: 'createUserModal'
     };
 
     const ROLE_CLASSES = {
@@ -69,6 +71,12 @@
 
         // Keyboard shortcuts
         document.addEventListener('keydown', handleKeyboardShortcuts);
+
+        // Create user form submission
+        const createUserForm = document.getElementById('createUserForm');
+        if (createUserForm) {
+            createUserForm.addEventListener('submit', createNewUser);
+        }
     }
 
     function setupFormSelectStyling() {
@@ -372,6 +380,7 @@
             if (response.ok) {
                 showAlert('User role updated successfully!', ALERT_TYPES.SUCCESS);
                 hideModal(ELEMENTS.editRoleModal);
+                await loadUserStatistics();
                 await loadAllUsers();
             } else {
                 throw new Error('Failed to update user role');
@@ -394,6 +403,7 @@
             if (response.ok) {
                 showAlert('User deleted successfully!', ALERT_TYPES.SUCCESS);
                 hideModal(ELEMENTS.deleteUserModal);
+                await loadUserStatistics();
                 await loadAllUsers();
             } else {
                 throw new Error('Failed to delete user');
@@ -449,6 +459,200 @@
         return div.innerHTML;
     }
 
+    // ==================== CREATE USER ====================
+
+    /**
+     * Toggle password visibility
+     */
+    function togglePasswordVisibility(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(inputId + 'Icon');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    /**
+     * Validate password match
+     */
+    function validatePasswordMatch() {
+        const password = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (password !== confirmPassword) {
+            document.getElementById('confirmPassword').setCustomValidity('Passwords do not match');
+            return false;
+        } else {
+            document.getElementById('confirmPassword').setCustomValidity('');
+            return true;
+        }
+    }
+
+    // Add event listener for password confirmation
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        if (confirmPasswordInput) {
+            confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+        }
+    });
+
+    /**
+     * Create new user
+     */
+    async function createNewUser(event) {
+        event.preventDefault();
+
+        // Prevent double submission
+        const submitButton = event.target.querySelector('button[type="submit"]');
+        if (submitButton.disabled) {
+            return; // Already processing
+        }
+
+        try {
+            // Disable submit button to prevent double submission
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+
+            const username = document.getElementById('newUsername').value.trim();
+            const email = document.getElementById('newEmail').value.trim();
+            const password = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const usernameGHUB = document.getElementById('newUsernameGHUB').value.trim();
+
+            // Validate required fields
+            if (!username || !email || !password) {
+                showAlert('Please fill in all required fields', ALERT_TYPES.DANGER);
+                return;
+            }
+
+            // Validate password match
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match', ALERT_TYPES.DANGER);
+                return;
+            }
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showAlert('Please enter a valid email address', ALERT_TYPES.DANGER);
+                return;
+            }
+
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) {
+                window.location.href = '/ConsoleApp/login';
+                return;
+            }
+
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                body: JSON.stringify({
+                    username: username,
+                    email: email,
+                    password: password,
+                    usernameGHUB: usernameGHUB || null
+                })
+            });
+
+            // Parse response
+            let data;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                // If response is not JSON (e.g., HTML error page), throw error
+                const text = await response.text();
+                console.error('Non-JSON response:', text);
+                throw new Error('Server returned an invalid response');
+            }
+
+            if (response.ok) {
+                showAlert('User created successfully!', ALERT_TYPES.SUCCESS);
+
+                // Close modal
+                const modalElement = document.getElementById('createUserModal');
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                }
+
+                // Reset form
+                document.getElementById('createUserForm').reset();
+
+                // Reload data
+                await loadUserStatistics();
+                await loadAllUsers();
+            } else {
+                // Handle specific error messages from backend
+                const errorMessage = data.message || data.error || 'Failed to create user';
+                showAlert(errorMessage, ALERT_TYPES.DANGER);
+            }
+        } catch (error) {
+            console.error('Error creating user:', error);
+            showAlert('An unexpected error occurred. Please try again.', ALERT_TYPES.DANGER);
+        } finally {
+            // Re-enable submit button
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-user-plus me-2"></i> Create User';
+            }
+        }
+    }
+
+    // Add event listener to reset form when modal is closed
+    document.addEventListener('DOMContentLoaded', function() {
+        const createUserModal = document.getElementById('createUserModal');
+        if (createUserModal) {
+            createUserModal.addEventListener('hidden.bs.modal', function () {
+                // Reset form
+                const form = document.getElementById('createUserForm');
+                form.reset();
+
+                // Reset password visibility icons
+                const newPasswordIcon = document.getElementById('newPasswordIcon');
+                const confirmPasswordIcon = document.getElementById('confirmPasswordIcon');
+
+                if (newPasswordIcon) {
+                    newPasswordIcon.classList.remove('fa-eye-slash');
+                    newPasswordIcon.classList.add('fa-eye');
+                }
+
+                if (confirmPasswordIcon) {
+                    confirmPasswordIcon.classList.remove('fa-eye-slash');
+                    confirmPasswordIcon.classList.add('fa-eye');
+                }
+
+                // Reset password input types
+                const newPassword = document.getElementById('newPassword');
+                const confirmPassword = document.getElementById('confirmPassword');
+
+                if (newPassword) newPassword.type = 'password';
+                if (confirmPassword) confirmPassword.type = 'password';
+
+                // Reset button state (in case it wasn't reset)
+                const submitButton = form.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-user-plus me-2"></i> Create User';
+                }
+            });
+        }
+    });
+
+    /**
+     * Show alert message
+     */
     function showAlert(message, type) {
         // Simple alert implementation - could be replaced with a proper notification system
         alert(`${type.charAt(0).toUpperCase() + type.slice(1)}: ${message}`);

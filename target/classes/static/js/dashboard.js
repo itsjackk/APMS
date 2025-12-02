@@ -555,6 +555,7 @@
                 if (response.ok) {
                     const projects = await response.json();
                     UIManager.displayRecentProjects(projects);
+                    loadProjectStats();
                 } else {
                     console.error('Failed to load recent projects, status:', response.status);
                     document.getElementById('recentProjects').innerHTML =

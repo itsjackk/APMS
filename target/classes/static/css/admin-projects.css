@@ -50,7 +50,7 @@
         color: rgba(255, 255, 255, 0.9);
         padding: 12px 20px;
         margin: 5px 0;
-        border-radius: 12px;
+        border-radius: 15px;
         transition: all 0.3s ease;
         font-weight: 500;
         border: 2px solid transparent;
@@ -179,7 +179,7 @@
         .page-header {
             background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
             border: 3px solid #FFD700;
-            border-radius: 20px;
+            border-radius: 15px;
             padding: 2rem;
             margin-bottom: 2rem;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
@@ -196,7 +196,7 @@
         .stats-card {
             background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
             border: 3px solid #FFD700;
-            border-radius: 20px;
+            border-radius: 15px;
             padding: 2rem;
             margin-bottom: 2rem;
             box-shadow: 0 4px 15px rgba(255,255,0,0.2);
@@ -229,7 +229,7 @@
         .filter-section {
             background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
             border: 3px solid #FFD700;
-            border-radius: 20px;
+            border-radius: 15px;
             padding: 2rem;
             margin-bottom: 2rem;
             box-shadow: 0 4px 15px rgba(255,255,0,0.2);
@@ -282,7 +282,7 @@
         /* Badges */
         .status-badge, .priority-badge {
             padding: 5px 12px;
-            border-radius: 20px;
+            border-radius: 15px;
             font-size: 0.85rem;
             font-weight: 500;
         }
@@ -290,7 +290,7 @@
         .user-badge {
             background: rgba(255, 255, 255, 0.1);
             padding: 5px 12px;
-            border-radius: 20px;
+            border-radius: 15px;
             font-size: 0.85rem;
             color: rgba(255, 255, 255, 0.9);
         }
@@ -298,13 +298,13 @@
         /* Progress Bar */
         .progress {
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+            border-radius: 15px;
             height: 10px;
         }
 
         .progress-bar {
             background: linear-gradient(135deg, #0d2818 0%, #1a472a 100%);
-            border-radius: 10px;
+            border-radius: 15px;
         }
 
         /* Buttons */
@@ -315,7 +315,7 @@
             color: white;
             font-weight: bold;
             transition: all 0.3s ease;
-            border-radius: 20px;
+            border-radius: 15px;
         }
 
         .btn-primary:hover {
@@ -333,7 +333,7 @@
             background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
             font-weight: bold;
             padding: 10px 25px;
-            border-radius: 20px;
+            border-radius: 15px;
             transition: all 0.3s ease;
         }
 
@@ -350,7 +350,7 @@
             background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
             font-weight: bold;
             transition: all 0.3s ease;
-            border-radius: 20px;
+            border-radius: 15px;
         }
 
         .btn-outline-danger:hover {
@@ -366,7 +366,7 @@
             color: white;
             font-weight: bold;
             transition: all 0.3s ease;
-            border-radius: 20px;
+            border-radius: 15px;
         }
 
         .btn-secondary:hover {
@@ -395,7 +395,7 @@
         /* Modal */
         .modal-content {
             background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
-            border-radius: 20px;
+            border-radius: 15px;
             border: 3px solid #FFD700;
         }
 

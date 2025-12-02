@@ -54,7 +54,7 @@
             background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
             color: white;
             padding: 2rem;
-            border-radius: 20px;
+            border-radius: 15px;
             margin-bottom: 2rem;
             border: 3px solid #FFD700;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
@@ -131,7 +131,7 @@
         .form-control, .form-select {
             border: 3px solid #FFD700;
             background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
-            border-radius: 10px;
+            border-radius: 15px;
             padding: 0.75rem;
             transition: all 0.3s ease;
             color: white;
@@ -149,7 +149,7 @@
                     color: white;
                     font-weight: bold;
                     transition: all 0.3s ease;
-                    border-radius: 20px;
+                    border-radius: 15px;
                 }
 
                 .btn-primary:hover {
@@ -168,7 +168,7 @@
                     background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
                     font-weight: bold;
                     padding: 10px 25px;
-                    border-radius: 20px;
+                    border-radius: 15px;
                     transition: all 0.3s ease;
                 }
 
@@ -185,7 +185,7 @@
                     background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
                     font-weight: bold;
                     transition: all 0.3s ease;
-                    border-radius: 20px;
+                    border-radius: 15px;
                 }
 
                 .btn-outline-danger:hover {
@@ -201,7 +201,7 @@
                     color: white;
                     font-weight: bold;
                     transition: all 0.3s ease;
-                    border-radius: 20px;
+                    border-radius: 15px;
                 }
 
                 .btn-secondary:hover {
@@ -236,7 +236,7 @@
         }
 
         .alert {
-            border-radius: 10px;
+            border-radius: 15px;
             border: 2px solid;
             padding: 1rem;
             margin-bottom: 1rem;
