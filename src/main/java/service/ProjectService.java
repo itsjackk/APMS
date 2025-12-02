@@ -2,6 +2,7 @@
 package service;
 
 import dto.AdminProjectStats;
+import dto.ProjectResponseGhub;
 import dto.ProjectStats;
 import dto.ProjectsResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,21 @@ public class ProjectService {
                         assignedToName = assignedUser.map(Users::getUsername).orElse(null);
                     }
                     return ProjectsResponse.fromEntity(project, createdByName, assignedToName);
+                })
+                .collect(Collectors.toList());
+    }
+    @Transactional(readOnly = true)
+    public List<ProjectResponseGhub> getAccessibleProjectsForUserGhub(Users user) {
+        List<Projects> projects = projectRepository.findAccessibleProjects(user, user.getId());
+        return projects.stream()
+                .map(project -> {
+                    String createdByName = project.getCreatedBy() != null ? project.getCreatedBy().getUsername() : null;
+                    String assignedToName = null;
+                    if (project.getAssignedTo() != null) {
+                        Optional<Users> assignedUser = userRepository.findById(project.getAssignedTo());
+                        assignedToName = assignedUser.map(Users::getUsername).orElse(null);
+                    }
+                    return ProjectResponseGhub.fromEntity(project, createdByName, assignedToName);
                 })
                 .collect(Collectors.toList());
     }

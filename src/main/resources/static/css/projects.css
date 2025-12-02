@@ -465,7 +465,6 @@
             margin-bottom: 20px;
         }
 
-        /* Update/Add these styles to your existing CSS */
         .project-card {
             display: flex;
             flex-direction: column;
@@ -479,7 +478,6 @@
             padding: 1.5rem;
         }
 
-        /* Top section with title and description - takes up available space */
         .project-header {
             flex: 0 0 auto;
             margin-bottom: 1rem;
@@ -503,3 +501,32 @@
             flex-wrap: wrap;
             margin-top: 1rem;
         }
+
+
+.project-url-link {
+    color: #4a9eff;
+    text-decoration: none;
+    word-break: break-all;
+    transition: color 0.3s ease;
+}
+
+.project-url-link:hover {
+    color: #2d7dd2;
+    text-decoration: underline;
+}
+
+.project-url-link:visited {
+    color: #8b5cf6;
+}
+
+.project-description {
+    margin-bottom: 1rem;
+}
+
+.project-description p {
+    line-height: 1.5;
+}
+
+.project-description .fa-link {
+    color: #6c757d;
+}

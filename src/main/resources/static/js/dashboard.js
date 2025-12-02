@@ -795,14 +795,8 @@ function initChristmasCountdown() {
     window.christmasCountdownInterval = countdownInterval;
 }
 
-// Add this to your existing DOMContentLoaded event listener
 document.addEventListener('DOMContentLoaded', function() {
-    // ... existing code ...
-
-    // Initialize Christmas countdown
     initChristmasCountdown();
-
-    // ... rest of existing code ...
 });
 
 // Optional: Cleanup function when leaving the page

@@ -297,7 +297,6 @@ const UIManager = {
             });
         }
 
-        // Add Enter key support for password field
         if (this.elements.passwordInput) {
             this.elements.passwordInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {

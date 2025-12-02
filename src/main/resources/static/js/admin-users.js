@@ -495,7 +495,6 @@
         }
     }
 
-    // Add event listener for password confirmation
     document.addEventListener('DOMContentLoaded', function() {
         const confirmPasswordInput = document.getElementById('confirmPassword');
         if (confirmPasswordInput) {
@@ -503,9 +502,7 @@
         }
     });
 
-    /**
-     * Create new user
-     */
+
     async function createNewUser(event) {
         event.preventDefault();
 
@@ -610,7 +607,6 @@
         }
     }
 
-    // Add event listener to reset form when modal is closed
     document.addEventListener('DOMContentLoaded', function() {
         const createUserModal = document.getElementById('createUserModal');
         if (createUserModal) {

@@ -49,8 +49,6 @@ public class ProjectController {
 
             try {
                 gitHubService.autoSyncGitHubProjects(user);
-                String rate = gitHubService.getRateLimitInfo();
-
             } catch (Exception e) {
                 log.warn("GitHub sync failed for user {}: {}", user.getUsername(), e.getMessage());
             }
@@ -58,6 +56,26 @@ public class ProjectController {
             List<ProjectsResponse> projects = projectService.getAccessibleProjectsForUser(user);
             return ResponseEntity.ok(projects);
             
+        } catch (Exception e) {
+            log.error("Error fetching projects: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/projects-updated")
+    public ResponseEntity<List<ProjectResponseGhub>> getUserProjectsUpdated(Authentication authentication) {
+        try {
+            Users user = userService.getCurrentUser(authentication);
+
+            try {
+                gitHubService.autoSyncGitHubProjects(user);
+            } catch (Exception e) {
+                log.warn("GitHub sync failed for user {}: {}", user.getUsername(), e.getMessage());
+            }
+
+            List<ProjectResponseGhub> projects = projectService.getAccessibleProjectsForUserGhub(user);
+            return ResponseEntity.ok(projects);
+
         } catch (Exception e) {
             log.error("Error fetching projects: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

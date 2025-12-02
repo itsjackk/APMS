@@ -249,7 +249,7 @@ async function loadProjects() {
             return;
         }
 
-        const response = await fetch('/api/projects', {
+        const response = await fetch('/api/projects/projects-updated', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
@@ -310,6 +310,17 @@ function createProjectCard(project) {
                         <h5 class="card-title mb-2">${escapeHtml(project.name)}</h5>
                         <div class="project-description">
                             <p class="card-text small mb-0">${escapeHtml(project.description || 'No description')}</p>
+                            ${project.url ? `
+                                <p class="card-text small mb-0">
+                                    <i class="fas fa-link me-1"></i>
+                                    <a href="${escapeHtml(project.url)}"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="project-url-link">
+                                        ${escapeHtml(project.url)}
+                                    </a>
+                                </p>
+                            ` : ''}
                         </div>
                     </div>
 

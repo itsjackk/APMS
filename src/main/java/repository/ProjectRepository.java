@@ -34,7 +34,6 @@ public interface ProjectRepository extends JpaRepository<Projects, UUID> {
            "(p.isGlobal = true AND p.assignedTo = :userId)")
     List<Projects> findAccessibleProjects(@Param("user") Users user, @Param("userId") UUID userId);
     
-    // Add these methods to your existing ProjectRepository interface
     Optional<Projects> findByGithubUrl(String githubUrl);
 
     boolean existsByGithubUrl(String githubUrl);
