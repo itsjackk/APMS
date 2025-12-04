@@ -51,7 +51,7 @@ public class GitHubService {
                 log.warn("Using anonymous GitHub API access (rate limits apply)");
             }
             if (user.getUsernameGHUB() == null || user.getUsernameGHUB().isEmpty()) {
-                log.error("GitHub username {} not found for user: {}",user.getUsernameGHUB(), user.getUsername());
+                log.error("GitHub username {} not found for user: {}", user.getUsernameGHUB(), user.getUsername());
                 return;
             }
 
@@ -137,7 +137,7 @@ public class GitHubService {
         } catch (IOException e) {
             log.warn("GitHub user not found or error fetching repos: {} - {}", username, e.getMessage());
         }
-        
+
         return repositories;
     }
 
@@ -146,17 +146,17 @@ public class GitHubService {
      */
     private Projects createProjectFromRepo(GHRepository repo, Users user) throws IOException {
         Projects project = new Projects();
-        
+
         // Basic info
         project.setName(repo.getName());
         project.setDescription(repo.getDescription());
         project.setCreatedBy(user);
         project.setIsGlobal(false); // GitHub imports are personal projects
-        
+
         // GitHub specific
         project.setGithubUrl(repo.getHtmlUrl().toString());
         project.setIsGithubImport(true);
-        
+
         // Set default status based on repo activity
         Date pushedAt = repo.getPushedAt();
         if (pushedAt != null) {
@@ -164,7 +164,7 @@ public class GitHubService {
         } else {
             project.setStatus(Projects.ProjectStatus.PLANNING);
         }
-        
+
         // Set priority based on stars/activity
         int stars = repo.getStargazersCount();
         if (stars > 10) {
@@ -174,21 +174,21 @@ public class GitHubService {
         } else {
             project.setPriority(Projects.ProjectPriority.LOW);
         }
-        
+
         // Set dates
         Date createdAt = repo.getCreatedAt();
         if (createdAt != null) {
             project.setStartDate(createdAt.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
         }
-        
+
         Date updatedAt = repo.getUpdatedAt();
         if (updatedAt != null) {
             project.setEndDate(updatedAt.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
         }
-        
+
         // Set progress based on open issues
         project.setProgress(0);
-        
+
         return project;
     }
 
@@ -200,7 +200,7 @@ public class GitHubService {
         autoSyncGitHubProjects(user);
         return projectRepository.findByCreatedByAndIsGithubImportTrue(user).size();
     }
-    
+
     /**
      * Get GitHub rate limit info (useful for debugging)
      */

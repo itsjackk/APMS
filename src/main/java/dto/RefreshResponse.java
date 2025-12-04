@@ -6,7 +6,8 @@ public class RefreshResponse {
     private String message;
 
     // Constructors
-    public RefreshResponse() {}
+    public RefreshResponse() {
+    }
 
     public RefreshResponse(String accessToken, String message) {
         this.accessToken = accessToken;

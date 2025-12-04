@@ -39,8 +39,15 @@ public class AuthenticationService {
 
     private Logger log = LoggerFactory.getLogger(AuthenticationService.class);
 
+    // Token expiration constants (in days)
+    private static final int REMEMBER_ME_ACCESS_TOKEN_DAYS = 30;
+    private static final int REMEMBER_ME_REFRESH_TOKEN_DAYS = 30;
+
+    /**
+     * Login with rememberMe support
+     */
     @Transactional
-    public AuthenticationResponse login(String username, String password) {
+    public AuthenticationResponse login(String username, String password, boolean rememberMe) {
         Optional<Users> userOpt = usersRepository.findByUsername(username);
 
         if (userOpt.isEmpty()) {
@@ -48,7 +55,7 @@ public class AuthenticationService {
         }
 
         Users user = userOpt.get();
-        
+
         if (!user.isAccountEnabled()) {
             throw new RuntimeException("Account is disabled");
         }
@@ -57,26 +64,70 @@ public class AuthenticationService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        // Generate tokens using JwtService
-        String accessToken = jwtService.generateAccessToken(user.getId(), user.getUsername(), user.getRole().toString());
-        String refreshToken = jwtService.generateRefreshToken(user.getId(), user.getUsername(),user.getRole().toString());
+        // Generate tokens based on rememberMe flag
+        String accessToken;
+        String refreshToken;
+        LocalDateTime refreshTokenExpiration;
 
-        // Save refresh token to database
+        if (rememberMe) {
+            // Generate long-lived tokens (30 days)
+            accessToken = jwtService.generateAccessToken(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getRole().toString(),
+                    REMEMBER_ME_ACCESS_TOKEN_DAYS
+            );
+            refreshToken = jwtService.generateRefreshToken(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getRole().toString(),
+                    REMEMBER_ME_REFRESH_TOKEN_DAYS
+            );
+            refreshTokenExpiration = jwtService.getRefreshTokenExpirationTime(REMEMBER_ME_REFRESH_TOKEN_DAYS);
+
+            log.info("User {} logged in with Remember Me (tokens valid for 30 days)", username);
+        } else {
+            // Generate standard tokens (25 minutes access, 7 days refresh)
+            accessToken = jwtService.generateAccessToken(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getRole().toString()
+            );
+            refreshToken = jwtService.generateRefreshToken(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getRole().toString()
+            );
+            refreshTokenExpiration = jwtService.getRefreshTokenExpirationTime();
+
+            log.info("User {} logged in (standard session - 25 minutes)", username);
+        }
+
+        // Save refresh token to database with rememberMe flag
         RefreshTokens refreshTokenEntity = new RefreshTokens(
                 user.getId(),
                 refreshToken,
-                jwtService.getRefreshTokenExpirationTime()
+                refreshTokenExpiration,
+                rememberMe
         );
         refreshTokensRepository.save(refreshTokenEntity);
 
         return new AuthenticationResponse(accessToken, refreshToken, user.getUsername());
     }
 
+    /**
+     * Login without rememberMe (backward compatibility)
+     */
+    @Transactional
+    public AuthenticationResponse login(String username, String password) {
+        return login(username, password, false);
+    }
+
     @Transactional
     public AuthenticationResponse refreshToken(String refreshToken) {
         try {
             String username = jwtService.extractUsername(refreshToken);
-            
+
             if (!jwtService.isRefreshTokenValid(refreshToken, username)) {
                 throw new RuntimeException("Invalid refresh token");
             }
@@ -101,28 +152,63 @@ public class AuthenticationService {
 
             Users user = userOpt.get();
 
-            // Generate new tokens
-            String newAccessToken = jwtService.generateAccessToken(user.getId(), user.getUsername(),user.getRole().toString());
-            String newRefreshToken = jwtService.generateRefreshToken(user.getId(), user.getUsername(),user.getRole().toString());
+            // Preserve the rememberMe setting from the original token
+            boolean rememberMe = tokenEntity.isRememberMe();
+
+            // Generate new tokens with same rememberMe setting
+            String newAccessToken;
+            String newRefreshToken;
+            LocalDateTime newRefreshTokenExpiration;
+
+            if (rememberMe) {
+                // Generate long-lived tokens (30 days)
+                newAccessToken = jwtService.generateAccessToken(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getRole().toString(),
+                        REMEMBER_ME_ACCESS_TOKEN_DAYS
+                );
+                newRefreshToken = jwtService.generateRefreshToken(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getRole().toString(),
+                        REMEMBER_ME_REFRESH_TOKEN_DAYS
+                );
+                newRefreshTokenExpiration = jwtService.getRefreshTokenExpirationTime(REMEMBER_ME_REFRESH_TOKEN_DAYS);
+
+                log.info("Refreshed tokens for user {} with Remember Me (30 days)", username);
+            } else {
+                // Generate standard tokens (25 minutes access, 7 days refresh)
+                newAccessToken = jwtService.generateAccessToken(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getRole().toString()
+                );
+                newRefreshToken = jwtService.generateRefreshToken(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getRole().toString()
+                );
+                newRefreshTokenExpiration = jwtService.getRefreshTokenExpirationTime();
+
+                log.info("Refreshed tokens for user {} (standard session - 25 minutes)", username);
+            }
 
             // Update the existing refresh token record with the new token
             tokenEntity.setToken(newRefreshToken);
-            tokenEntity.setExpiresAt(jwtService.getRefreshTokenExpirationTime());
-            tokenEntity.setCreatedAt(LocalDateTime.now()); // Update creation time
-            
+            tokenEntity.setExpiresAt(newRefreshTokenExpiration);
+            tokenEntity.setCreatedAt(LocalDateTime.now());
+            tokenEntity.setRememberMe(rememberMe); // Preserve rememberMe flag
+
             // Save the updated token
             refreshTokensRepository.save(tokenEntity);
 
-            log.info("Updated refresh token for user: {}", username);
-            log.info("New access token generated for user: {}", username);
-            
             return new AuthenticationResponse(newAccessToken, newRefreshToken, user.getUsername());
 
         } catch (Exception e) {
             throw new RuntimeException("Invalid refresh token: " + e.getMessage());
         }
     }
-
 
     @Transactional
     public void logout(String refreshToken) {
@@ -168,6 +254,7 @@ public class AuthenticationService {
     public void autoRevokeExpiredTokens() {
         log.info("Auto-revoking expired tokens");
         int revokedCount = refreshTokensRepository.revokeExpiredTokens(LocalDateTime.now());
-        log.info("Revoked {} expired tokens", revokedCount);
+        int deleteCount = refreshTokensRepository.deleteExpiredAndRevokedTokens(LocalDateTime.now());
+        log.info("Revoked {} expired tokens and deleted {} revoked or expired tokens ", revokedCount, deleteCount);
     }
 }

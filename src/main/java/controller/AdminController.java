@@ -36,12 +36,12 @@ public class AdminController {
 
     @Autowired
     private UserRepository userRepository;
-    
+
     @Autowired
     private ProjectRepository projectRepository;
 
     // ==================== USER MANAGEMENT ====================
-    
+
     @GetMapping("/users")
     public ResponseEntity<List<Users>> getAllUsers(Authentication authentication) {
         try {
@@ -89,17 +89,17 @@ public class AdminController {
             if (!admin.getRole().equals(Users.Role.ADMIN)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
-            
+
             Optional<Users> existingUserOpt = userRepository.findById(userId);
             if (existingUserOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
-            
+
             Users existingUser = existingUserOpt.get();
             existingUser.setUsername(updatedUser.getUsername());
             existingUser.setEmail(updatedUser.getEmail());
             existingUser.setRole(updatedUser.getRole());
-            
+
             Users saved = userRepository.save(existingUser);
             return ResponseEntity.ok(saved);
         } catch (RuntimeException e) {
@@ -118,12 +118,12 @@ public class AdminController {
                         currentUser.getUsername(), currentUser.getRole());
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
-            
+
             // Don't allow admin to delete themselves
             if (currentUser.getId().equals(userId)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
             }
-            
+
             userRepository.deleteById(userId);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
@@ -138,28 +138,28 @@ public class AdminController {
         try {
             Users admin = getCurrentUser(authentication);
             List<Projects> projects = projectService.getAllProjectsForAdmin(admin);
-    
+
             List<ProjectsResponse> responses = projects.stream()
                     .map(project -> {
                         String createdByName = project.getCreatedBy() != null ?
                                 project.getCreatedBy().getUsername() : "Unknown";
                         String assignedToName = "Not assigned";
-    
+
                         if (project.getAssignedTo() != null) {
                             Optional<Users> assignedUser = userRepository.findById(project.getAssignedTo());
                             assignedToName = assignedUser.map(Users::getUsername).orElse("Not assigned");
                         }
-    
+
                         ProjectsResponse response = ProjectsResponse.fromEntity(project, createdByName, assignedToName);
-    
+
                         // Explicitly ensure isGlobal is set correctly
                         response.setGlobal(project.getIsGlobal() != null ? project.getIsGlobal() : false);
-                        
+
                         response.setType(response.isGlobal() ? "global" : "personal");
                         return response;
                     })
                     .collect(Collectors.toList());
-    
+
             return ResponseEntity.ok(responses);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -187,14 +187,14 @@ public class AdminController {
             Authentication authentication) {
         try {
             Users admin = getCurrentUser(authentication);
-            
+
             Optional<Projects> projectOpt = projectRepository.findById(projectId);
             if (projectOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
-            
+
             Projects project = projectOpt.get();
-            
+
             if (updates.containsKey("name")) {
                 project.setName((String) updates.get("name"));
             }
@@ -222,14 +222,14 @@ public class AdminController {
                 }
             }
             Projects updated = projectService.updateProjectAsAdmin(projectId, project, admin);
-            
+
             String creatorUsername = updated.getCreatedBy() != null ? updated.getCreatedBy().getUsername() : null;
             String assignedUsername = null;
             if (updated.getAssignedTo() != null) {
                 Optional<Users> assignedUser = userRepository.findById(updated.getAssignedTo());
                 assignedUsername = assignedUser.map(Users::getUsername).orElse(null);
             }
-            
+
             return ResponseEntity.ok(ProjectsResponse.fromEntity(updated, creatorUsername, assignedUsername));
         } catch (RuntimeException e) {
             if (e.getMessage().contains("not found")) {
@@ -326,10 +326,10 @@ public class AdminController {
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<?> getUserStats(Authentication authentication) {
         log.info("Getting user statistics");
-        
+
         try {
             Users currentUser = getCurrentUser(authentication);
-            
+
             if (!currentUser.isAdmin()) {
                 log.warn("Non-admin user '{}' attempted to access user statistics", currentUser.getUsername());
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -337,7 +337,7 @@ public class AdminController {
             }
 
             List<Users> allUsers = userRepository.findAll();
-            
+
             long totalUsers = allUsers.size();
             long adminUsers = allUsers.stream()
                     .filter(Users::isAdmin)
@@ -351,7 +351,7 @@ public class AdminController {
             );
 
             return ResponseEntity.ok(stats);
-            
+
         } catch (Exception e) {
             log.error("Error getting user statistics", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -370,7 +370,7 @@ public class AdminController {
 
         try {
             Users currentUser = getCurrentUser(authentication);
-            
+
             if (!currentUser.isAdmin()) {
                 log.warn("Non-admin user '{}' attempted to update user role", currentUser.getUsername());
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -386,7 +386,7 @@ public class AdminController {
 
             Users user = userOpt.get();
             String newRole = roleUpdate.get("role");
-            
+
             if (!"USER".equals(newRole) && !"ADMIN".equals(newRole)) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "Invalid role. Must be USER or ADMIN"));
@@ -398,7 +398,7 @@ public class AdminController {
 
             log.info("User role updated successfully for user: {}", user.getUsername());
             return ResponseEntity.ok(user);
-            
+
         } catch (Exception e) {
             log.error("Error updating user role", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

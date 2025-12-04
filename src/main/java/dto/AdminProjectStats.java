@@ -29,14 +29,43 @@ public class AdminProjectStats {
     }
 
     // Getters
-    public Long getTotalProjects() { return totalProjects; }
-    public Long getPlanningProjects() { return planningProjects; }
-    public Long getInProgressProjects() { return inProgressProjects; }
-    public Long getCompletedProjects() { return completedProjects; }
-    public Long getOnHoldProjects() { return onHoldProjects; }
-    public Long getCancelledProjects() { return cancelledProjects; }
-    public Long getGlobalProjects() { return globalProjects; }
-    public Long getPersonalProjects() { return personalProjects; }
-    public Double getAverageProgress() { return averageProgress; }
-    public Long getTotalUsers() { return totalUsers; }
+    public Long getTotalProjects() {
+        return totalProjects;
+    }
+
+    public Long getPlanningProjects() {
+        return planningProjects;
+    }
+
+    public Long getInProgressProjects() {
+        return inProgressProjects;
+    }
+
+    public Long getCompletedProjects() {
+        return completedProjects;
+    }
+
+    public Long getOnHoldProjects() {
+        return onHoldProjects;
+    }
+
+    public Long getCancelledProjects() {
+        return cancelledProjects;
+    }
+
+    public Long getGlobalProjects() {
+        return globalProjects;
+    }
+
+    public Long getPersonalProjects() {
+        return personalProjects;
+    }
+
+    public Double getAverageProgress() {
+        return averageProgress;
+    }
+
+    public Long getTotalUsers() {
+        return totalUsers;
+    }
 }

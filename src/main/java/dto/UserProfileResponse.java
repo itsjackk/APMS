@@ -53,7 +53,7 @@ public class UserProfileResponse {
         this.usernameGHUB = usernameGHUB;
     }
 
-    public UserProfileResponse(String username,String usernameGHUB, String email, Users.Role role, java.time.LocalDateTime createdAt) {
+    public UserProfileResponse(String username, String usernameGHUB, String email, Users.Role role, java.time.LocalDateTime createdAt) {
         this.username = username;
         this.usernameGHUB = usernameGHUB;
         this.email = email;

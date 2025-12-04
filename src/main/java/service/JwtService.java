@@ -28,6 +28,12 @@ public class JwtService {
     @Value("${jwt.refresh-token-expiration}")
     private long refreshTokenExpiration;
 
+    // Constants for day-based expiration (in seconds)
+    private static final long SECONDS_PER_DAY = 86400L; // 24 * 60 * 60
+
+    /**
+     * Generate standard access token (uses configured expiration - 25 minutes)
+     */
     public String generateAccessToken(UUID userId, String username, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId.toString());
@@ -36,12 +42,45 @@ public class JwtService {
         return createToken(claims, username, accessTokenExpiration);
     }
 
+    /**
+     * Generate access token with custom expiration (for Remember Me)
+     *
+     * @param expirationDays Number of days until token expires
+     */
+    public String generateAccessToken(UUID userId, String username, String role, int expirationDays) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId.toString());
+        claims.put("type", "access");
+        claims.put("role", role);
+        claims.put("rememberMe", true); // Mark as remember me token
+        long expirationSeconds = expirationDays * SECONDS_PER_DAY;
+        return createToken(claims, username, expirationSeconds);
+    }
+
+    /**
+     * Generate standard refresh token (uses configured expiration - 7 days)
+     */
     public String generateRefreshToken(UUID userId, String username, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId.toString());
         claims.put("type", "refresh");
         claims.put("role", role);
         return createToken(claims, username, refreshTokenExpiration);
+    }
+
+    /**
+     * Generate refresh token with custom expiration (for Remember Me)
+     *
+     * @param expirationDays Number of days until token expires
+     */
+    public String generateRefreshToken(UUID userId, String username, String role, int expirationDays) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId.toString());
+        claims.put("type", "refresh");
+        claims.put("role", role);
+        claims.put("rememberMe", true); // Mark as remember me token
+        long expirationSeconds = expirationDays * SECONDS_PER_DAY;
+        return createToken(claims, username, expirationSeconds);
     }
 
     private String createToken(Map<String, Object> claims, String subject, long expiration) {
@@ -69,6 +108,18 @@ public class JwtService {
 
     public String extractTokenType(String token) {
         return extractClaim(token, claims -> claims.get("type", String.class));
+    }
+
+    /**
+     * Check if token was created with Remember Me option
+     */
+    public boolean isRememberMeToken(String token) {
+        try {
+            Boolean rememberMe = extractClaim(token, claims -> claims.get("rememberMe", Boolean.class));
+            return rememberMe != null && rememberMe;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -99,17 +150,17 @@ public class JwtService {
             if (isTokenExpired(token)) {
                 return false;
             }
-            
+
             // Validate username
             String extractedUsername = extractUsername(token);
             if (!extractedUsername.equals(username)) {
                 return false;
             }
-            
+
             // Verify token type
             String tokenType = extractTokenType(token);
             return "access".equals(tokenType);
-            
+
         } catch (Exception e) {
             return false;
         }
@@ -125,24 +176,36 @@ public class JwtService {
             if (isTokenExpired(token)) {
                 return false;
             }
-            
+
             // Validate username
             String extractedUsername = extractUsername(token);
             if (!extractedUsername.equals(username)) {
                 return false;
             }
-            
+
             // Verify token type
             String tokenType = extractTokenType(token);
             return "refresh".equals(tokenType);
-            
+
         } catch (Exception e) {
             return false;
         }
     }
 
+    /**
+     * Get standard refresh token expiration time (7 days from now)
+     */
     public LocalDateTime getRefreshTokenExpirationTime() {
         return LocalDateTime.now().plusSeconds(refreshTokenExpiration);
+    }
+
+    /**
+     * Get custom refresh token expiration time
+     *
+     * @param expirationDays Number of days until expiration
+     */
+    public LocalDateTime getRefreshTokenExpirationTime(int expirationDays) {
+        return LocalDateTime.now().plusDays(expirationDays);
     }
 
     private SecretKey getSignInKey() {
@@ -158,16 +221,16 @@ public class JwtService {
             if (token == null || token.trim().isEmpty()) {
                 return false;
             }
-            
+
             // Check if token is not expired (this also validates signature)
             if (isTokenExpired(token)) {
                 return false;
             }
-            
+
             // Try to extract username to validate signature
             String username = extractUsername(token);
             return username != null && !username.trim().isEmpty();
-            
+
         } catch (Exception e) {
             return false;
         }

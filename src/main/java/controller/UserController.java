@@ -37,9 +37,9 @@ public class UserController {
     @Operation(summary = "Get user profile", description = "Get the profile of the authenticated user")
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Profile retrieved successfully"),
-        @ApiResponse(responseCode = "404", description = "User not found"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
+            @ApiResponse(responseCode = "200", description = "Profile retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @GetMapping("/profile")
     public ResponseEntity<?> getUserProfile() {
@@ -55,18 +55,19 @@ public class UserController {
 
             Users user = userOpt.get();
             return ResponseEntity.ok(new UserProfileResponse(
-                user.getUsername(),
-                user.getUsernameGHUB(),
-                user.getEmail(),
-                user.getRole(),
-                user.getCreatedAt()
+                    user.getUsername(),
+                    user.getUsernameGHUB(),
+                    user.getEmail(),
+                    user.getRole(),
+                    user.getCreatedAt()
             ));
 
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(new ErrorResponse("Failed to get user profile", e.getMessage()));
+                    .body(new ErrorResponse("Failed to get user profile", e.getMessage()));
         }
     }
+
     @Operation(summary = "Update user profile", description = "Update the email of the authenticated user")
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
@@ -78,14 +79,14 @@ public class UserController {
     public ResponseEntity<?> updateUserProfile(@RequestBody UpdateProfileRequest request, Authentication authentication) {
         try {
             Users user = userService.getCurrentUser(authentication);
-    
+
             if (user == null) {
                 log.warn("User not found from authentication");
                 return ResponseEntity.notFound().build();
             }
-    
+
             boolean hasChanges = false;
-    
+
             if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
                 if (!request.getEmail().equals(user.getEmail())) {
                     Optional<Users> existingUser = usersRepository.findByEmail(request.getEmail());
@@ -94,12 +95,12 @@ public class UserController {
                         return ResponseEntity.badRequest()
                                 .body(new ErrorResponse("Email update failed", "Email already exists"));
                     }
-    
+
                     user.setEmail(request.getEmail());
                     hasChanges = true;
                 }
             }
-    
+
             if (request.getUsernameGHUB() != null && !request.getUsernameGHUB().trim().isEmpty()) {
                 if (!request.getUsernameGHUB().equals(user.getUsernameGHUB())) {
                     Optional<Users> existingUser = usersRepository.findByUsernameGHUB(request.getUsernameGHUB());
@@ -108,12 +109,12 @@ public class UserController {
                         return ResponseEntity.badRequest()
                                 .body(new ErrorResponse("Username update failed", "Username already exists"));
                     }
-    
+
                     user.setUsernameGHUB(request.getUsernameGHUB());
                     hasChanges = true;
                 }
             }
-    
+
             Users updatedUser = user;
             if (hasChanges) {
                 user.setUpdatedAt(LocalDateTime.now());
@@ -122,7 +123,7 @@ public class UserController {
             } else {
                 log.info("No changes detected for user profile: {}", user.getUsername());
             }
-    
+
             return ResponseEntity.ok(new UserProfileResponse(
                     updatedUser.getUsername(),
                     updatedUser.getUsernameGHUB(),
@@ -130,13 +131,14 @@ public class UserController {
                     updatedUser.getRole(),
                     updatedUser.getCreatedAt()
             ));
-    
+
         } catch (Exception e) {
             log.error("Error updating user profile", e);
             return ResponseEntity.badRequest()
                     .body(new ErrorResponse("Failed to update user profile", e.getMessage()));
         }
     }
+
     @Operation(summary = "Change user password", description = "Change the password of the authenticated user")
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
@@ -152,7 +154,8 @@ public class UserController {
             if (user == null) {
                 log.warn("User not found from authentication");
                 return ResponseEntity.notFound().build();
-            }if (request.getCurrentPassword() == null || request.getCurrentPassword().trim().isEmpty()) {
+            }
+            if (request.getCurrentPassword() == null || request.getCurrentPassword().trim().isEmpty()) {
                 log.warn("Current password is required");
                 return ResponseEntity.badRequest()
                         .body(new ErrorResponse("Password change failed", "Current password is required"));

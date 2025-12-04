@@ -43,6 +43,7 @@ public class ProjectService {
                 })
                 .collect(Collectors.toList());
     }
+
     @Transactional(readOnly = true)
     public List<ProjectResponseGhub> getAccessibleProjectsForUserGhub(Users user) {
         List<Projects> projects = projectRepository.findAccessibleProjects(user, user.getId());
@@ -84,8 +85,8 @@ public class ProjectService {
     }
 
     public Projects createPersonalProject(String name, String description, Users user,
-                                        Projects.ProjectStatus status, Projects.ProjectPriority priority,
-                                        LocalDate startDate, LocalDate endDate, Integer progress) {
+                                          Projects.ProjectStatus status, Projects.ProjectPriority priority,
+                                          LocalDate startDate, LocalDate endDate, Integer progress) {
         Projects project = new Projects();
         project.setName(name);
         project.setDescription(description);
@@ -100,8 +101,8 @@ public class ProjectService {
     }
 
     public Projects createGlobalProject(String name, String description, Users admin,
-                                      Projects.ProjectStatus status, Projects.ProjectPriority priority,
-                                      LocalDate startDate, LocalDate endDate,UUID assignedTo) {
+                                        Projects.ProjectStatus status, Projects.ProjectPriority priority,
+                                        LocalDate startDate, LocalDate endDate, UUID assignedTo) {
         if (!admin.isAdmin()) {
             throw new RuntimeException("Only admins can create global projects");
         }
@@ -170,7 +171,7 @@ public class ProjectService {
         boolean canUpdate = false;
         if (project.getIsGlobal()) {
             canUpdate = user.isAdmin() ||
-                       (project.getAssignedTo() != null && project.getAssignedTo().equals(user.getId()));
+                    (project.getAssignedTo() != null && project.getAssignedTo().equals(user.getId()));
         } else {
             canUpdate = project.getCreatedBy().getId().equals(user.getId());
         }
@@ -228,17 +229,17 @@ public class ProjectService {
         Long totalProjects = (long) userProjects.size();
 
         Long planningProjects = userProjects.stream()
-            .filter(p -> p.getStatus() == Projects.ProjectStatus.PLANNING)
-            .count();
+                .filter(p -> p.getStatus() == Projects.ProjectStatus.PLANNING)
+                .count();
         Long inProgressProjects = userProjects.stream()
-            .filter(p -> p.getStatus() == Projects.ProjectStatus.IN_PROGRESS)
-            .count();
+                .filter(p -> p.getStatus() == Projects.ProjectStatus.IN_PROGRESS)
+                .count();
         Long completedProjects = userProjects.stream()
-            .filter(p -> p.getStatus() == Projects.ProjectStatus.COMPLETED)
-            .count();
+                .filter(p -> p.getStatus() == Projects.ProjectStatus.COMPLETED)
+                .count();
         Long onHoldProjects = userProjects.stream()
-            .filter(p -> p.getStatus() == Projects.ProjectStatus.ON_HOLD)
-            .count();
+                .filter(p -> p.getStatus() == Projects.ProjectStatus.ON_HOLD)
+                .count();
 
         return new ProjectStats(totalProjects, planningProjects, inProgressProjects, completedProjects, onHoldProjects);
     }
@@ -273,7 +274,7 @@ public class ProjectService {
     private boolean canUserAccessProject(Projects project, Users user) {
         if (project.getIsGlobal()) {
             return user.isAdmin() ||
-                   (project.getAssignedTo() != null && project.getAssignedTo().equals(user.getId()));
+                    (project.getAssignedTo() != null && project.getAssignedTo().equals(user.getId()));
         } else {
             return project.getCreatedBy().getId().equals(user.getId());
         }
@@ -377,45 +378,45 @@ public class ProjectService {
         Long totalProjects = (long) allProjects.size();
 
         Long planningProjects = allProjects.stream()
-            .filter(p -> p.getStatus() == Projects.ProjectStatus.PLANNING)
-            .count();
+                .filter(p -> p.getStatus() == Projects.ProjectStatus.PLANNING)
+                .count();
         Long inProgressProjects = allProjects.stream()
-            .filter(p -> p.getStatus() == Projects.ProjectStatus.IN_PROGRESS)
-            .count();
+                .filter(p -> p.getStatus() == Projects.ProjectStatus.IN_PROGRESS)
+                .count();
         Long completedProjects = allProjects.stream()
-            .filter(p -> p.getStatus() == Projects.ProjectStatus.COMPLETED)
-            .count();
+                .filter(p -> p.getStatus() == Projects.ProjectStatus.COMPLETED)
+                .count();
         Long onHoldProjects = allProjects.stream()
-            .filter(p -> p.getStatus() == Projects.ProjectStatus.ON_HOLD)
-            .count();
+                .filter(p -> p.getStatus() == Projects.ProjectStatus.ON_HOLD)
+                .count();
         Long cancelledProjects = allProjects.stream()
-            .filter(p -> p.getStatus() == Projects.ProjectStatus.CANCELLED)
-            .count();
+                .filter(p -> p.getStatus() == Projects.ProjectStatus.CANCELLED)
+                .count();
 
         Long globalProjects = allProjects.stream()
-            .filter(Projects::getIsGlobal)
-            .count();
+                .filter(Projects::getIsGlobal)
+                .count();
         Long personalProjects = totalProjects - globalProjects;
 
         Double averageProgress = allProjects.stream()
-            .filter(p -> p.getProgress() != null)
-            .mapToInt(Projects::getProgress)
-            .average()
-            .orElse(0.0);
+                .filter(p -> p.getProgress() != null)
+                .mapToInt(Projects::getProgress)
+                .average()
+                .orElse(0.0);
 
         Long totalUsers = userRepository.count();
 
         return new AdminProjectStats(
-            totalProjects,
-            planningProjects,
-            inProgressProjects,
-            completedProjects,
-            onHoldProjects,
-            cancelledProjects,
-            globalProjects,
-            personalProjects,
-            averageProgress,
-            totalUsers
+                totalProjects,
+                planningProjects,
+                inProgressProjects,
+                completedProjects,
+                onHoldProjects,
+                cancelledProjects,
+                globalProjects,
+                personalProjects,
+                averageProgress,
+                totalUsers
         );
     }
 

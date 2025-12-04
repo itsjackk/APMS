@@ -83,9 +83,9 @@ public class WebController {
 
             String username = jwtService.extractUsername(refreshToken);
             String role = jwtService.extractRole(refreshToken);
-            
+
             log.info("User '{}' with role '{}' accessing dashboard", username, role);
-            
+
             model.addAttribute("username", username);
             model.addAttribute("role", role);
             model.addAttribute("isAuthenticated", true);
@@ -108,7 +108,7 @@ public class WebController {
     @GetMapping("/projects")
     public String projectsPage(HttpServletRequest request, Model model) {
         log.info("Projects page requested");
-        
+
         try {
             String refreshToken = extractRefreshTokenFromCookies(request);
 
@@ -125,9 +125,9 @@ public class WebController {
 
             String username = jwtService.extractUsername(refreshToken);
             String role = jwtService.extractRole(refreshToken);
-            
+
             log.info("User '{}' with role '{}' accessing projects page", username, role);
-            
+
             model.addAttribute("username", username);
             model.addAttribute("role", role);
             model.addAttribute("isAuthenticated", true);
@@ -144,7 +144,7 @@ public class WebController {
     @GetMapping("/projects/create")
     public String createProjectPage(HttpServletRequest request, Model model) {
         log.info("Create project page requested");
-        
+
         try {
             String refreshToken = extractRefreshTokenFromCookies(request);
 
@@ -161,9 +161,9 @@ public class WebController {
 
             String username = jwtService.extractUsername(refreshToken);
             String role = jwtService.extractRole(refreshToken);
-            
+
             log.info("User '{}' with role '{}' accessing create project page", username, role);
-            
+
             model.addAttribute("username", username);
             model.addAttribute("role", role);
             model.addAttribute("isAuthenticated", true);
@@ -180,7 +180,7 @@ public class WebController {
     @GetMapping("/projects/assigned")
     public String assignedProjectsPage(HttpServletRequest request, Model model) {
         log.info("Assigned projects page requested");
-        
+
         try {
             String refreshToken = extractRefreshTokenFromCookies(request);
 
@@ -197,9 +197,9 @@ public class WebController {
 
             String username = jwtService.extractUsername(refreshToken);
             String role = jwtService.extractRole(refreshToken);
-            
+
             log.info("User '{}' with role '{}' accessing assigned projects page", username, role);
-            
+
             model.addAttribute("username", username);
             model.addAttribute("role", role);
             model.addAttribute("isAuthenticated", true);
@@ -216,7 +216,7 @@ public class WebController {
     @GetMapping("/profile")
     public String profilePage(HttpServletRequest request, Model model) {
         log.info("Profile page requested");
-        
+
         try {
             String refreshToken = extractRefreshTokenFromCookies(request);
 
@@ -233,9 +233,9 @@ public class WebController {
 
             String username = jwtService.extractUsername(refreshToken);
             String role = jwtService.extractRole(refreshToken);
-            
+
             log.info("User '{}' with role '{}' accessing profile page", username, role);
-            
+
             model.addAttribute("username", username);
             model.addAttribute("role", role);
             model.addAttribute("isAuthenticated", true);
@@ -252,7 +252,7 @@ public class WebController {
     @GetMapping("/projects/edit/{projectId}")
     public String editProjectPage(@PathVariable UUID projectId, HttpServletRequest request, Model model) {
         log.info("Edit project page requested for project ID: {}", projectId);
-        
+
         try {
             String refreshToken = extractRefreshTokenFromCookies(request);
 
@@ -269,9 +269,9 @@ public class WebController {
 
             String username = jwtService.extractUsername(refreshToken);
             String role = jwtService.extractRole(refreshToken);
-            
+
             log.info("User '{}' with role '{}' accessing edit project page for project {}", username, role, projectId);
-            
+
             model.addAttribute("username", username);
             model.addAttribute("role", role);
             model.addAttribute("projectId", projectId);
@@ -289,7 +289,7 @@ public class WebController {
     @GetMapping("/admin/projects")
     public String adminProjectsPage(HttpServletRequest request, Model model) {
         log.info("Admin projects management page requested");
-        
+
         try {
             String refreshToken = extractRefreshTokenFromCookies(request);
 
@@ -306,15 +306,15 @@ public class WebController {
 
             String username = jwtService.extractUsername(refreshToken);
             String role = jwtService.extractRole(refreshToken);
-            
+
             // Check if user is admin
             if (!"ADMIN".equals(role)) {
                 log.warn("User '{}' with role '{}' attempted to access admin projects page", username, role);
                 return "redirect:/ConsoleApp/dashboard";
             }
-            
+
             log.info("Admin user '{}' accessing projects management page", username);
-            
+
             model.addAttribute("username", username);
             model.addAttribute("role", role);
             model.addAttribute("isAuthenticated", true);
@@ -331,7 +331,7 @@ public class WebController {
     @GetMapping("/admin/users")
     public String adminUsersPage(HttpServletRequest request, Model model) {
         log.info("Admin users management page requested");
-        
+
         try {
             String refreshToken = extractRefreshTokenFromCookies(request);
 
@@ -348,15 +348,15 @@ public class WebController {
 
             String username = jwtService.extractUsername(refreshToken);
             String role = jwtService.extractRole(refreshToken);
-            
+
             // Check if user is admin
             if (!"ADMIN".equals(role)) {
                 log.warn("User '{}' with role '{}' attempted to access admin users page", username, role);
                 return "redirect:/ConsoleApp/dashboard";
             }
-            
+
             log.info("Admin user '{}' accessing users management page", username);
-            
+
             model.addAttribute("username", username);
             model.addAttribute("role", role);
             model.addAttribute("isAuthenticated", true);

@@ -7,7 +7,8 @@ public class LoginResponse {
     private String message;
 
     // Constructors
-    public LoginResponse() {}
+    public LoginResponse() {
+    }
 
     public LoginResponse(String accessToken, String username, String message) {
         this.accessToken = accessToken;

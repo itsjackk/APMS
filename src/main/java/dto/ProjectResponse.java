@@ -7,7 +7,8 @@ public class ProjectResponse {
     private Projects project;
 
     // Constructors
-    public ProjectResponse() {}
+    public ProjectResponse() {
+    }
 
     public ProjectResponse(String message, Projects project) {
         this.message = message;

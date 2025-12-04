@@ -17,9 +17,23 @@ public class ProjectStats {
     }
 
     // Getters
-    public Long getTotalProjects() { return totalProjects; }
-    public Long getPlanningProjects() { return planningProjects; }
-    public Long getInProgressProjects() { return inProgressProjects; }
-    public Long getCompletedProjects() { return completedProjects; }
-    public Long getOnHoldProjects() { return onHoldProjects; }
+    public Long getTotalProjects() {
+        return totalProjects;
+    }
+
+    public Long getPlanningProjects() {
+        return planningProjects;
+    }
+
+    public Long getInProgressProjects() {
+        return inProgressProjects;
+    }
+
+    public Long getCompletedProjects() {
+        return completedProjects;
+    }
+
+    public Long getOnHoldProjects() {
+        return onHoldProjects;
+    }
 }

@@ -18,11 +18,18 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Non-critical CSS - Defer loading -->
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></noscript>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style"
+          onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    </noscript>
 
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&display=swap" rel="stylesheet"></noscript>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&display=swap"
+          as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&display=swap"
+              rel="stylesheet">
+    </noscript>
 
     <!-- Local CSS -->
     <link rel="stylesheet" th:href="@{/css/admin-christmas.css}">
@@ -30,200 +37,212 @@
     <link rel="stylesheet" th:href="@{/css/profile.css}">
 </head>
 <body>
-    <div id="snowflakes"></div>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-3 col-lg-2 sidebar p-0">
-                <div class="p-3">
-                    <h4 class="text-center mb-4">
-                        <i class="fas fa-project-diagram"></i> APMS
-                    </h4>
-                    <nav class="nav flex-column">
-                        <a class="nav-link" href="/ConsoleApp/dashboard">
-                            <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-                        </a>
-                        <a class="nav-link" href="/ConsoleApp/projects">
-                            <i class="fas fa-folder me-2"></i> My Projects
-                        </a>
-                        <a class="nav-link" href="/ConsoleApp/projects/create">
-                            <i class="fas fa-plus me-2"></i> Create Project
-                        </a>
-                        <!--<a class="nav-link" href="/ConsoleApp/projects/assigned">
-                            <i class="fas fa-tasks me-2"></i> Assigned Projects
-                        </a>-->
-                        <hr th:if="${role == 'ADMIN'}">
-                        <small class="text-muted px-3" th:if="${role == 'ADMIN'}">ADMIN</small>
-                        <a class="nav-link" href="/ConsoleApp/admin/projects" th:if="${role == 'ADMIN'}">
-                            <i class="fas fa-cogs me-2"></i> Manage Projects
-                        </a>
-                        <a class="nav-link" href="/ConsoleApp/admin/users" th:if="${role == 'ADMIN'}">
-                            <i class="fas fa-users me-2"></i> Manage Users
-                        </a>
-                        <hr>
-                        <a class="nav-link active" href="/ConsoleApp/profile">
-                            <i class="fas fa-user me-2"></i> Profile
-                        </a>
-                        <a class="nav-link text-danger logout-link" href="#" onclick="logout()">
-                            <i class="fas fa-sign-out-alt me-2"></i> Logout
-                        </a>
-                    </nav>
-                </div>
+<div id="snowflakes"></div>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar p-0">
+            <div class="p-3">
+                <h4 class="text-center mb-4">
+                    <i class="fas fa-project-diagram"></i> APMS
+                </h4>
+                <nav class="nav flex-column">
+                    <a class="nav-link" href="/ConsoleApp/dashboard">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="/ConsoleApp/projects">
+                        <i class="fas fa-folder me-2"></i> My Projects
+                    </a>
+                    <a class="nav-link" href="/ConsoleApp/projects/create">
+                        <i class="fas fa-plus me-2"></i> Create Project
+                    </a>
+                    <!--<a class="nav-link" href="/ConsoleApp/projects/assigned">
+                        <i class="fas fa-tasks me-2"></i> Assigned Projects
+                    </a>-->
+                    <hr th:if="${role == 'ADMIN'}">
+                    <small class="text-muted px-3" th:if="${role == 'ADMIN'}">ADMIN</small>
+                    <a class="nav-link" href="/ConsoleApp/admin/projects" th:if="${role == 'ADMIN'}">
+                        <i class="fas fa-cogs me-2"></i> Manage Projects
+                    </a>
+                    <a class="nav-link" href="/ConsoleApp/admin/users" th:if="${role == 'ADMIN'}">
+                        <i class="fas fa-users me-2"></i> Manage Users
+                    </a>
+                    <hr>
+                    <a class="nav-link active" href="/ConsoleApp/profile">
+                        <i class="fas fa-user me-2"></i> Profile
+                    </a>
+                    <a class="nav-link text-danger logout-link" href="#" onclick="logout()">
+                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                    </a>
+                </nav>
             </div>
+        </div>
 
-            <!-- Main Content -->
-            <div class="col-md-9 col-lg-10">
-                <div class="main-content">
-                    <!-- Profile Header -->
-                    <div class="profile-header">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h2>
-                                <i class="fas fa-user-circle me-2"></i> My Profile
-                            </h2>
-                            <div>
-                                <span class="me-3">Welcome, <strong th:text="${username}">User</strong></span>
-                            </div>
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <div class="main-content">
+                <!-- Profile Header -->
+                <div class="profile-header">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>
+                            <i class="fas fa-user-circle me-2"></i> My Profile
+                        </h2>
+                        <div>
+                            <span class="me-3">Welcome, <strong th:text="${username}">User</strong></span>
                         </div>
-
-                        <div class="profile-avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <h2 class="text-center mb-2" th:text="${username}">User</h2>
-                        <p class="text-center mb-0">
-                            <span class="badge role-badge" th:classappend="${role == 'ADMIN'} ? 'bg-danger' : 'bg-primary'" th:text="${role}">USER</span>
-                        </p>
                     </div>
 
-                    <!-- Profile Information -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card user-card mb-4">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-center mb-4">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-info-circle me-2"></i> Account Information
-                                        </h5>
-                                        <button class="btn btn-sm btn-outline-primary action-btn" onclick="toggleEditMode()">
-                                            <i class="fas fa-edit me-1"></i> Edit
-                                        </button>
-                                    </div>
+                    <div class="profile-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h2 class="text-center mb-2" th:text="${username}">User</h2>
+                    <p class="text-center mb-0">
+                        <span class="badge role-badge" th:classappend="${role == 'ADMIN'} ? 'bg-danger' : 'bg-primary'"
+                              th:text="${role}">USER</span>
+                    </p>
+                </div>
 
-                                    <div id="viewMode">
-                                        <div class="mb-3 pb-3 border-bottom">
-                                            <label class="text-muted mb-1"><i class="fas fa-user me-2"></i>Username</label>
-                                            <p class="mb-0 fw-bold" id="displayUsername">Loading...</p>
-                                        </div>
-                                        <div class="mb-3 pb-3 border-bottom">
-                                            <label class="text-muted mb-1"><i class="fas fa-user me-2"></i>username GHUB</label>
-                                            <p class="mb-0 fw-bold" id="displayUsernameGHUB">Loading...</p>
-                                        </div>
-                                        <div class="mb-3 pb-3 border-bottom">
-                                            <label class="text-muted mb-1"><i class="fas fa-envelope me-2"></i>Email</label>
-                                            <p class="mb-0 fw-bold" id="displayEmail">Loading...</p>
-                                        </div>
-                                        <div class="mb-3 pb-3 border-bottom">
-                                            <label class="text-muted mb-1"><i class="fas fa-shield-alt me-2"></i>Role</label>
-                                            <p class="mb-0">
-                                                <span class="role-badge" th:classappend="${role == 'ADMIN'} ? 'bg-danger' : 'bg-success'" th:text="${role}">USER</span>
-                                            </p>
-                                        </div>
-                                        <div class="mb-0">
-                                            <label class="text-muted mb-1"><i class="fas fa-calendar-alt me-2"></i>Member Since</label>
-                                            <p class="mb-0 fw-bold" id="displayCreatedAt">Loading...</p>
-                                        </div>
-                                    </div>
+                <!-- Profile Information -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card user-card mb-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-info-circle me-2"></i> Account Information
+                                    </h5>
+                                    <button class="btn btn-sm btn-outline-primary action-btn"
+                                            onclick="toggleEditMode()">
+                                        <i class="fas fa-edit me-1"></i> Edit
+                                    </button>
+                                </div>
 
-                                    <div id="editMode" style="display: none;">
-                                        <form id="profileForm">
-                                            <div class="mb-3">
-                                                <label class="form-label"><i class="fas fa-user me-2"></i>Username</label>
-                                                <input type="text" class="form-control" id="editUsername" readonly>
-                                                <small class="text-muted">Username cannot be changed</small>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label"><i class="fas fa-envelope me-2"></i>UsernameGHUB</label>
-                                                <input type="text" class="form-control" id="editUsernameGHUB" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label"><i class="fas fa-envelope me-2"></i>Email</label>
-                                                <input type="email" class="form-control" id="editEmail" required>
-                                            </div>
-                                            <div class="d-flex gap-2">
-                                                <button type="submit" class="btn btn-outline-primary">
-                                                    <i class="fas fa-save me-2"></i> Save Changes
-                                                </button>
-                                                <button type="button" class="btn btn btn-outline-danger" onclick="toggleEditMode()">
-                                                    <i class="fas fa-times me-2"></i> Cancel
-                                                </button>
-                                            </div>
-                                        </form>
+                                <div id="viewMode">
+                                    <div class="mb-3 pb-3 border-bottom">
+                                        <label class="text-muted mb-1"><i class="fas fa-user me-2"></i>Username</label>
+                                        <p class="mb-0 fw-bold" id="displayUsername">Loading...</p>
+                                    </div>
+                                    <div class="mb-3 pb-3 border-bottom">
+                                        <label class="text-muted mb-1"><i class="fas fa-user me-2"></i>username
+                                            GHUB</label>
+                                        <p class="mb-0 fw-bold" id="displayUsernameGHUB">Loading...</p>
+                                    </div>
+                                    <div class="mb-3 pb-3 border-bottom">
+                                        <label class="text-muted mb-1"><i class="fas fa-envelope me-2"></i>Email</label>
+                                        <p class="mb-0 fw-bold" id="displayEmail">Loading...</p>
+                                    </div>
+                                    <div class="mb-3 pb-3 border-bottom">
+                                        <label class="text-muted mb-1"><i
+                                                class="fas fa-shield-alt me-2"></i>Role</label>
+                                        <p class="mb-0">
+                                            <span class="role-badge"
+                                                  th:classappend="${role == 'ADMIN'} ? 'bg-danger' : 'bg-success'"
+                                                  th:text="${role}">USER</span>
+                                        </p>
+                                    </div>
+                                    <div class="mb-0">
+                                        <label class="text-muted mb-1"><i class="fas fa-calendar-alt me-2"></i>Member
+                                            Since</label>
+                                        <p class="mb-0 fw-bold" id="displayCreatedAt">Loading...</p>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div class="col-md-6">
-                            <div class="card user-card mb-4">
-                                <div class="card-body">
-                                    <h5 class="mb-4">
-                                        <i class="fas fa-lock me-2"></i> Change Password
-                                    </h5>
-                                    <form id="passwordForm">
+                                <div id="editMode" style="display: none;">
+                                    <form id="profileForm">
                                         <div class="mb-3">
-                                            <label class="form-label"><i class="fas fa-key me-2"></i>Current Password</label>
-                                            <input type="password" class="form-control" id="currentPassword" required>
+                                            <label class="form-label"><i class="fas fa-user me-2"></i>Username</label>
+                                            <input type="text" class="form-control" id="editUsername" readonly>
+                                            <small class="text-muted">Username cannot be changed</small>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label"><i class="fas fa-lock me-2"></i>New Password</label>
-                                            <input type="password" class="form-control" id="newPassword" required minlength="6">
-                                            <small class="text-muted">Minimum 6 characters</small>
+                                            <label class="form-label"><i
+                                                    class="fas fa-envelope me-2"></i>UsernameGHUB</label>
+                                            <input type="text" class="form-control" id="editUsernameGHUB" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label"><i class="fas fa-lock me-2"></i>Confirm New Password</label>
-                                            <input type="password" class="form-control" id="confirmPassword" required>
+                                            <label class="form-label"><i class="fas fa-envelope me-2"></i>Email</label>
+                                            <input type="email" class="form-control" id="editEmail" required>
                                         </div>
-                                        <button type="submit" class="btn btn-outline-primary">
-                                            <i class="fas fa-key me-2"></i> Update Password
-                                        </button>
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" class="btn btn-outline-primary">
+                                                <i class="fas fa-save me-2"></i> Save Changes
+                                            </button>
+                                            <button type="button" class="btn btn btn-outline-danger"
+                                                    onclick="toggleEditMode()">
+                                                <i class="fas fa-times me-2"></i> Cancel
+                                            </button>
+                                        </div>
                                     </form>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Quick Actions -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card user-card">
-                                <div class="card-body">
-                                    <h5 class="mb-3">
-                                        <i class="fas fa-bolt me-2"></i> Quick Actions
-                                    </h5>
-                                    <div class="d-flex gap-2 flex-wrap">
-                                        <a href="/ConsoleApp/projects/create" class="btn btn-outline-primary">
-                                            <i class="fas fa-plus me-2"></i> New Project
-                                        </a>
-                                        <a href="/ConsoleApp/projects" class="btn btn-outline-primary">
-                                            <i class="fas fa-folder me-2"></i> My Projects
-                                        </a>
-                                        <!--<a href="/ConsoleApp/projects/assigned" class="btn btn-outline-primary">
-                                            <i class="fas fa-tasks me-2"></i> Assigned Projects
-                                        </a>-->
+                    <div class="col-md-6">
+                        <div class="card user-card mb-4">
+                            <div class="card-body">
+                                <h5 class="mb-4">
+                                    <i class="fas fa-lock me-2"></i> Change Password
+                                </h5>
+                                <form id="passwordForm">
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="fas fa-key me-2"></i>Current
+                                            Password</label>
+                                        <input type="password" class="form-control" id="currentPassword" required>
                                     </div>
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="fas fa-lock me-2"></i>New Password</label>
+                                        <input type="password" class="form-control" id="newPassword" required
+                                               minlength="6">
+                                        <small class="text-muted">Minimum 6 characters</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="fas fa-lock me-2"></i>Confirm New
+                                            Password</label>
+                                        <input type="password" class="form-control" id="confirmPassword" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-outline-primary">
+                                        <i class="fas fa-key me-2"></i> Update Password
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card user-card">
+                            <div class="card-body">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-bolt me-2"></i> Quick Actions
+                                </h5>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a href="/ConsoleApp/projects/create" class="btn btn-outline-primary">
+                                        <i class="fas fa-plus me-2"></i> New Project
+                                    </a>
+                                    <a href="/ConsoleApp/projects" class="btn btn-outline-primary">
+                                        <i class="fas fa-folder me-2"></i> My Projects
+                                    </a>
+                                    <!--<a href="/ConsoleApp/projects/assigned" class="btn btn-outline-primary">
+                                        <i class="fas fa-tasks me-2"></i> Assigned Projects
+                                    </a>-->
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Footer -->
-                    <div class="footer">
-                        <p>Merry Christmas & Happy New Year! 🎄✨</p>
-                    </div>
+                <!-- Footer -->
+                <div class="footer">
+                    <p>Merry Christmas & Happy New Year! 🎄✨</p>
                 </div>
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script th:src="@{/js/profile.js}"></script>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/profile.js}"></script>
 </body>
 </html>

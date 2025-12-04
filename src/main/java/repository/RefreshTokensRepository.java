@@ -15,16 +15,17 @@ import java.util.UUID;
 @Repository
 public interface RefreshTokensRepository extends JpaRepository<RefreshTokens, UUID> {
     Optional<RefreshTokens> findByToken(String token);
+
     List<RefreshTokens> findByUserIdAndIsRevokedFalse(UUID userId);
-    
+
     @Modifying
     @Query("UPDATE RefreshTokens rt SET rt.isRevoked = true WHERE rt.userId = :userId")
     void revokeAllUserTokens(@Param("userId") UUID userId);
-    
+
     @Modifying
     @Query("UPDATE RefreshTokens rt SET rt.isRevoked = true WHERE rt.expiresAt < :now AND rt.isRevoked = false")
     int revokeExpiredTokens(@Param("now") LocalDateTime now);
-    
+
     @Modifying
     @Query("DELETE FROM RefreshTokens rt WHERE rt.expiresAt < :now OR rt.isRevoked = true")
     int deleteExpiredAndRevokedTokens(@Param("now") LocalDateTime now);
@@ -32,4 +33,8 @@ public interface RefreshTokensRepository extends JpaRepository<RefreshTokens, UU
     @Modifying
     @Query("DELETE FROM RefreshTokens rt WHERE rt.userId = :userId")
     void deleteByUserId(@Param("userId") UUID userId);
+
+    @Modifying
+    @Query("DELETE FROM RefreshTokens rt WHERE rt.expiresAt < :now OR rt.isRevoked = true")
+    int deleteRevokedTokens(@Param("now") LocalDateTime now);
 }

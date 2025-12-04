@@ -1,6 +1,6 @@
 package dto;
 
-public  class DashboardResponse {
+public class DashboardResponse {
     private String message;
     private String username;
     private String accessTime;
@@ -12,7 +12,15 @@ public  class DashboardResponse {
     }
 
     // Getters
-    public String getMessage() { return message; }
-    public String getUsername() { return username; }
-    public String getAccessTime() { return accessTime; }
+    public String getMessage() {
+        return message;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getAccessTime() {
+        return accessTime;
+    }
 }

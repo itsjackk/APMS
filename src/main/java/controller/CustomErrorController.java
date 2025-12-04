@@ -25,14 +25,14 @@ public class CustomErrorController implements ErrorController {
 
         if (status != null) {
             int statusCode = Integer.parseInt(status.toString());
-            
+
             // Check if it's a static resource or browser-specific request (ignore these)
             if (requestUri != null && shouldIgnoreRequest(requestUri)) {
                 log.debug("Ignoring request for: {}", requestUri);
                 response.setStatus(HttpStatus.NOT_FOUND.value());
                 return;
             }
-            
+
             log.warn("Error {} occurred for URI: {}", statusCode, requestUri);
 
             // Redirect 404 errors to login (except ignored resources)
@@ -41,7 +41,7 @@ public class CustomErrorController implements ErrorController {
                 response.sendRedirect("/ConsoleApp/login");
                 return;
             }
-            
+
             // Log other error codes
             if (statusCode == HttpStatus.FORBIDDEN.value()) {
                 log.warn("403 Forbidden error for {}, redirecting to login", requestUri);
@@ -57,7 +57,7 @@ public class CustomErrorController implements ErrorController {
         // For other errors, redirect to login
         response.sendRedirect("/ConsoleApp/login");
     }
-    
+
     /**
      * Check if the request should be ignored (static resources or browser-specific requests)
      */
@@ -65,32 +65,32 @@ public class CustomErrorController implements ErrorController {
         if (uri == null) {
             return false;
         }
-        
+
         // Browser-specific requests that should be ignored
         if (uri.startsWith("/.well-known/") ||
-            uri.contains("/devtools") ||
-            uri.equals("/favicon.ico")) {
+                uri.contains("/devtools") ||
+                uri.equals("/favicon.ico")) {
             return true;
         }
-        
+
         // Common static resource patterns
         return uri.endsWith(".css") ||
-               uri.endsWith(".js") ||
-               uri.endsWith(".ico") ||
-               uri.endsWith(".png") ||
-               uri.endsWith(".jpg") ||
-               uri.endsWith(".jpeg") ||
-               uri.endsWith(".gif") ||
-               uri.endsWith(".svg") ||
-               uri.endsWith(".woff") ||
-               uri.endsWith(".woff2") ||
-               uri.endsWith(".ttf") ||
-               uri.endsWith(".eot") ||
-               uri.endsWith(".map") ||
-               uri.contains("/static/") ||
-               uri.contains("/css/") ||
-               uri.contains("/js/") ||
-               uri.contains("/images/") ||
-               uri.contains("/fonts/");
+                uri.endsWith(".js") ||
+                uri.endsWith(".ico") ||
+                uri.endsWith(".png") ||
+                uri.endsWith(".jpg") ||
+                uri.endsWith(".jpeg") ||
+                uri.endsWith(".gif") ||
+                uri.endsWith(".svg") ||
+                uri.endsWith(".woff") ||
+                uri.endsWith(".woff2") ||
+                uri.endsWith(".ttf") ||
+                uri.endsWith(".eot") ||
+                uri.endsWith(".map") ||
+                uri.contains("/static/") ||
+                uri.contains("/css/") ||
+                uri.contains("/js/") ||
+                uri.contains("/images/") ||
+                uri.contains("/fonts/");
     }
 }

@@ -379,7 +379,6 @@ function collectFormData() {
         endDate: getElementValue(ELEMENTS.endDate) || null
     };
 
-    // Add admin-specific fields
     if (state.isAdmin) {
         projectData.projectType = getElementValue(ELEMENTS.projectType);
         if (projectData.projectType === PROJECT_TYPES.GLOBAL) {

@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -41,7 +42,7 @@ public class AuthController {
 
     @Autowired
     private AuthenticationService authenticationService;
-    
+
     @Autowired
     private UserRepository userRepository;
 
@@ -53,49 +54,49 @@ public class AuthController {
 
     @Operation(summary = "Register new user", description = "Register a new user account")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "User registered successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid input or user already exists"),
-        @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "200", description = "User registered successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input or user already exists"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
         try {
             log.info("Registration attempt for username: {}", registerRequest.getUsername());
-            
+
             // Use synchronized block or transaction to prevent race conditions
             synchronized (this) {
                 // Check if username already exists
                 if (userRepository.findByUsername(registerRequest.getUsername()).isPresent()) {
                     log.warn("Registration failed: Username '{}' already exists", registerRequest.getUsername());
                     return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of(
-                            "error", "Username already exists",
-                            "message", "A user with this username already exists. Please choose a different username."
-                        ));
+                            .status(HttpStatus.BAD_REQUEST)
+                            .body(Map.of(
+                                    "error", "Username already exists",
+                                    "message", "A user with this username already exists. Please choose a different username."
+                            ));
                 }
-                
+
                 // Check if email already exists
                 if (userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
                     log.warn("Registration failed: Email '{}' already exists", registerRequest.getEmail());
                     return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of(
-                            "error", "Email already exists",
-                            "message", "A user with this email already exists. Please use a different email address."
-                        ));
+                            .status(HttpStatus.BAD_REQUEST)
+                            .body(Map.of(
+                                    "error", "Email already exists",
+                                    "message", "A user with this email already exists. Please use a different email address."
+                            ));
                 }
-                
+
                 // Check if GitHub username already exists (if provided)
                 if (registerRequest.getUsernameGHUB() != null && !registerRequest.getUsernameGHUB().trim().isEmpty()) {
                     if (userRepository.findByUsernameGHUB(registerRequest.getUsernameGHUB()).isPresent()) {
                         log.warn("Registration failed: GitHub username '{}' already exists", registerRequest.getUsernameGHUB());
                         return ResponseEntity
-                            .status(HttpStatus.BAD_REQUEST)
-                            .body(Map.of(
-                                "error", "GitHub username already exists",
-                                "message", "A user with this GitHub username already exists. Please use a different GitHub username."
-                            ));
+                                .status(HttpStatus.BAD_REQUEST)
+                                .body(Map.of(
+                                        "error", "GitHub username already exists",
+                                        "message", "A user with this GitHub username already exists. Please use a different GitHub username."
+                                ));
                     }
                 }
 
@@ -108,7 +109,7 @@ public class AuthController {
                 newUser.setEnabled(true);
                 newUser.setCreatedAt(LocalDateTime.now());
                 newUser.setUpdatedAt(LocalDateTime.now());
-                
+
                 if (registerRequest.getUsernameGHUB() != null && !registerRequest.getUsernameGHUB().trim().isEmpty()) {
                     newUser.setUsernameGHUB(registerRequest.getUsernameGHUB());
                 }
@@ -117,118 +118,168 @@ public class AuthController {
                 log.info("User registered successfully: {}", registerRequest.getUsername());
 
                 return ResponseEntity.ok(Map.of(
-                    "message", "User registered successfully",
-                    "username", newUser.getUsername()
+                        "message", "User registered successfully",
+                        "username", newUser.getUsername()
                 ));
             }
-            
+
         } catch (DataIntegrityViolationException e) {
             log.error("Data integrity violation during registration: {}", e.getMessage());
-            
+
             // Parse the constraint violation to provide specific error message
             String errorMessage = e.getMessage().toLowerCase();
             if (errorMessage.contains("username")) {
                 return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of(
-                        "error", "Username already exists",
-                        "message", "This username is already taken. Please choose a different username."
-                    ));
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of(
+                                "error", "Username already exists",
+                                "message", "This username is already taken. Please choose a different username."
+                        ));
             } else if (errorMessage.contains("email")) {
                 return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of(
-                        "error", "Email already exists",
-                        "message", "This email is already registered. Please use a different email address."
-                    ));
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of(
+                                "error", "Email already exists",
+                                "message", "This email is already registered. Please use a different email address."
+                        ));
             } else if (errorMessage.contains("username_ghub")) {
                 return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of(
+                                "error", "GitHub username already exists",
+                                "message", "This GitHub username is already taken. Please use a different GitHub username."
+                        ));
+            }
+
+            return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body(Map.of(
-                        "error", "GitHub username already exists",
-                        "message", "This GitHub username is already taken. Please use a different GitHub username."
+                            "error", "Registration failed",
+                            "message", "A user with these details already exists. Please check your input."
                     ));
-            }
-            
-            return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of(
-                    "error", "Registration failed",
-                    "message", "A user with these details already exists. Please check your input."
-                ));
-                
+
         } catch (Exception e) {
             log.error("Unexpected error during registration", e);
             return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of(
-                    "error", "Registration failed",
-                    "message", "An unexpected error occurred. Please try again later."
-                ));
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                            "error", "Registration failed",
+                            "message", "An unexpected error occurred. Please try again later."
+                    ));
         }
     }
 
 
-    @Operation(summary = "Login user")
+    @Operation(summary = "Login user with Remember Me support")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Login successful"),
-        @ApiResponse(responseCode = "401", description = "Authentication failed")
+            @ApiResponse(responseCode = "200", description = "Login successful"),
+            @ApiResponse(responseCode = "401", description = "Authentication failed")
     })
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
         try {
-            AuthenticationResponse authResponse =
-                authenticationService.login(loginRequest.getUsername(), loginRequest.getPassword());
+            log.info("Login attempt for user: {} (Remember Me: {})",
+                    loginRequest.getUsername(),
+                    loginRequest.isRememberMe());
 
+            // Authenticate user with rememberMe flag
+            AuthenticationResponse authResponse = authenticationService.login(
+                    loginRequest.getUsername(),
+                    loginRequest.getPassword(),
+                    loginRequest.isRememberMe()
+            );
+
+            // Set refresh token as HTTP-only cookie
             Cookie refreshTokenCookie = new Cookie("refreshToken", authResponse.getRefreshToken());
             refreshTokenCookie.setHttpOnly(true);
             refreshTokenCookie.setSecure(true); // Set to true in production with HTTPS
             refreshTokenCookie.setPath("/");
-            refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
+            refreshTokenCookie.setAttribute("SameSite", "Strict");
+
+            // Set cookie max age based on rememberMe
+            if (loginRequest.isRememberMe()) {
+                refreshTokenCookie.setMaxAge(30 * 24 * 60 * 60); // 30 days
+                log.info("Setting refresh token cookie with 30-day expiration for user: {}",
+                        loginRequest.getUsername());
+            } else {
+                refreshTokenCookie.setMaxAge(25 * 60); // 7 days
+                log.info("Setting refresh token cookie with 25-min expiration for user: {}",
+                        loginRequest.getUsername());
+            }
+
             response.addCookie(refreshTokenCookie);
 
+            log.info("Login successful for user: {})",
+                    authResponse.getUsername());
+
             return ResponseEntity.ok(new LoginResponse(
-                authResponse.getAccessToken(),
-                authResponse.getUsername(),
-                "Login successful"
+                    authResponse.getAccessToken(),
+                    authResponse.getUsername(),
+                    "Login successful"
             ));
 
         } catch (Exception e) {
+            log.error("Login failed for user: {} - {}",
+                    loginRequest.getUsername(),
+                    e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Authentication failed", e.getMessage()));
+                    .body(new ErrorResponse("Authentication failed", e.getMessage()));
         }
     }
 
     @Operation(summary = "Refresh access token")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Token refreshed successfully"),
-        @ApiResponse(responseCode = "401", description = "Invalid refresh token")
+            @ApiResponse(responseCode = "200", description = "Token refreshed successfully"),
+            @ApiResponse(responseCode = "401", description = "Invalid refresh token")
     })
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
         try {
             String refreshToken = extractRefreshTokenFromCookies(request);
+
             if (refreshToken == null) {
+                log.warn("Refresh token request with missing token");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ErrorResponse("Refresh token not found", "No refresh token provided"));
+                        .body(new ErrorResponse("Refresh token not found", "No refresh token provided"));
             }
-            AuthenticationResponse authResponse =
-            authenticationService.refreshToken(refreshToken);
+
+            log.info("Processing refresh token request");
+
+            // Generate new tokens
+            AuthenticationResponse authResponse = authenticationService.refreshToken(refreshToken);
+
+            // Update refresh token cookie
             Cookie refreshTokenCookie = new Cookie("refreshToken", authResponse.getRefreshToken());
             refreshTokenCookie.setHttpOnly(true);
             refreshTokenCookie.setSecure(true);
             refreshTokenCookie.setPath("/");
-            refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60);
+            refreshTokenCookie.setAttribute("SameSite", "Strict");
+
+            // Preserve cookie expiration based on token type
+            // Check if the original token was a remember-me token
+            boolean isRememberMe = jwtService.isRememberMeToken(refreshToken);
+
+            if (isRememberMe) {
+                refreshTokenCookie.setMaxAge(30 * 24 * 60 * 60); // 30 days
+                log.info("Refreshing remember-me token for user: {}", authResponse.getUsername());
+            } else {
+                refreshTokenCookie.setMaxAge(25 * 60); // 7 days
+                log.info("Refreshing standard token for user: {}", authResponse.getUsername());
+            }
+
             response.addCookie(refreshTokenCookie);
 
+            log.info("Token refresh successful for user: {}", authResponse.getUsername());
+
             return ResponseEntity.ok(new RefreshResponse(
-                authResponse.getAccessToken(),
-                "Token refreshed successfully"
+                    authResponse.getAccessToken(),
+                    "Token refreshed successfully"
             ));
 
         } catch (Exception e) {
+            log.error("Token refresh failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Token refresh failed", e.getMessage()));
+                    .body(new ErrorResponse("Token refresh failed", e.getMessage()));
         }
     }
 
@@ -237,7 +288,7 @@ public class AuthController {
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         try {
             String refreshToken = extractRefreshTokenFromCookies(request);
-            
+
             if (refreshToken != null) {
                 authenticationService.logout(refreshToken);
                 log.info("Revoked refresh token");
@@ -256,7 +307,7 @@ public class AuthController {
         } catch (Exception e) {
             log.error("Logout failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("Logout failed", e.getMessage()));
+                    .body(new ErrorResponse("Logout failed", e.getMessage()));
         }
     }
 
@@ -265,10 +316,10 @@ public class AuthController {
     public ResponseEntity<?> logoutAllDevices(HttpServletRequest request, HttpServletResponse response) {
         try {
             String refreshToken = extractRefreshTokenFromCookies(request);
-            
+
             if (refreshToken == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ErrorResponse("Unauthorized", "No refresh token provided"));
+                        .body(new ErrorResponse("Unauthorized", "No refresh token provided"));
             }
 
             java.util.UUID userId = jwtService.extractUserId(refreshToken);
@@ -290,7 +341,7 @@ public class AuthController {
         } catch (Exception e) {
             log.error("Logout all failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("Logout all failed", e.getMessage()));
+                    .body(new ErrorResponse("Logout all failed", e.getMessage()));
         }
     }
 
@@ -301,19 +352,19 @@ public class AuthController {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
-            
+
             // Log dashboard access with user info
             log.info("User " + username + " accessed dashboard at " + java.time.LocalDateTime.now());
-            
+
             return ResponseEntity.ok(new DashboardResponse(
-                "Dashboard accessed successfully",
-                username,
-                java.time.LocalDateTime.now().toString()
+                    "Dashboard accessed successfully",
+                    username,
+                    java.time.LocalDateTime.now().toString()
             ));
-            
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("Dashboard access failed", e.getMessage()));
+                    .body(new ErrorResponse("Dashboard access failed", e.getMessage()));
         }
     }
 
@@ -394,9 +445,9 @@ public class AuthController {
     private String extractRefreshTokenFromCookies(HttpServletRequest request) {
         if (request.getCookies() != null) {
             Optional<Cookie> refreshTokenCookie = Arrays.stream(request.getCookies())
-                .filter(cookie -> "refreshToken".equals(cookie.getName()))
-                .findFirst();
-            
+                    .filter(cookie -> "refreshToken".equals(cookie.getName()))
+                    .findFirst();
+
             if (refreshTokenCookie.isPresent()) {
                 return refreshTokenCookie.get().getValue();
             }

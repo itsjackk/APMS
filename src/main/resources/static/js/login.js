@@ -5,20 +5,28 @@
 const CONFIG = {
     API_ENDPOINTS: {
         LOGIN: '/api/auth/login',
+        REFRESH: '/api/auth/refresh',
         VERIFY_TOKEN: '/api/auth/verify'
     },
     STORAGE_KEYS: {
         ACCESS_TOKEN: 'accessToken',
-        USERNAME: 'username'
+        USERNAME: 'username',
+        REMEMBER_ME: 'rememberMe'
     },
     ROUTES: {
+        LOGIN: '/ConsoleApp/login',
         DASHBOARD: '/ConsoleApp/dashboard'
     },
-    SNOWFLAKE_COUNT: 50,
-    ALERT_DURATION: 5000,
-    REDIRECT_LOOP_DETECTION: {
-        MAX_ATTEMPTS: 2,
-        RESET_INTERVAL: 5000 // 5 seconds
+    TOKEN: {
+        STANDARD_LIFETIME: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+        REMEMBER_ME_LIFETIME: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+        REFRESH_BUFFER: 5 * 60 * 1000 // Refresh 5 minutes before expiry
+    },
+    REDIRECT_LOOP: {
+        MAX_REDIRECTS: 3,
+        TIMEOUT: 5000,
+        STORAGE_KEY: 'loginRedirectCount',
+        TIMESTAMP_KEY: 'loginRedirectTimestamp'
     }
 };
 
@@ -27,30 +35,75 @@ const CONFIG = {
 // ============================================================================
 
 const AuthState = {
-    accessToken: null,
     isLoading: false,
 
+    /**
+     * Get access token from localStorage
+     * @returns {string|null}
+     */
+    getToken() {
+        return localStorage.getItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN);
+    },
+
+    /**
+     * Set access token in localStorage
+     * @param {string} token
+     */
     setToken(token) {
-        this.accessToken = token;
         if (token) {
             localStorage.setItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN, token);
         }
     },
 
-    getToken() {
-        return this.accessToken || localStorage.getItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN);
+    /**
+     * Get username from localStorage
+     * @returns {string|null}
+     */
+    getUsername() {
+        return localStorage.getItem(CONFIG.STORAGE_KEYS.USERNAME);
     },
 
-    clearToken() {
-        this.accessToken = null;
-        localStorage.removeItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN);
-        localStorage.removeItem(CONFIG.STORAGE_KEYS.USERNAME);
-    },
-
+    /**
+     * Set username in localStorage
+     * @param {string} username
+     */
     setUsername(username) {
         if (username) {
             localStorage.setItem(CONFIG.STORAGE_KEYS.USERNAME, username);
         }
+    },
+
+    /**
+     * Set remember me preference
+     * @param {boolean} rememberMe
+     */
+    setRememberMe(rememberMe) {
+        localStorage.setItem(CONFIG.STORAGE_KEYS.REMEMBER_ME, rememberMe.toString());
+    },
+
+    /**
+     * Get remember me preference
+     * @returns {boolean}
+     */
+    getRememberMe() {
+        return localStorage.getItem(CONFIG.STORAGE_KEYS.REMEMBER_ME) === 'true';
+    },
+
+    /**
+     * Check if remember me is enabled
+     * @returns {boolean}
+     */
+    isRememberMeEnabled() {
+        return this.getRememberMe();
+    },
+
+    /**
+     * Clear all authentication data
+     */
+    clearToken() {
+        localStorage.removeItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN);
+        localStorage.removeItem(CONFIG.STORAGE_KEYS.USERNAME);
+        localStorage.removeItem(CONFIG.STORAGE_KEYS.REMEMBER_ME);
     }
 };
 
@@ -63,37 +116,70 @@ const AuthState = {
  */
 const TokenUtils = {
     /**
-     * Check if a JWT token is expired
-     * @param {string} token - JWT token to check
-     * @returns {boolean} - True if expired, false otherwise
-     */
-    isExpired(token) {
-        if (!token) return true;
-
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const currentTime = Math.floor(Date.now() / 1000);
-            return payload.exp < currentTime;
-        } catch (error) {
-            console.error('Error parsing token:', error);
-            return true;
-        }
-    },
-
-    /**
-     * Decode JWT token payload
-     * @param {string} token - JWT token to decode
-     * @returns {object|null} - Decoded payload or null
+     * Decode JWT token
+     * @param {string} token
+     * @returns {object|null}
      */
     decode(token) {
         if (!token) return null;
 
         try {
-            return JSON.parse(atob(token.split('.')[1]));
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(
+                atob(base64)
+                    .split('')
+                    .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                    .join('')
+            );
+            return JSON.parse(jsonPayload);
         } catch (error) {
             console.error('Error decoding token:', error);
             return null;
         }
+    },
+
+    /**
+     * Check if token is expired
+     * @param {string} token
+     * @returns {boolean}
+     */
+    isExpired(token) {
+        const payload = this.decode(token);
+        if (!payload || !payload.exp) return true;
+
+        const currentTime = Math.floor(Date.now() / 1000);
+        return payload.exp < currentTime;
+    },
+
+    /**
+     * Check if token needs refresh (within buffer time)
+     * @param {string} token
+     * @returns {boolean}
+     */
+    needsRefresh(token) {
+        const payload = this.decode(token);
+        if (!payload || !payload.exp) return true;
+
+        const expiryTime = payload.exp * 1000;
+        const currentTime = Date.now();
+        const timeUntilExpiry = expiryTime - currentTime;
+
+        return timeUntilExpiry < CONFIG.TOKEN.REFRESH_BUFFER;
+    },
+
+    /**
+     * Get time until token expires
+     * @param {string} token
+     * @returns {number} - Time in milliseconds
+     */
+    getTimeUntilExpiry(token) {
+        const payload = this.decode(token);
+        if (!payload || !payload.exp) return 0;
+
+        const expiryTime = payload.exp * 1000;
+        const currentTime = Date.now();
+        return Math.max(0, expiryTime - currentTime);
     }
 };
 
@@ -102,68 +188,59 @@ const TokenUtils = {
  */
 const RedirectLoopDetector = {
     /**
-     * Check if we're in a redirect loop
-     * @returns {boolean} - True if loop detected
-     */
-    isInLoop() {
-        const count = this.getRedirectCount();
-        const lastTime = this.getLastRedirectTime();
-        const now = Date.now();
-
-        // Reset counter if enough time has passed
-        if (now - lastTime > CONFIG.REDIRECT_LOOP_DETECTION.RESET_INTERVAL) {
-            this.reset();
-            return false;
-        }
-
-        return count >= CONFIG.REDIRECT_LOOP_DETECTION.MAX_ATTEMPTS;
-    },
-
-    /**
      * Increment redirect counter
      */
     incrementCounter() {
-        const count = this.getRedirectCount();
-        sessionStorage.setItem('loginRedirectCount', (count + 1).toString());
-        sessionStorage.setItem('lastRedirectTime', Date.now().toString());
+        const count = this.getCounter();
+        const timestamp = Date.now();
+
+        localStorage.setItem(CONFIG.REDIRECT_LOOP.STORAGE_KEY, (count + 1).toString());
+        localStorage.setItem(CONFIG.REDIRECT_LOOP.TIMESTAMP_KEY, timestamp.toString());
     },
 
     /**
-     * Get current redirect count
+     * Get current redirect counter
      * @returns {number}
      */
-    getRedirectCount() {
-        return parseInt(sessionStorage.getItem('loginRedirectCount') || '0');
+    getCounter() {
+        const count = localStorage.getItem(CONFIG.REDIRECT_LOOP.STORAGE_KEY);
+        const timestamp = localStorage.getItem(CONFIG.REDIRECT_LOOP.TIMESTAMP_KEY);
+
+        if (!count || !timestamp) return 0;
+
+        const timeSinceLastRedirect = Date.now() - parseInt(timestamp);
+
+        if (timeSinceLastRedirect > CONFIG.REDIRECT_LOOP.TIMEOUT) {
+            this.reset();
+            return 0;
+        }
+
+        return parseInt(count) || 0;
     },
 
     /**
-     * Get last redirect timestamp
-     * @returns {number}
+     * Check if in redirect loop
+     * @returns {boolean}
      */
-    getLastRedirectTime() {
-        return parseInt(sessionStorage.getItem('lastRedirectTime') || '0');
+    isInLoop() {
+        return this.getCounter() >= CONFIG.REDIRECT_LOOP.MAX_REDIRECTS;
     },
 
     /**
-     * Reset redirect tracking
+     * Reset redirect counter
      */
     reset() {
-        sessionStorage.removeItem('loginRedirectCount');
-        sessionStorage.removeItem('lastRedirectTime');
+        localStorage.removeItem(CONFIG.REDIRECT_LOOP.STORAGE_KEY);
+        localStorage.removeItem(CONFIG.REDIRECT_LOOP.TIMESTAMP_KEY);
     },
 
     /**
-     * Check if we were redirected from a protected page
+     * Check if was redirected from protected page
      * @returns {boolean}
      */
     wasRedirectedFromProtectedPage() {
-        const referrer = document.referrer;
-        return referrer && (
-            referrer.includes('/ConsoleApp/dashboard') ||
-            referrer.includes('/ConsoleApp/projects') ||
-            referrer.includes('/ConsoleApp/profile') ||
-            referrer.includes('/ConsoleApp/admin')
-        );
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.has('redirect') || document.referrer.includes('/dashboard');
     }
 };
 
@@ -172,14 +249,19 @@ const RedirectLoopDetector = {
  */
 const AlertUtils = {
     /**
-     * Show an alert message
-     * @param {string} message - Message to display
-     * @param {string} type - Alert type (success, danger, warning, info)
-     * @param {number} duration - Duration in milliseconds
+     * Show alert message
+     * @param {string} message
+     * @param {string} type - 'success', 'danger', 'warning', 'info'
+     * @param {number} duration - Auto-hide duration in ms (0 = no auto-hide)
      */
-    show(message, type = 'info', duration = CONFIG.ALERT_DURATION) {
+    show(message, type = 'info', duration = 0) {
         const alertContainer = document.getElementById('alertContainer');
-        if (!alertContainer) return;
+        if (!alertContainer) {
+            console.warn('Alert container not found');
+            return;
+        }
+
+        this.clear();
 
         const alert = document.createElement('div');
         alert.className = `alert alert-${type} alert-dismissible fade show`;
@@ -189,17 +271,10 @@ const AlertUtils = {
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         `;
 
-        alertContainer.innerHTML = '';
         alertContainer.appendChild(alert);
 
-        // Auto-dismiss after duration
         if (duration > 0) {
-            setTimeout(() => {
-                if (alert.parentNode) {
-                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-                    bsAlert.close();
-                }
-            }, duration);
+            setTimeout(() => this.clear(), duration);
         }
     },
 
@@ -219,34 +294,31 @@ const AlertUtils = {
  */
 const VisualEffects = {
     /**
-     * Create falling snowflakes animation
+     * Create snowflake effect
      */
     createSnowflakes() {
-        const snowflakesContainer = document.getElementById('snowflakes');
-        if (!snowflakesContainer) return;
+        const container = document.getElementById('snowflakes');
+        if (!container) return;
 
-        // Clear existing snowflakes
-        snowflakesContainer.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+        const snowflakeCount = 50;
 
-        for (let i = 0; i < CONFIG.SNOWFLAKE_COUNT; i++) {
+        for (let i = 0; i < snowflakeCount; i++) {
             const snowflake = document.createElement('div');
             snowflake.className = 'snowflake';
             snowflake.innerHTML = '❄';
-            snowflake.setAttribute('aria-hidden', 'true');
 
-            // Random positioning and animation
-            const leftPos = Math.random() * 100;
-            const animationDuration = 5 + Math.random() * 10;
-            const animationDelay = Math.random() * 5;
-            const size = 0.5 + Math.random() * 1.5;
+            Object.assign(snowflake.style, {
+                left: `${Math.random() * 100}%`,
+                animationDuration: `${5 + Math.random() * 10}s`,
+                animationDelay: `${Math.random() * 5}s`,
+                fontSize: `${0.5 + Math.random() * 1.5}em`
+            });
 
-            snowflake.style.left = `${leftPos}%`;
-            snowflake.style.animationDuration = `${animationDuration}s`;
-            snowflake.style.animationDelay = `${animationDelay}s`;
-            snowflake.style.fontSize = `${size}em`;
-
-            snowflakesContainer.appendChild(snowflake);
+            fragment.appendChild(snowflake);
         }
+
+        container.appendChild(fragment);
     }
 };
 
@@ -262,7 +334,8 @@ const UIManager = {
         togglePasswordBtn: null,
         loginBtn: null,
         loginBtnText: null,
-        loginBtnSpinner: null
+        loginBtnSpinner: null,
+        rememberMeCheckbox: null
     },
 
     /**
@@ -276,6 +349,7 @@ const UIManager = {
         this.elements.loginBtn = document.getElementById('loginBtn');
         this.elements.loginBtnText = document.getElementById('loginBtnText');
         this.elements.loginBtnSpinner = document.getElementById('loginBtnSpinner');
+        this.elements.rememberMeCheckbox = document.getElementById('rememberMe');
 
         this.attachEventListeners();
     },
@@ -364,8 +438,17 @@ const UIManager = {
     getFormData() {
         return {
             username: this.elements.usernameInput?.value.trim() || '',
-            password: this.elements.passwordInput?.value || ''
+            password: this.elements.passwordInput?.value || '',
+            rememberMe: this.getRememberMeState()
         };
+    },
+
+    /**
+     * Get remember me checkbox state
+     * @returns {boolean}
+     */
+    getRememberMeState() {
+        return this.elements.rememberMeCheckbox?.checked || false;
     },
 
     /**
@@ -378,6 +461,9 @@ const UIManager = {
         if (this.elements.passwordInput) {
             this.elements.passwordInput.value = '';
         }
+        if (this.elements.rememberMeCheckbox) {
+            this.elements.rememberMeCheckbox.checked = false;
+        }
     },
 
     /**
@@ -385,7 +471,7 @@ const UIManager = {
      * @returns {object} - Validation result
      */
     validateForm() {
-        const { username, password } = this.getFormData();
+        const { username, password, rememberMe } = this.getFormData();
 
         if (!username) {
             return {
@@ -454,6 +540,28 @@ const AuthService = {
             return;
         }
 
+        // Check if remember me was enabled in previous session
+        const rememberMeEnabled = AuthState.isRememberMeEnabled();
+        if (rememberMeEnabled) {
+            // For remember me sessions, check if token needs refresh
+            if (TokenUtils.needsRefresh(storedToken)) {
+                console.log('Token needs refresh, attempting refresh...');
+                const refreshed = await this.refreshAccessToken();
+                if (refreshed) {
+                    console.log('Token refreshed successfully, redirecting to dashboard');
+                    RedirectLoopDetector.incrementCounter();
+                    this.redirectToDashboard();
+                    return;
+                } else {
+                    console.log('Token refresh failed, clearing storage');
+                    AuthState.clearToken();
+                    RedirectLoopDetector.reset();
+                    AlertUtils.show('Your session has expired. Please login again.', 'info');
+                    return;
+                }
+            }
+        }
+
         // Token appears valid, verify with server
         console.log('Token found, verifying with server...');
         const isValid = await this.verifyTokenWithServer(storedToken);
@@ -467,6 +575,50 @@ const AuthService = {
             AuthState.clearToken();
             RedirectLoopDetector.reset();
             AlertUtils.show('Your session is no longer valid. Please login again.', 'info');
+        }
+    },
+
+    /**
+     * Refresh access token using refresh token
+     * @returns {Promise<boolean>} - True if refresh successful
+     */
+    async refreshAccessToken() {
+        const refreshToken = AuthState.getRefreshToken();
+        if (!refreshToken) {
+            console.warn('No refresh token available');
+            return false;
+        }
+
+        try {
+            const response = await fetch(CONFIG.API_ENDPOINTS.REFRESH, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ refreshToken }),
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Token refresh successful:', data);
+
+                // Store new tokens
+                AuthState.setToken(data.accessToken);
+
+                // Update remember me preference based on new token
+                const rememberMe = TokenUtils.hasRememberMe(data.accessToken);
+                AuthState.setRememberMe(rememberMe);
+
+                return true;
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                console.warn('Token refresh failed:', response.status, errorData);
+                return false;
+            }
+        } catch (error) {
+            console.error('Token refresh error:', error);
+            return false;
         }
     },
 
@@ -515,7 +667,7 @@ const AuthService = {
             return;
         }
 
-        const { username, password } = UIManager.getFormData();
+        const { username, password, rememberMe } = UIManager.getFormData();
 
         UIManager.setLoadingState(true);
         AlertUtils.clear();
@@ -526,14 +678,14 @@ const AuthService = {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username, password }),
+                body: JSON.stringify({ username, password, rememberMe }),
                 credentials: 'include'
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                await this.handleLoginSuccess(data);
+                await this.handleLoginSuccess(data, rememberMe);
             } else {
                 this.handleLoginError(data);
             }
@@ -548,8 +700,9 @@ const AuthService = {
     /**
      * Handle successful login
      * @param {object} data - Response data from server
+     * @param {boolean} rememberMe - Remember me preference
      */
-    async handleLoginSuccess(data) {
+    async handleLoginSuccess(data, rememberMe) {
         console.log('Login successful');
 
         // Clear any redirect loop tracking
@@ -558,9 +711,10 @@ const AuthService = {
         // Store authentication data
         AuthState.setToken(data.accessToken);
         AuthState.setUsername(data.username);
+        AuthState.setRememberMe(rememberMe);
 
         // Show success message
-        AlertUtils.show(`🎄Login successful! Welcome ${data.username}`, 'success', 2000);
+        AlertUtils.show(`Login successful! Welcome ${data.username}`, 'success', 2000);
 
         // Wait for localStorage to be written and alert to be visible
         await new Promise(resolve => setTimeout(resolve, 500));

@@ -17,9 +17,23 @@ public class UserStats {
     }
 
     // Getters
-    public long getTotalUsers() { return totalUsers; }
-    public long getAdminUsers() { return adminUsers; }
-    public long getRegularUsers() { return regularUsers; }
-    public long getEnabledUsers() { return enabledUsers; }
-    public long getDisabledUsers() { return disabledUsers; }
+    public long getTotalUsers() {
+        return totalUsers;
+    }
+
+    public long getAdminUsers() {
+        return adminUsers;
+    }
+
+    public long getRegularUsers() {
+        return regularUsers;
+    }
+
+    public long getEnabledUsers() {
+        return enabledUsers;
+    }
+
+    public long getDisabledUsers() {
+        return disabledUsers;
+    }
 }

@@ -5,7 +5,8 @@ public class LogoutResponse {
     private String message;
 
     // Constructors
-    public LogoutResponse() {}
+    public LogoutResponse() {
+    }
 
     public LogoutResponse(String message) {
         this.message = message;

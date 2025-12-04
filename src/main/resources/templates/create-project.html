@@ -23,8 +23,11 @@
     <link rel="stylesheet" th:href="@{/css/snowflakes.css}">
 
     <!-- Non-critical CSS - Defer loading -->
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></noscript>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style"
+          onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    </noscript>
 
     <!-- Preload JavaScript -->
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" as="script">
@@ -111,7 +114,8 @@
                                         <i class="fas fa-align-left me-2" aria-hidden="true"></i>Description
                                     </label>
                                     <textarea class="form-control" id="projectDescription" rows="4"
-                                              placeholder="Enter project description" aria-describedby="descriptionHelp"></textarea>
+                                              placeholder="Enter project description"
+                                              aria-describedby="descriptionHelp"></textarea>
                                 </div>
 
                                 <div class="row">
@@ -119,14 +123,16 @@
                                         <label for="startDate" class="form-label">
                                             <i class="fas fa-calendar-alt me-2" aria-hidden="true"></i>Start Date
                                         </label>
-                                        <input type="date" class="form-control" id="startDate" aria-label="Project start date">
+                                        <input type="date" class="form-control" id="startDate"
+                                               aria-label="Project start date">
                                     </div>
 
                                     <div class="col-md-6 mb-3">
                                         <label for="endDate" class="form-label">
                                             <i class="fas fa-calendar-check me-2" aria-hidden="true"></i>End Date
                                         </label>
-                                        <input type="date" class="form-control" id="endDate" aria-label="Project end date">
+                                        <input type="date" class="form-control" id="endDate"
+                                               aria-label="Project end date">
                                     </div>
                                 </div>
 
@@ -162,7 +168,8 @@
                                     <h5 class="form-section-title">
                                         <i class="fas fa-crown" aria-hidden="true"></i>
                                         Admin Options
-                                        <span id="adminBadge" class="badge bg-warning text-dark ms-2" style="display: none;">ADMIN</span>
+                                        <span id="adminBadge" class="badge bg-warning text-dark ms-2"
+                                              style="display: none;">ADMIN</span>
                                     </h5>
 
                                     <div class="row">
@@ -180,7 +187,8 @@
                                             <label for="assignedUser" class="form-label">
                                                 <i class="fas fa-user-plus me-2" aria-hidden="true"></i>Assign to User
                                             </label>
-                                            <select class="form-select" id="assignedUser" aria-label="Assign project to user">
+                                            <select class="form-select" id="assignedUser"
+                                                    aria-label="Assign project to user">
                                                 <option value="">Select a user...</option>
                                             </select>
                                         </div>
@@ -198,7 +206,8 @@
                                             <i class="fas fa-save me-2" aria-hidden="true"></i> Create Project
                                         </span>
                                         <span id="submitSpinner" style="display: none;" aria-live="polite">
-                                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Creating...
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"
+                                                  aria-hidden="true"></span>Creating...
                                         </span>
                                     </button>
                                 </div>

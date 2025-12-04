@@ -465,7 +465,6 @@
             margin-bottom: 20px;
         }
 
-        /* Update/Add these styles to your existing CSS */
         .project-card {
             display: flex;
             flex-direction: column;
@@ -479,7 +478,6 @@
             padding: 1.5rem;
         }
 
-        /* Top section with title and description - takes up available space */
         .project-header {
             flex: 0 0 auto;
             margin-bottom: 1rem;
@@ -504,7 +502,6 @@
             margin-top: 1rem;
         }
 
-/* Add this to your existing CSS file */
 
 .project-url-link {
     color: #4a9eff;

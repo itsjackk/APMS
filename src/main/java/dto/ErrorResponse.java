@@ -6,7 +6,8 @@ public class ErrorResponse {
     private String message;
 
     // Constructors
-    public ErrorResponse() {}
+    public ErrorResponse() {
+    }
 
     public ErrorResponse(String error, String message) {
         this.error = error;

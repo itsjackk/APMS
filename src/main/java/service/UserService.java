@@ -97,9 +97,9 @@ public class UserService {
     public List<UserResponse> searchUsers(String query) {
         String lowerQuery = query.toLowerCase();
         return userRepository.findAll().stream()
-                .filter(user -> 
-                    user.getUsername().toLowerCase().contains(lowerQuery) ||
-                    user.getEmail().toLowerCase().contains(lowerQuery))
+                .filter(user ->
+                        user.getUsername().toLowerCase().contains(lowerQuery) ||
+                                user.getEmail().toLowerCase().contains(lowerQuery))
                 .map(UserResponse::fromEntity)
                 .collect(Collectors.toList());
     }

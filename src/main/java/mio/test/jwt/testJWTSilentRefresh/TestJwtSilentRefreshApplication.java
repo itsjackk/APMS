@@ -6,14 +6,14 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication(scanBasePackages = {"mio.test.jwt.testJWTSilentRefresh", "config", "controller", "service", "repository", "tables", "dto"})
+@SpringBootApplication(scanBasePackages = {"config", "controller", "service", "repository", "tables", "dto"})
 @EnableScheduling
 @EntityScan(basePackages = "tables")
 @EnableJpaRepositories(basePackages = "repository")
 public class TestJwtSilentRefreshApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(TestJwtSilentRefreshApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(TestJwtSilentRefreshApplication.class, args);
+    }
 
 }

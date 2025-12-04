@@ -38,7 +38,7 @@ public class ProjectController {
 
     @Autowired
     private UserRepository userRepository;
-    
+
     @Autowired
     private GitHubService gitHubService;
 
@@ -52,10 +52,10 @@ public class ProjectController {
             } catch (Exception e) {
                 log.warn("GitHub sync failed for user {}: {}", user.getUsername(), e.getMessage());
             }
-            
+
             List<ProjectsResponse> projects = projectService.getAccessibleProjectsForUser(user);
             return ResponseEntity.ok(projects);
-            
+
         } catch (Exception e) {
             log.error("Error fetching projects: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -148,19 +148,19 @@ public class ProjectController {
         try {
             Users user = userService.getCurrentUser(authentication);
             Projects project = projectService.createGlobalProject(
-                request.getName(), 
-                request.getDescription(), 
-                user,
-                request.getStatus() != null ? request.getStatus() : Projects.ProjectStatus.PLANNING,
-                request.getPriority() != null ? request.getPriority() : Projects.ProjectPriority.MEDIUM,
-                request.getStartDate(),
-                request.getEndDate(),
-                request.getAssignedUserId()
+                    request.getName(),
+                    request.getDescription(),
+                    user,
+                    request.getStatus() != null ? request.getStatus() : Projects.ProjectStatus.PLANNING,
+                    request.getPriority() != null ? request.getPriority() : Projects.ProjectPriority.MEDIUM,
+                    request.getStartDate(),
+                    request.getEndDate(),
+                    request.getAssignedUserId()
             );
             return ResponseEntity.ok(new ProjectResponse("Global project created successfully", project));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ProjectResponse("Error creating project: " + e.getMessage(), null));
+                    .body(new ProjectResponse("Error creating project: " + e.getMessage(), null));
         }
     }
 
@@ -175,7 +175,7 @@ public class ProjectController {
             return ResponseEntity.ok(new ProjectResponse("Project assigned successfully", project));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ProjectResponse("Error assigning project: " + e.getMessage(), null));
+                    .body(new ProjectResponse("Error assigning project: " + e.getMessage(), null));
         }
     }
 
@@ -186,7 +186,7 @@ public class ProjectController {
             Authentication authentication) {
         try {
             Users user = userService.getCurrentUser(authentication);
-            
+
             Projects updatedProject = new Projects();
             updatedProject.setName(request.getName());
             updatedProject.setDescription(request.getDescription());
@@ -200,10 +200,10 @@ public class ProjectController {
                 } catch (Exception e) {
                     log.error("Failed to parse start date: " + request.getStartDate(), e);
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ProjectResponse("Invalid start date format. Use YYYY-MM-DD", null));
+                            .body(new ProjectResponse("Invalid start date format. Use YYYY-MM-DD", null));
                 }
             }
-            
+
             if (request.getEndDate() != null) {
                 try {
                     LocalDate endDate = parseDate(request.getEndDate());
@@ -211,16 +211,16 @@ public class ProjectController {
                 } catch (Exception e) {
                     log.error("Failed to parse end date: " + request.getEndDate(), e);
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ProjectResponse("Invalid end date format. Use YYYY-MM-DD", null));
+                            .body(new ProjectResponse("Invalid end date format. Use YYYY-MM-DD", null));
                 }
             }
-            
+
             Projects project = projectService.updateProject(projectId, updatedProject, user);
             return ResponseEntity.ok(new ProjectResponse("Project updated successfully", project));
         } catch (Exception e) {
             log.error("Error updating project: " + e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ProjectResponse("Error updating project: " + e.getMessage(), null));
+                    .body(new ProjectResponse("Error updating project: " + e.getMessage(), null));
         }
     }
 
@@ -234,7 +234,7 @@ public class ProjectController {
             return ResponseEntity.ok(new ProjectResponse("Project deleted successfully", null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ProjectResponse("Error deleting project: " + e.getMessage(), null));
+                    .body(new ProjectResponse("Error deleting project: " + e.getMessage(), null));
         }
     }
 
@@ -245,10 +245,10 @@ public class ProjectController {
                 log.error("Authentication is null!");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
-            
+
             Users user = userService.getCurrentUser(authentication);
             ProjectStats stats = projectService.getUserProjectStats(user);
-            
+
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
             log.error("Error getting project stats", e);
@@ -294,50 +294,50 @@ public class ProjectController {
             Authentication authentication) {
         try {
             Users user = userService.getCurrentUser(authentication);
-            
+
             if (request.getName() == null || request.getName().trim().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ProjectResponse("Project name is required", null));
+                        .body(new ProjectResponse("Project name is required", null));
             }
-            
+
             Projects project;
-            
+
             if (user.isAdmin() && "global".equals(request.getProjectType())) {
-                log.info("Creating global project for admin: {}, assigned to user: {}", 
+                log.info("Creating global project for admin: {}, assigned to user: {}",
                         user.getUsername(), request.getAssignedUserId());
-                
+
                 project = projectService.createGlobalProject(
-                    request.getName(),
-                    request.getDescription(),
-                    user,
-                    request.getStatus() != null ? request.getStatus() : Projects.ProjectStatus.PLANNING,
-                    request.getPriority() != null ? request.getPriority() : Projects.ProjectPriority.MEDIUM,
-                    request.getStartDate(),
-                    request.getEndDate(),
-                    request.getAssignedUserId()
+                        request.getName(),
+                        request.getDescription(),
+                        user,
+                        request.getStatus() != null ? request.getStatus() : Projects.ProjectStatus.PLANNING,
+                        request.getPriority() != null ? request.getPriority() : Projects.ProjectPriority.MEDIUM,
+                        request.getStartDate(),
+                        request.getEndDate(),
+                        request.getAssignedUserId()
                 );
-                
+
                 return ResponseEntity.ok(new ProjectResponse("Global project created successfully", project));
             } else {
                 log.info("Creating personal project for user: {}", user.getUsername());
                 project = projectService.createPersonalProject(
-                    request.getName(),
-                    request.getDescription(),
-                    user,
-                    request.getStatus() != null ? request.getStatus() : Projects.ProjectStatus.PLANNING,
-                    request.getPriority() != null ? request.getPriority() : Projects.ProjectPriority.MEDIUM,
-                    request.getStartDate(),
-                    request.getEndDate(),
-                    request.getProgress() != null ? request.getProgress() : 0
+                        request.getName(),
+                        request.getDescription(),
+                        user,
+                        request.getStatus() != null ? request.getStatus() : Projects.ProjectStatus.PLANNING,
+                        request.getPriority() != null ? request.getPriority() : Projects.ProjectPriority.MEDIUM,
+                        request.getStartDate(),
+                        request.getEndDate(),
+                        request.getProgress() != null ? request.getProgress() : 0
                 );
-                
+
                 return ResponseEntity.ok(new ProjectResponse("Personal project created successfully", project));
             }
-            
+
         } catch (Exception e) {
             log.error("Error creating project: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ProjectResponse("Error creating project: " + e.getMessage(), null));
+                    .body(new ProjectResponse("Error creating project: " + e.getMessage(), null));
         }
     }
 
@@ -348,37 +348,37 @@ public class ProjectController {
                 log.error("Authentication is null!");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
-            
+
             Users user = userService.getCurrentUser(authentication);
-            
+
             long count = projectService.getAssignedProjectsCount(user);
             log.info("Assigned projects count retrieved successfully: {}", count);
-            
+
             return ResponseEntity.ok(count);
         } catch (Exception e) {
             log.error("Error getting assigned projects count", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
+
     @PostMapping("/sync-github")
     public ResponseEntity<?> syncGitHubProjects(Authentication authentication) {
         try {
             Users user = userService.getCurrentUser(authentication);
-            
+
             gitHubService.autoSyncGitHubProjects(user);
 
             String rate = gitHubService.getRateLimitInfo();
 
             return ResponseEntity.ok(Map.of(
-                "message", "GitHub projects synced successfully",
-                "timestamp", LocalDateTime.now()
+                    "message", "GitHub projects synced successfully",
+                    "timestamp", LocalDateTime.now()
             ));
-            
+
         } catch (Exception e) {
             log.error("Error syncing GitHub projects: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Failed to sync GitHub projects: " + e.getMessage()));
+                    .body(Map.of("error", "Failed to sync GitHub projects: " + e.getMessage()));
         }
     }
 
@@ -386,7 +386,7 @@ public class ProjectController {
         if (dateString == null || dateString.trim().isEmpty()) {
             return null;
         }
-        
+
         try {
             return LocalDate.parse(dateString);
         } catch (Exception e1) {
