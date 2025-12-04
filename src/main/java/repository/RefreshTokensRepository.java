@@ -37,4 +37,32 @@ public interface RefreshTokensRepository extends JpaRepository<RefreshTokens, UU
     @Modifying
     @Query("DELETE FROM RefreshTokens rt WHERE rt.expiresAt < :now OR rt.isRevoked = true")
     int deleteRevokedTokens(@Param("now") LocalDateTime now);
+
+    List<RefreshTokens> findByTokenFamily(String tokenFamily);
+
+    Optional<RefreshTokens> findByPreviousToken(String previousToken);
+
+    boolean existsByTokenFamily(String tokenFamily);
+
+    @Modifying
+    @Query("UPDATE RefreshTokens rt SET rt.isRevoked = true, rt.revokedDueToReuse = true, rt.revokedAt = :now WHERE rt.tokenFamily = :tokenFamily")
+    void revokeTokenFamily(@Param("tokenFamily") String tokenFamily, @Param("now") LocalDateTime now);
+
+    @Query("SELECT COUNT(rt) FROM RefreshTokens rt WHERE rt.tokenFamily = :tokenFamily AND rt.isRevoked = false AND rt.expiresAt > :now")
+    long countActiveTokensInFamily(@Param("tokenFamily") String tokenFamily, @Param("now") LocalDateTime now);
+
+    @Query("SELECT rt FROM RefreshTokens rt WHERE rt.rotationCount > :maxRotations AND rt.isRevoked = false")
+    List<RefreshTokens> findTokensWithHighRotationCount(@Param("maxRotations") int maxRotations);
+
+    @Query("SELECT rt FROM RefreshTokens rt WHERE rt.lastRotatedAt > :since AND rt.tokenFamily = :tokenFamily")
+    List<RefreshTokens> findRecentlyRotatedTokensInFamily(@Param("tokenFamily") String tokenFamily, @Param("since") LocalDateTime since);
+
+    @Query("SELECT rt FROM RefreshTokens rt WHERE rt.revokedDueToReuse = true AND rt.revokedAt > :since")
+    List<RefreshTokens> findTokensRevokedForReuse(@Param("since") LocalDateTime since);
+
+    @Query("SELECT rt FROM RefreshTokens rt WHERE rt.tokenFamily = :tokenFamily ORDER BY rt.createdAt DESC LIMIT 1")
+    Optional<RefreshTokens> findLatestTokenInFamily(@Param("tokenFamily") String tokenFamily);
+
+    @Query("SELECT SUM(rt.rotationCount) FROM RefreshTokens rt WHERE rt.userId = :userId")
+    Long getTotalRotationCountForUser(@Param("userId") UUID userId);
 }

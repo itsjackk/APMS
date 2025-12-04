@@ -98,12 +98,31 @@ const AuthState = {
     },
 
     /**
+     * Get refresh token from localStorage
+     * @returns {string|null}
+     */
+    getRefreshToken() {
+        return localStorage.getItem('refreshToken');
+    },
+
+    /**
+     * Set refresh token in localStorage
+     * @param {string} token
+     */
+    setRefreshToken(token) {
+        if (token) {
+            localStorage.setItem('refreshToken', token);
+        }
+    },
+
+    /**
      * Clear all authentication data
      */
     clearToken() {
         localStorage.removeItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN);
         localStorage.removeItem(CONFIG.STORAGE_KEYS.USERNAME);
         localStorage.removeItem(CONFIG.STORAGE_KEYS.REMEMBER_ME);
+        localStorage.removeItem('refreshToken');
     }
 };
 
@@ -180,6 +199,16 @@ const TokenUtils = {
         const expiryTime = payload.exp * 1000;
         const currentTime = Date.now();
         return Math.max(0, expiryTime - currentTime);
+    },
+
+    /**
+     * Check if token has remember me flag
+     * @param {string} token
+     * @returns {boolean}
+     */
+    hasRememberMe(token) {
+        const payload = this.decode(token);
+        return payload?.rememberMe === true;
     }
 };
 
@@ -712,6 +741,10 @@ const AuthService = {
         AuthState.setToken(data.accessToken);
         AuthState.setUsername(data.username);
         AuthState.setRememberMe(rememberMe);
+
+        if (data.refreshToken) {
+                AuthState.setRefreshToken(data.refreshToken);
+            }
 
         // Show success message
         AlertUtils.show(`Login successful! Welcome ${data.username}`, 'success', 2000);

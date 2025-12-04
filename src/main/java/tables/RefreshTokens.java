@@ -1,7 +1,6 @@
 package tables;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -31,9 +30,29 @@ public class RefreshTokens {
     @Column(name = "remember_me", nullable = false)
     private boolean rememberMe = false;
 
-    // Constructors
+
+    @Column(name = "token_family", nullable = false)
+    private String tokenFamily;
+
+    @Column(name = "rotation_count", nullable = false)
+    private Integer rotationCount = 0;
+
+    @Column(name = "last_rotated_at")
+    private LocalDateTime lastRotatedAt;
+
+    @Column(name = "previous_token", length = 1000)
+    private String previousToken;
+
+    @Column(name = "revoked_due_to_reuse", nullable = false)
+    private boolean revokedDueToReuse = false;
+
+    @Column(name = "revoked_at")
+    private LocalDateTime revokedAt;
+
     public RefreshTokens() {
         this.createdAt = LocalDateTime.now();
+        this.rotationCount = 0;
+        this.revokedDueToReuse = false;
     }
 
     public RefreshTokens(UUID userId, String token, LocalDateTime expiresAt) {
@@ -48,7 +67,12 @@ public class RefreshTokens {
         this.rememberMe = rememberMe;
     }
 
-    // Methods
+    // New constructor with token family
+    public RefreshTokens(UUID userId, String token, LocalDateTime expiresAt, boolean rememberMe, String tokenFamily) {
+        this(userId, token, expiresAt, rememberMe);
+        this.tokenFamily = tokenFamily;
+    }
+
     public boolean isValid() {
         return !this.isRevoked && !this.isExpired();
     }
@@ -59,9 +83,26 @@ public class RefreshTokens {
 
     public void revoke() {
         this.isRevoked = true;
+        this.revokedAt = LocalDateTime.now();
     }
 
-    // Getters and Setters
+    /**
+     * Revoke token due to reuse detection
+     */
+    public void revokeForReuse() {
+        this.isRevoked = true;
+        this.revokedDueToReuse = true;
+        this.revokedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Increment rotation count and update timestamp
+     */
+    public void incrementRotation() {
+        this.rotationCount++;
+        this.lastRotatedAt = LocalDateTime.now();
+    }
+
     public UUID getId() {
         return id;
     }
@@ -116,5 +157,53 @@ public class RefreshTokens {
 
     public void setRememberMe(boolean rememberMe) {
         this.rememberMe = rememberMe;
+    }
+
+    public String getTokenFamily() {
+        return tokenFamily;
+    }
+
+    public void setTokenFamily(String tokenFamily) {
+        this.tokenFamily = tokenFamily;
+    }
+
+    public Integer getRotationCount() {
+        return rotationCount;
+    }
+
+    public void setRotationCount(Integer rotationCount) {
+        this.rotationCount = rotationCount;
+    }
+
+    public LocalDateTime getLastRotatedAt() {
+        return lastRotatedAt;
+    }
+
+    public void setLastRotatedAt(LocalDateTime lastRotatedAt) {
+        this.lastRotatedAt = lastRotatedAt;
+    }
+
+    public String getPreviousToken() {
+        return previousToken;
+    }
+
+    public void setPreviousToken(String previousToken) {
+        this.previousToken = previousToken;
+    }
+
+    public boolean isRevokedDueToReuse() {
+        return revokedDueToReuse;
+    }
+
+    public void setRevokedDueToReuse(boolean revokedDueToReuse) {
+        this.revokedDueToReuse = revokedDueToReuse;
+    }
+
+    public LocalDateTime getRevokedAt() {
+        return revokedAt;
+    }
+
+    public void setRevokedAt(LocalDateTime revokedAt) {
+        this.revokedAt = revokedAt;
     }
 }
