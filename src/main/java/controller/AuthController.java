@@ -22,12 +22,14 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import service.JwtService;
+import service.TokenRotationService;
 import tables.Users;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -52,6 +54,9 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private TokenRotationService tokenRotationService;
+
     @Operation(summary = "Register new user", description = "Register a new user account")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User registered successfully"),
@@ -63,9 +68,7 @@ public class AuthController {
         try {
             log.info("Registration attempt for username: {}", registerRequest.getUsername());
 
-            // Use synchronized block or transaction to prevent race conditions
             synchronized (this) {
-                // Check if username already exists
                 if (userRepository.findByUsername(registerRequest.getUsername()).isPresent()) {
                     log.warn("Registration failed: Username '{}' already exists", registerRequest.getUsername());
                     return ResponseEntity
@@ -76,7 +79,6 @@ public class AuthController {
                             ));
                 }
 
-                // Check if email already exists
                 if (userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
                     log.warn("Registration failed: Email '{}' already exists", registerRequest.getEmail());
                     return ResponseEntity
@@ -87,7 +89,6 @@ public class AuthController {
                             ));
                 }
 
-                // Check if GitHub username already exists (if provided)
                 if (registerRequest.getUsernameGHUB() != null && !registerRequest.getUsernameGHUB().trim().isEmpty()) {
                     if (userRepository.findByUsernameGHUB(registerRequest.getUsernameGHUB()).isPresent()) {
                         log.warn("Registration failed: GitHub username '{}' already exists", registerRequest.getUsernameGHUB());
@@ -100,7 +101,6 @@ public class AuthController {
                     }
                 }
 
-                // Create new user
                 Users newUser = new Users();
                 newUser.setUsername(registerRequest.getUsername());
                 newUser.setEmail(registerRequest.getEmail());
@@ -126,7 +126,6 @@ public class AuthController {
         } catch (DataIntegrityViolationException e) {
             log.error("Data integrity violation during registration: {}", e.getMessage());
 
-            // Parse the constraint violation to provide specific error message
             String errorMessage = e.getMessage().toLowerCase();
             if (errorMessage.contains("username")) {
                 return ResponseEntity
@@ -169,7 +168,6 @@ public class AuthController {
         }
     }
 
-
     @Operation(summary = "Login user with Remember Me support")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Login successful"),
@@ -182,35 +180,31 @@ public class AuthController {
                     loginRequest.getUsername(),
                     loginRequest.isRememberMe());
 
-            // Authenticate user with rememberMe flag
             AuthenticationResponse authResponse = authenticationService.login(
                     loginRequest.getUsername(),
                     loginRequest.getPassword(),
                     loginRequest.isRememberMe()
             );
 
-            // Set refresh token as HTTP-only cookie
             Cookie refreshTokenCookie = new Cookie("refreshToken", authResponse.getRefreshToken());
             refreshTokenCookie.setHttpOnly(true);
-            refreshTokenCookie.setSecure(true); // Set to true in production with HTTPS
+            refreshTokenCookie.setSecure(true);
             refreshTokenCookie.setPath("/");
             refreshTokenCookie.setAttribute("SameSite", "Strict");
 
-            // Set cookie max age based on rememberMe
             if (loginRequest.isRememberMe()) {
                 refreshTokenCookie.setMaxAge(30 * 24 * 60 * 60); // 30 days
                 log.info("Setting refresh token cookie with 30-day expiration for user: {}",
                         loginRequest.getUsername());
             } else {
-                refreshTokenCookie.setMaxAge(25 * 60); // 7 days
-                log.info("Setting refresh token cookie with 25-min expiration for user: {}",
+                refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
+                log.info("Setting refresh token cookie with 7-day expiration for user: {}",
                         loginRequest.getUsername());
             }
 
             response.addCookie(refreshTokenCookie);
 
-            log.info("Login successful for user: {})",
-                    authResponse.getUsername());
+            log.info("Login successful for user: {}", authResponse.getUsername());
 
             return ResponseEntity.ok(new LoginResponse(
                     authResponse.getAccessToken(),
@@ -227,10 +221,11 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "Refresh access token")
+    @Operation(summary = "Refresh access token with automatic rotation")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Token refreshed successfully"),
-            @ApiResponse(responseCode = "401", description = "Invalid refresh token")
+            @ApiResponse(responseCode = "401", description = "Invalid or reused refresh token"),
+            @ApiResponse(responseCode = "403", description = "Token reuse detected - all tokens revoked")
     })
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
@@ -243,12 +238,12 @@ public class AuthController {
                         .body(new ErrorResponse("Refresh token not found", "No refresh token provided"));
             }
 
-            log.info("Processing refresh token request");
+            log.info("Processing refresh token request with rotation");
 
-            // Generate new tokens
+            // This will handle token rotation automatically
             AuthenticationResponse authResponse = authenticationService.refreshToken(refreshToken);
 
-            // Update refresh token cookie
+            // Update refresh token cookie with the NEW rotated token
             Cookie refreshTokenCookie = new Cookie("refreshToken", authResponse.getRefreshToken());
             refreshTokenCookie.setHttpOnly(true);
             refreshTokenCookie.setSecure(true);
@@ -256,26 +251,40 @@ public class AuthController {
             refreshTokenCookie.setAttribute("SameSite", "Strict");
 
             // Preserve cookie expiration based on token type
-            // Check if the original token was a remember-me token
             boolean isRememberMe = jwtService.isRememberMeToken(refreshToken);
 
             if (isRememberMe) {
                 refreshTokenCookie.setMaxAge(30 * 24 * 60 * 60); // 30 days
                 log.info("Refreshing remember-me token for user: {}", authResponse.getUsername());
             } else {
-                refreshTokenCookie.setMaxAge(25 * 60); // 7 days
+                refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
                 log.info("Refreshing standard token for user: {}", authResponse.getUsername());
             }
 
             response.addCookie(refreshTokenCookie);
 
-            log.info("Token refresh successful for user: {}", authResponse.getUsername());
+            log.info("Token refresh successful with rotation for user: {}", authResponse.getUsername());
 
             return ResponseEntity.ok(new RefreshResponse(
                     authResponse.getAccessToken(),
                     "Token refreshed successfully"
             ));
 
+        } catch (IllegalStateException e) {
+            // Token reuse detected
+            log.error("TOKEN REUSE DETECTED: {}", e.getMessage());
+            
+            // Clear the cookie
+            Cookie refreshTokenCookie = new Cookie("refreshToken", "");
+            refreshTokenCookie.setHttpOnly(true);
+            refreshTokenCookie.setSecure(true);
+            refreshTokenCookie.setPath("/");
+            refreshTokenCookie.setMaxAge(0);
+            response.addCookie(refreshTokenCookie);
+            
+            // Return forbidden response
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ErrorResponse("Token reuse detected", "Your session has been terminated for security reasons."));
         } catch (Exception e) {
             log.error("Token refresh failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

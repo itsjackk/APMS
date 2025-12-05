@@ -180,6 +180,16 @@ const TokenUtils = {
         const expiryTime = payload.exp * 1000;
         const currentTime = Date.now();
         return Math.max(0, expiryTime - currentTime);
+    },
+
+    /**
+     * Check if token has remember me flag
+     * @param {string} token
+     * @returns {boolean}
+     */
+    hasRememberMe(token) {
+        const payload = this.decode(token);
+        return payload?.rememberMe === true;
     }
 };
 
@@ -579,38 +589,47 @@ const AuthService = {
     },
 
     /**
-     * Refresh access token using refresh token
+     * Refresh access token using HttpOnly cookie
      * @returns {Promise<boolean>} - True if refresh successful
      */
     async refreshAccessToken() {
-        const refreshToken = AuthState.getRefreshToken();
-        if (!refreshToken) {
-            console.warn('No refresh token available');
-            return false;
-        }
-
         try {
+            // No need to get refresh token - it's in the cookie
             const response = await fetch(CONFIG.API_ENDPOINTS.REFRESH, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ refreshToken }),
-                credentials: 'include'
+                // No body needed - refresh token is in cookie
+                credentials: 'include' // This sends the HttpOnly cookie
             });
 
             if (response.ok) {
                 const data = await response.json();
                 console.log('Token refresh successful:', data);
 
-                // Store new tokens
+                // Store new access token
                 AuthState.setToken(data.accessToken);
 
-                // Update remember me preference based on new token
+                // Update remember me preference
                 const rememberMe = TokenUtils.hasRememberMe(data.accessToken);
                 AuthState.setRememberMe(rememberMe);
 
                 return true;
+            } else if (response.status === 403) {
+                // Handle token reuse detection
+                console.error('TOKEN REUSE DETECTED - All tokens revoked');
+                AuthState.clearToken();
+                AlertUtils.show(
+                    'Security violation detected. Please login again.',
+                    'danger'
+                );
+                return false;
+            } else if (response.status === 401) {
+                // Refresh token expired or invalid
+                console.warn('Refresh token expired');
+                AuthState.clearToken();
+                return false;
             } else {
                 const errorData = await response.json().catch(() => ({}));
                 console.warn('Token refresh failed:', response.status, errorData);
@@ -708,10 +727,12 @@ const AuthService = {
         // Clear any redirect loop tracking
         RedirectLoopDetector.reset();
 
-        // Store authentication data
+        // Store authentication data (access token only)
         AuthState.setToken(data.accessToken);
         AuthState.setUsername(data.username);
         AuthState.setRememberMe(rememberMe);
+
+        // Refresh token is automatically stored in HttpOnly cookie by browser
 
         // Show success message
         AlertUtils.show(`Login successful! Welcome ${data.username}`, 'success', 2000);

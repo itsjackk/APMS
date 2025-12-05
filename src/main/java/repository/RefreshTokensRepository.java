@@ -44,6 +44,8 @@ public interface RefreshTokensRepository extends JpaRepository<RefreshTokens, UU
 
     boolean existsByTokenFamily(String tokenFamily);
 
+    List<RefreshTokens> findByUserId(UUID userId);
+
     @Modifying
     @Query("UPDATE RefreshTokens rt SET rt.isRevoked = true, rt.revokedDueToReuse = true, rt.revokedAt = :now WHERE rt.tokenFamily = :tokenFamily")
     void revokeTokenFamily(@Param("tokenFamily") String tokenFamily, @Param("now") LocalDateTime now);

@@ -1,11 +1,7 @@
+
         const username = /*[[${username}]]*/ 'User';
         const userRole = /*[[${role}]]*/ 'USER';
         const totalUsers = /*[[${totalUsers}]]*/ 0;
-
-        // Flags to prevent duplicate operations
-        let isRedirecting = false;
-        let isLoadingData = false;
-        let projectsLoaded = false; // NEW: Track if projects are already loaded
 
         // ==================== CONFIGURATION ====================
         const CONFIG = {
@@ -410,56 +406,15 @@
         });
 
         // ==================== TOKEN MANAGEMENT ====================
-        function getAccessToken() {
-            const token = localStorage.getItem('accessToken');
-            if (!token) {
-                console.log('No access token in localStorage');
-                return null;
-            }
-
-            // Check if token is expired
-            try {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                const expirationTime = payload.exp * 1000;
-                const currentTime = Date.now();
-
-                if (currentTime >= expirationTime) {
-                    console.log('Access token is expired');
-                    localStorage.removeItem('accessToken');
-                    return null;
-                }
-
-                return token;
-            } catch (error) {
-                console.error('Error parsing token:', error);
-                localStorage.removeItem('accessToken');
-                return null;
-            }
-        }
-
-        function redirectToLogin() {
-            if (isRedirecting) return;
-
-            isRedirecting = true;
-            console.log('Redirecting to login page...');
-
-            // Clear tokens
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-
-            // Redirect
-            window.location.href = '/ConsoleApp/login';
-        }
 
         // ==================== DATA LOADING ====================
         async function loadDashboardData() {
-            // Prevent multiple simultaneous calls
-            if (isLoadingData) {
+            if (AppState.isLoadingData) {
                 console.log('Data loading already in progress, skipping duplicate call');
                 return;
             }
 
-            isLoadingData = true;
+            AppState.setLoadingData(true);  // Changed from: isLoadingData = true;
 
             try {
                 const accessToken = AuthService.getAccessToken();
@@ -470,28 +425,25 @@
                 }
 
                 // Load statistics based on user role
-                //if (userRole === 'ADMIN') {
-                //    await loadAdminStats();
-                //} else {
-                //    await loadProjectStats();
-                //}
-                await loadProjectStats();
-
-                // Load recent projects ONLY ONCE
-                if (!projectsLoaded) {
+                if (userRole === 'ADMIN') {
+                    await loadAdminStats();
+                } else {
+                    await loadProjectStats();
+                }
+                if (!AppState.projectsLoaded) {
                     await loadRecentProjects();
-                    projectsLoaded = true; // Mark as loaded
+                    AppState.setProjectsLoaded(true);  // Changed from: projectsLoaded = true;
                 } else {
                     console.log('Projects already loaded, skipping duplicate call');
                 }
 
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
-                if (!isRedirecting) {
+                if (!AppState.isRedirecting) {  // Changed from: if (!isRedirecting)
                     UIManager.showAlert('Error loading dashboard data', 'danger');
                 }
             } finally {
-                isLoadingData = false;
+                AppState.setLoadingData(false);  // Changed from: isLoadingData = false;
             }
         }
 
@@ -568,141 +520,6 @@
                         '<div class="col-12"><p class="text-muted">Error loading projects</p></div>';
                 }
             }
-        }
-
-        // ==================== HELPER FUNCTIONS ====================
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function getStatusColor(status) {
-            switch(status) {
-                case 'COMPLETED': return 'success';
-                case 'IN_PROGRESS': return 'primary';
-                case 'ON_HOLD': return 'warning';
-                case 'CANCELLED': return 'danger';
-                case 'PLANNING': return 'info';
-                default: return 'secondary';
-            }
-        }
-
-        function getProgressColor(progress) {
-            if (progress < 30) return 'danger';
-            if (progress < 70) return 'warning';
-            return 'success';
-        }
-
-        function showAlert(message, type) {
-            const alertHtml = `
-                <div class="alert alert-${type} alert-dismissible fade show alert-custom" role="alert">
-                    <i class="fas fa-${type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-            const alertContainer = document.createElement('div');
-            alertContainer.innerHTML = alertHtml;
-            document.body.appendChild(alertContainer);
-
-            // Auto-remove after 5 seconds
-            setTimeout(() => {
-                if (alertContainer.parentNode) {
-                    alertContainer.parentNode.removeChild(alertContainer);
-                }
-            }, 5000);
-        }
-
-        // ==================== UTILITY FUNCTIONS ====================
-
-        function isTokenExpired(token) {
-            try {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                const currentTime = Math.floor(Date.now() / 1000);
-                return payload.exp < currentTime;
-            } catch (error) {
-                console.error('Error parsing token:', error);
-                return true;
-            }
-        }
-
-        function clearAuthData() {
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('username');
-        }
-
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            return new Date(dateString).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
-        }
-
-        function getPriorityColor(priority) {
-            const colors = {
-                'LOW': 'success',
-                'MEDIUM': 'primary',
-                'HIGH': 'warning',
-                'CRITICAL': 'danger'
-            };
-            return colors[priority] || 'secondary';
-        }
-
-        // ==================== AUTHENTICATION FUNCTIONS ====================
-
-        // Update the refresh token function to only work for manual refresh button
-        async function refreshToken() {
-            if (AppState.isRedirecting) {
-                return false;
-            }
-
-            try {
-                // Only allow manual refresh if we have a valid (non-expired) access token
-                const currentToken = localStorage.getItem('accessToken');
-                if (!currentToken || Utils.isTokenExpired(currentToken)) {
-                    console.log('Cannot refresh - no valid token available');
-                    UIManager.showAlert('Session expired. Please log in again.', 'warning');
-                    setTimeout(() => {
-                        AuthService.redirectToLogin();
-                    }, 2000);
-                    return false;
-                }
-
-                const response = await fetch(CONFIG.API_ENDPOINTS.AUTH_REFRESH, {
-                    method: 'POST',
-                    credentials: 'include'
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.accessToken) {
-                        localStorage.setItem('accessToken', data.accessToken);
-                        UIManager.showAlert('Session refreshed successfully!', 'success');
-                        return true;
-                    }
-                } else if (response.status === 401) {
-                    console.log('Refresh token is invalid or expired');
-                    UIManager.showAlert('Session expired. Please log in again.', 'warning');
-                    setTimeout(() => {
-                        AuthService.redirectToLogin();
-                    }, 2000);
-                    return false;
-                } else {
-                    console.log('Failed to refresh token, status:', response.status);
-                    UIManager.showAlert('Failed to refresh session', 'danger');
-                    return false;
-                }
-            } catch (error) {
-                console.error('Error refreshing token:', error);
-                if (!AppState.isRedirecting) {
-                    UIManager.showAlert('Error refreshing session: ' + error.message, 'danger');
-                }
-                return false;
-            }
-            return false;
         }
 
         // ==================== USER ACTIONS ====================

@@ -17,7 +17,6 @@ import tables.RefreshTokens;
 import tables.Users;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
