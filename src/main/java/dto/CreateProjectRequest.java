@@ -1,9 +1,8 @@
-
 package dto;
 
-import tables.Projects;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import tables.Projects;
 
 import java.time.LocalDate;
 import java.util.UUID;

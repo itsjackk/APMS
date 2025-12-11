@@ -1,4 +1,3 @@
-
 package service;
 
 import io.jsonwebtoken.Claims;
@@ -9,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,7 +56,7 @@ public class JwtService {
     }
 
     /**
-     * Generate standard refresh token (uses configured expiration - 7 days)
+     * Generate standard refresh token (uses configured expiration - 25 minutes)
      */
     public String generateRefreshToken(UUID userId, String username, String role) {
         Map<String, Object> claims = new HashMap<>();
@@ -193,7 +191,7 @@ public class JwtService {
     }
 
     /**
-     * Get standard refresh token expiration time (7 days from now)
+     * Get standard refresh token expiration time (25 minutes from now)
      */
     public LocalDateTime getRefreshTokenExpirationTime() {
         return LocalDateTime.now().plusSeconds(refreshTokenExpiration);

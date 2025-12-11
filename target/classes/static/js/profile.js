@@ -1,4 +1,3 @@
-
 // ============================================================================
 // STATE MANAGEMENT
 // ============================================================================
@@ -10,6 +9,18 @@ const state = {
 // ============================================================================
 // CONSTANTS
 // ============================================================================
+const API_ENDPOINTS = {
+    PROFILE: '/api/user/profile',
+    CHANGE_PASSWORD: '/api/user/change-password'
+};
+
+const ALERT_TYPES = {
+    SUCCESS: 'success',
+    DANGER: 'danger',
+    INFO: 'info',
+    WARNING: 'warning'
+};
+
 const ELEMENTS = {
     viewMode: 'viewMode',
     editMode: 'editMode',
@@ -42,7 +53,13 @@ const PASSWORD_FIELDS = {
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    const isAuth = await AuthUtils.isAuthenticated();
+    if (!isAuth) {
+        AuthUtils.redirectToLogin();
+        return;
+    }
+
     createSnowflakes();
     initializeEventListeners();
     loadUserProfile();
@@ -81,71 +98,11 @@ function createSnowflake() {
 }
 
 // ============================================================================
-// AUTHENTICATION & TOKEN MANAGEMENT
-// ============================================================================
-function getAccessToken() {
-    const token = localStorage.getItem('accessToken');
-    if (!token) return null;
-
-    if (isTokenExpired(token)) {
-        clearAuthData();
-        return null;
-    }
-    return token;
-}
-
-function isTokenExpired(token) {
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const currentTime = Math.floor(Date.now() / 1000);
-        return payload.exp < currentTime;
-    } catch (error) {
-        return true;
-    }
-}
-
-function clearAuthData() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('username');
-}
-
-function redirectToLogin() {
-    window.location.href = '/ConsoleApp/login';
-}
-
-async function makeAuthenticatedRequest(url, options = {}) {
-    const accessToken = getAccessToken();
-    if (!accessToken) {
-        redirectToLogin();
-        throw new Error('No valid access token');
-    }
-
-    const requestOptions = {
-        ...options,
-        headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-            ...options.headers
-        }
-    };
-
-    const response = await fetch(url, requestOptions);
-
-    if (response.status === 401) {
-        clearAuthData();
-        redirectToLogin();
-        throw new Error('Authentication failed');
-    }
-
-    return response;
-}
-
-// ============================================================================
 // PROFILE MANAGEMENT
 // ============================================================================
 async function loadUserProfile() {
     try {
-        const response = await makeAuthenticatedRequest('/api/user/profile');
+        const response = await AuthUtils.makeAuthenticatedRequest(API_ENDPOINTS.PROFILE);
 
         if (response.ok) {
             const responseText = await response.text();
@@ -153,7 +110,8 @@ async function loadUserProfile() {
             displayUserProfile(state.userData);
         }
     } catch (error) {
-        showAlert('Error loading profile data', 'danger');
+        console.error('Error loading profile:', error);
+        showAlert('Error loading profile data', ALERT_TYPES.DANGER);
     }
 }
 
@@ -256,21 +214,22 @@ async function handleProfileUpdate() {
     const usernameGHUB = getInputValue(EDIT_FIELDS.usernameGHUB);
 
     try {
-        const response = await makeAuthenticatedRequest('/api/user/profile', {
+        const response = await AuthUtils.makeAuthenticatedRequest(API_ENDPOINTS.PROFILE, {
             method: 'PUT',
             body: JSON.stringify({ email, usernameGHUB })
         });
 
         if (response.ok) {
-            showAlert('Profile updated successfully!', 'success');
+            showAlert('Profile updated successfully!', ALERT_TYPES.SUCCESS);
             await loadUserProfile();
             toggleEditMode();
         } else {
             const errorData = await response.json();
-            showAlert(errorData.message || 'Failed to update profile', 'danger');
+            showAlert(errorData.message || 'Failed to update profile', ALERT_TYPES.DANGER);
         }
     } catch (error) {
-        showAlert('Error updating profile', 'danger');
+        console.error('Error updating profile:', error);
+        showAlert('Error updating profile', ALERT_TYPES.DANGER);
     }
 }
 
@@ -284,31 +243,32 @@ async function handlePasswordChange() {
     }
 
     try {
-        const response = await makeAuthenticatedRequest('/api/user/change-password', {
+        const response = await AuthUtils.makeAuthenticatedRequest(API_ENDPOINTS.CHANGE_PASSWORD, {
             method: 'PUT',
             body: JSON.stringify({ currentPassword, newPassword })
         });
 
         if (response.ok) {
-            showAlert('Password updated successfully!', 'success');
+            showAlert('Password updated successfully!', ALERT_TYPES.SUCCESS);
             clearPasswordForm();
         } else {
             const errorData = await response.json();
-            showAlert(errorData.message || 'Failed to update password', 'danger');
+            showAlert(errorData.message || 'Failed to update password', ALERT_TYPES.DANGER);
         }
     } catch (error) {
-        showAlert('Error changing password', 'danger');
+        console.error('Error changing password:', error);
+        showAlert('Error changing password', ALERT_TYPES.DANGER);
     }
 }
 
 function validatePasswordChange(newPassword, confirmPassword) {
     if (newPassword !== confirmPassword) {
-        showAlert('New passwords do not match!', 'danger');
+        showAlert('New passwords do not match!', ALERT_TYPES.DANGER);
         return false;
     }
 
     if (newPassword.length < 8) {
-        showAlert('Password must be at least 8 characters long!', 'danger');
+        showAlert('Password must be at least 8 characters long!', ALERT_TYPES.DANGER);
         return false;
     }
 
@@ -332,7 +292,7 @@ function getInputValue(elementId) {
 // ============================================================================
 function formatDate(dateString) {
     if (!dateString) return 'Unknown';
-    
+
     try {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
@@ -345,14 +305,14 @@ function formatDate(dateString) {
     }
 }
 
-function showAlert(message, type = 'info') {
+function showAlert(message, type = ALERT_TYPES.INFO) {
     const alertDiv = createAlertElement(message, type);
     const container = document.querySelector('.main-content');
 
     if (!container) return;
 
     container.insertBefore(alertDiv, container.firstChild);
-    
+
     setTimeout(() => {
         alertDiv.remove();
     }, 5000);
@@ -383,9 +343,8 @@ function escapeHtml(text) {
 // ============================================================================
 // LOGOUT
 // ============================================================================
-function logout() {
-    clearAuthData();
-    redirectToLogin();
+async function logout() {
+    await AuthUtils.logout();
 }
 
 window.logout = logout;

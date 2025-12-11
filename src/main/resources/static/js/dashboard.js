@@ -10,12 +10,9 @@
                 ADMIN_STATS: '/api/admin/stats',
                 PROJECT_STATS: '/api/projects/stats',
                 ASSIGNED_COUNT: '/api/projects/assigned/count',
-                PROJECTS: '/api/projects',
-                AUTH_REFRESH: '/api/auth/refresh',
-                AUTH_LOGOUT: '/api/auth/logout'
+                PROJECTS: '/api/projects'
             },
             ROUTES: {
-                LOGIN: '/ConsoleApp/login',
                 PROJECTS_CREATE: '/ConsoleApp/projects/create',
                 PROJECTS_EDIT: '/ConsoleApp/projects/edit'
             }
@@ -52,17 +49,6 @@
 
         // ==================== UTILITY FUNCTIONS ====================
         const Utils = {
-            isTokenExpired(token) {
-                try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    const currentTime = Math.floor(Date.now() / 1000);
-                    return payload.exp < currentTime;
-                } catch (error) {
-                    console.error('Error parsing token:', error);
-                    return true;
-                }
-            },
-
             escapeHtml(text) {
                 const div = document.createElement('div');
                 div.textContent = text;
@@ -194,177 +180,6 @@
             }
         };
 
-        // ==================== AUTHENTICATION SERVICE ====================
-        const AuthService = {
-            getAccessToken() {
-                try {
-                    const token = localStorage.getItem('accessToken');
-                    if (!token) {
-                        console.log('No access token found');
-                        return null;
-                    }
-
-                    if (Utils.isTokenExpired(token)) {
-                        console.log('Access token is expired');
-                        this.clearAuthData();
-                        return null;
-                    }
-
-                    return token;
-                } catch (error) {
-                    console.error('Error parsing token:', error);
-                    localStorage.removeItem('accessToken');
-                    return null;
-                }
-            },
-
-            clearAuthData() {
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('username');
-            },
-
-            redirectToLogin() {
-                if (AppState.isRedirecting) return;
-
-                AppState.setRedirecting(true);
-                console.log('Redirecting to login page...');
-
-                this.clearAuthData();
-                window.location.href = CONFIG.ROUTES.LOGIN;
-            },
-
-            async refreshAccessToken() {
-                try {
-                    const response = await fetch(CONFIG.API_ENDPOINTS.AUTH_REFRESH, {
-                        method: 'POST',
-                        credentials: 'include'
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        localStorage.setItem('accessToken', data.accessToken);
-                        return true;
-                    } else {
-                        console.error('Failed to refresh token');
-                        this.clearAuthData();
-                        return false;
-                    }
-                } catch (error) {
-                    console.error('Error refreshing token:', error);
-                    return false;
-                }
-            },
-
-            async refreshToken() {
-                if (AppState.isRedirecting) {
-                    return false;
-                }
-
-                try {
-                    const currentToken = localStorage.getItem('accessToken');
-                    if (!currentToken || Utils.isTokenExpired(currentToken)) {
-                        console.log('Cannot refresh - no valid token available');
-                        UIManager.showAlert('Session expired. Please log in again.', 'warning');
-                        setTimeout(() => {
-                            this.redirectToLogin();
-                        }, 2000);
-                        return false;
-                    }
-
-                    const response = await fetch(CONFIG.API_ENDPOINTS.AUTH_REFRESH, {
-                        method: 'POST',
-                        credentials: 'include'
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.accessToken) {
-                            localStorage.setItem('accessToken', data.accessToken);
-                            UIManager.showAlert('Session refreshed successfully!', 'success');
-                            return true;
-                        }
-                    } else if (response.status === 401) {
-                        console.log('Refresh token is invalid or expired');
-                        UIManager.showAlert('Session expired. Please log in again.', 'warning');
-                        setTimeout(() => {
-                            this.redirectToLogin();
-                        }, 2000);
-                        return false;
-                    } else {
-                        console.log('Failed to refresh token, status:', response.status);
-                        UIManager.showAlert('Failed to refresh session', 'danger');
-                        return false;
-                    }
-                } catch (error) {
-                    console.error('Error refreshing token:', error);
-                    if (!AppState.isRedirecting) {
-                        UIManager.showAlert('Error refreshing session: ' + error.message, 'danger');
-                    }
-                    return false;
-                }
-                return false;
-            },
-
-            async logout() {
-                try {
-                    await fetch(CONFIG.API_ENDPOINTS.AUTH_LOGOUT, {
-                        method: 'POST',
-                        credentials: 'include'
-                    });
-                } catch (error) {
-                    console.error('Logout error:', error);
-                } finally {
-                    this.clearAuthData();
-                    window.location.href = CONFIG.ROUTES.LOGIN;
-                }
-            }
-        };
-
-        // ==================== API SERVICE ====================
-        const APIService = {
-            async makeAuthenticatedRequest(url, options = {}) {
-                if (AppState.isRedirecting) {
-                    throw new Error('Redirect in progress');
-                }
-
-                const accessToken = AuthService.getAccessToken();
-
-                if (!accessToken) {
-                    AuthService.redirectToLogin();
-                    throw new Error('No valid access token');
-                }
-
-                const headers = {
-                    'Authorization': 'Bearer ' + accessToken,
-                    'Content-Type': 'application/json',
-                    ...options.headers
-                };
-
-                try {
-                    const response = await fetch(url, {
-                        ...options,
-                        headers
-                    });
-
-                    // If we get 401, the token is invalid/expired
-                    if (response.status === 401) {
-                        console.log('Received 401 from:', url, '- redirecting to login');
-                        AuthService.redirectToLogin();
-                        throw new Error('Authentication failed');
-                    }
-
-                    return response;
-                } catch (error) {
-                    // Only redirect on auth errors, not network errors
-                    if (error.message === 'Authentication failed') {
-                        throw error;
-                    }
-                    console.error('Request error for', url, ':', error);
-                    throw error;
-                }
-            }
-        };
-
         // Create snowflakes
         function createSnowflakes() {
             const snowflakesContainer = document.getElementById('snowflakes');
@@ -391,21 +206,6 @@
         }
 
         // ==================== PAGE LOAD ====================
-        document.addEventListener('DOMContentLoaded', function() {
-            createSnowflakes();
-
-            const accessToken = AuthService.getAccessToken();
-
-            // If no valid token, redirect immediately
-            if (!accessToken) {
-                console.log('No valid access token found, redirecting to login');
-                AuthService.redirectToLogin();
-                return;
-            }
-            loadDashboardData();
-        });
-
-        // ==================== TOKEN MANAGEMENT ====================
 
         // ==================== DATA LOADING ====================
         async function loadDashboardData() {
@@ -417,10 +217,10 @@
             AppState.setLoadingData(true);  // Changed from: isLoadingData = true;
 
             try {
-                const accessToken = AuthService.getAccessToken();
+                const accessToken = AuthUtils.getAccessToken();
                 if (!accessToken) {
-                    console.log('No valid access token, redirecting to login');
-                    AuthService.redirectToLogin();
+                    console.log('No valid access token found, redirecting to login');
+                    await AuthUtils.logout();
                     return;
                 }
 
@@ -452,7 +252,7 @@
             if (AppState.isRedirecting) return;
 
             try {
-                const response = await APIService.makeAuthenticatedRequest(CONFIG.API_ENDPOINTS.ADMIN_STATS);
+                const response = await AuthUtils.makeAuthenticatedRequest(CONFIG.API_ENDPOINTS.ADMIN_STATS);
 
                 if (response.ok) {
                     const stats = await response.json();
@@ -473,8 +273,8 @@
             try {
                 // Make both requests in parallel to reduce redundancy
                 const [statsResponse, assignedResponse] = await Promise.all([
-                    APIService.makeAuthenticatedRequest(CONFIG.API_ENDPOINTS.PROJECT_STATS),
-                    APIService.makeAuthenticatedRequest(CONFIG.API_ENDPOINTS.ASSIGNED_COUNT)
+                    AuthUtils.makeAuthenticatedRequest(CONFIG.API_ENDPOINTS.PROJECT_STATS),
+                    AuthUtils.makeAuthenticatedRequest(CONFIG.API_ENDPOINTS.ASSIGNED_COUNT)
                 ]);
 
                 if (statsResponse.ok && assignedResponse.ok) {
@@ -502,7 +302,7 @@
             }
 
             try {
-                const response = await APIService.makeAuthenticatedRequest(CONFIG.API_ENDPOINTS.PROJECTS + '?limit=6');
+                const response = await AuthUtils.makeAuthenticatedRequest(CONFIG.API_ENDPOINTS.PROJECTS + '?limit=6');
 
                 if (response.ok) {
                     const projects = await response.json();
@@ -525,29 +325,10 @@
         // ==================== USER ACTIONS ====================
 
         async function logout() {
-            try {
-                await fetch(CONFIG.API_ENDPOINTS.AUTH_LOGOUT, {
-                    method: 'POST',
-                    credentials: 'include'
-                });
-            } catch (error) {
-                console.error('Logout error:', error);
-            } finally {
-                AuthService.clearAuthData();
-                window.location.href = CONFIG.ROUTES.LOGIN;
-            }
+            await AuthUtils.logout();
         }
 
         // ==================== PAGE INITIALIZATION ====================
-
-        // Auto-refresh token before it expires (every 20 minutes)
-        setInterval(async () => {
-            const token = localStorage.getItem('accessToken');
-            if (token && !Utils.isTokenExpired(token)) {
-                console.log('Auto-refreshing access token...');
-                await AuthService.refreshAccessToken();
-            }
-        }, CONFIG.TOKEN_REFRESH_INTERVAL); // 20 minutes
 
 /**
  * Christmas Countdown Timer
@@ -612,8 +393,21 @@ function initChristmasCountdown() {
     window.christmasCountdownInterval = countdownInterval;
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Initialize UI elements
+    createSnowflakes();
     initChristmasCountdown();
+
+    // Check authentication
+    const accessToken = AuthUtils.getAccessToken();
+
+    if (!accessToken) {
+        console.log('No valid access token found, redirecting to login');
+        await AuthUtils.logout();
+        return;
+    }
+
+    loadDashboardData();
 });
 
 // Optional: Cleanup function when leaving the page

@@ -6,11 +6,7 @@
 const CONFIG = {
     API_ENDPOINTS: {
         PROJECTS: '/api/admin/projects',
-        USERS: '/api/admin/users',
-        LOGOUT: '/api/auth/logout'
-    },
-    ROUTES: {
-        LOGIN: '/ConsoleApp/login'
+        USERS: '/api/admin/users'
     },
     UI: {
         SNOWFLAKE_COUNT: 50
@@ -24,23 +20,14 @@ const CONFIG = {
 const AppState = {
     allProjects: [],
     filteredProjects: [],
-    
-    getAccessToken() {
-        return localStorage.getItem('accessToken');
-    },
-    
+
     setProjects(projects) {
         this.allProjects = projects;
         this.filteredProjects = [...projects];
     },
-    
+
     getProject(projectId) {
         return this.allProjects.find(p => p.id === projectId);
-    },
-    
-    clearAuth() {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('username');
     }
 };
 
@@ -52,13 +39,13 @@ const Utils = {
     formatDate(dateString) {
         return new Date(dateString).toLocaleDateString();
     },
-    
+
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     },
-    
+
     getStatusColor(status) {
         const colors = {
             'PLANNING': 'secondary',
@@ -69,7 +56,7 @@ const Utils = {
         };
         return colors[status] || 'secondary';
     },
-    
+
     getPriorityColor(priority) {
         const colors = {
             'LOW': 'success',
@@ -79,12 +66,12 @@ const Utils = {
         };
         return colors[priority] || 'secondary';
     },
-    
+
     getPriorityOrder(priority) {
         const order = { 'LOW': 1, 'MEDIUM': 2, 'HIGH': 3, 'CRITICAL': 4 };
         return order[priority] || 0;
     },
-    
+
     getStatusOrder(status) {
         const order = { 'PLANNING': 1, 'IN_PROGRESS': 2, 'ON_HOLD': 3, 'COMPLETED': 4, 'CANCELLED': 5 };
         return order[status] || 0;
@@ -98,22 +85,22 @@ const Utils = {
 function createSnowflakes() {
     const container = document.getElementById('snowflakes');
     if (!container) return;
-    
+
     for (let i = 0; i < CONFIG.UI.SNOWFLAKE_COUNT; i++) {
         const snowflake = document.createElement('div');
         snowflake.className = 'snowflake';
         snowflake.innerHTML = '❄';
-        
+
         const leftPos = Math.random() * 100;
         const animationDuration = 5 + Math.random() * 10;
         const animationDelay = Math.random() * 5;
         const size = 0.5 + Math.random() * 1.5;
-        
+
         snowflake.style.left = `${leftPos}%`;
         snowflake.style.animationDuration = `${animationDuration}s`;
         snowflake.style.animationDelay = `${animationDelay}s`;
         snowflake.style.fontSize = `${size}em`;
-        
+
         container.appendChild(snowflake);
     }
 }
@@ -124,72 +111,33 @@ function createSnowflakes() {
 
 const APIService = {
     async fetchProjects() {
-        const response = await fetch(CONFIG.API_ENDPOINTS.PROJECTS, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${AppState.getAccessToken()}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to load projects');
-        }
-        
+        const response = await AuthUtils.makeAuthenticatedRequest(CONFIG.API_ENDPOINTS.PROJECTS);
         return await response.json();
     },
-    
+
     async fetchUsers() {
-        const response = await fetch(CONFIG.API_ENDPOINTS.USERS, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${AppState.getAccessToken()}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to load users');
-        }
-        
+        const response = await AuthUtils.makeAuthenticatedRequest(CONFIG.API_ENDPOINTS.USERS);
         return await response.json();
     },
-    
+
     async updateProject(projectId, projectData) {
-        const response = await fetch(`${CONFIG.API_ENDPOINTS.PROJECTS}/${projectId}`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${AppState.getAccessToken()}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(projectData)
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to update project');
-        }
-        
+        const response = await AuthUtils.makeAuthenticatedRequest(
+            `${CONFIG.API_ENDPOINTS.PROJECTS}/${projectId}`,
+            {
+                method: 'PUT',
+                body: JSON.stringify(projectData)
+            }
+        );
         return await response.json();
     },
-    
+
     async deleteProject(projectId) {
-        const response = await fetch(`${CONFIG.API_ENDPOINTS.PROJECTS}/${projectId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${AppState.getAccessToken()}`
+        await AuthUtils.makeAuthenticatedRequest(
+            `${CONFIG.API_ENDPOINTS.PROJECTS}/${projectId}`,
+            {
+                method: 'DELETE'
             }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to delete project');
-        }
-    },
-    
-    async logout() {
-        await fetch(CONFIG.API_ENDPOINTS.LOGOUT, {
-            method: 'POST',
-            credentials: 'include'
-        });
+        );
     }
 };
 
@@ -207,7 +155,7 @@ const UIManager = {
             </div>
         `;
     },
-    
+
     showStatsLoading() {
         const statsContainer = document.getElementById('statsContainer');
         statsContainer.innerHTML = `
@@ -217,7 +165,7 @@ const UIManager = {
             </div>
         `;
     },
-    
+
     showProjectsError(message = 'Failed to load projects. Please try again.') {
         const projectsList = document.getElementById('projectsList');
         projectsList.innerHTML = `
@@ -226,7 +174,7 @@ const UIManager = {
             </div>
         `;
     },
-    
+
     showStatsError(message = 'Failed to load statistics. Please try again.') {
         const statsContainer = document.getElementById('statsContainer');
         statsContainer.innerHTML = `
@@ -235,10 +183,10 @@ const UIManager = {
             </div>
         `;
     },
-    
+
     displayProjects(projects) {
         const projectsList = document.getElementById('projectsList');
-        
+
         if (projects.length === 0) {
             projectsList.innerHTML = `
                 <div class="alert alert-info">
@@ -247,11 +195,11 @@ const UIManager = {
             `;
             return;
         }
-        
+
         const projectsHTML = projects.map(project => this.createProjectCard(project)).join('');
         projectsList.innerHTML = projectsHTML;
     },
-    
+
     createProjectCard(project) {
         return `
             <div class="project-card">
@@ -296,7 +244,6 @@ const UIManager = {
             </div>
         `;
     },
-    
     
     updateStatistics(projects) {
         const statsContainer = document.getElementById('statsContainer');
@@ -435,12 +382,6 @@ const ProjectManager = {
             console.error('Error loading projects:', error);
             UIManager.showProjectsError();
             UIManager.showStatsError();
-
-            if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-                setTimeout(() => {
-                    window.location.href = CONFIG.ROUTES.LOGIN;
-                }, 2000);
-            }
         }
     },
 
@@ -561,15 +502,8 @@ const ProjectManager = {
 // ============================================================================
 
 async function logout() {
-    try {
-        await APIService.logout();
-    } catch (error) {
-        console.error('Logout error:', error);
-    } finally {
-        AppState.clearAuth();
-        window.location.href = CONFIG.ROUTES.LOGIN;
-    }
-}
+            await AuthUtils.logout();
+        }
 
 // ============================================================================
 // GLOBAL FUNCTIONS (for onclick handlers in HTML)
@@ -599,9 +533,9 @@ function deleteProject(projectId) {
 // INITIALIZATION
 // ============================================================================
 
-document.addEventListener('DOMContentLoaded', function() {
-    if (!AppState.getAccessToken()) {
-        window.location.href = CONFIG.ROUTES.LOGIN;
+document.addEventListener('DOMContentLoaded', async function() {
+    const isAuthenticated = await AuthUtils.isAuthenticated();
+    if (!isAuthenticated) {
         return;
     }
 

@@ -1,14 +1,12 @@
 
     const state = {
-        currentUserId: null,
-        currentUsername: /*[[${username}]]*/ 'Admin',
         allUsers: [],
+        currentUserId: null,
+        currentUsername: localStorage.getItem('username') || '',
         dataLoaded: false
     };
 
     const API_ENDPOINTS = {
-        REFRESH: '/api/auth/refresh',
-        LOGOUT: '/api/auth/logout',
         USER_STATS: '/api/admin/users/stats',
         USERS: '/api/admin/users',
         USER_ROLE: (userId) => `/api/admin/users/${userId}/role`,
@@ -43,6 +41,22 @@
         INFO: 'info'
     };
 
+    const SNOWFLAKE_CONFIG = {
+        COUNT: 50,
+        MIN_DURATION: 5,
+        MAX_DURATION: 15,
+        MIN_SIZE: 0.5,
+        MAX_SIZE: 2
+    };
+
+    const PASSWORD_CONFIG = {
+        MIN_LENGTH: 8,
+        REQUIRE_UPPERCASE: true,
+        REQUIRE_LOWERCASE: true,
+        REQUIRE_NUMBER: true,
+        REQUIRE_SPECIAL: false
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
         if (state.dataLoaded) return;
 
@@ -55,12 +69,12 @@
     function initializeUI() {
         createSnowflakes();
         setupFormSelectStyling();
-    }
+    };
 
     function loadData() {
         loadUserStatistics();
         loadAllUsers();
-    }
+    };
 
     function setupEventListeners() {
         // Search input listener with debounce
@@ -77,7 +91,19 @@
         if (createUserForm) {
             createUserForm.addEventListener('submit', createNewUser);
         }
-    }
+
+        // Password match validation
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        if (confirmPasswordInput) {
+            confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+        }
+
+        // Modal reset on close
+        const createUserModal = document.getElementById('createUserModal');
+        if (createUserModal) {
+            createUserModal.addEventListener('hidden.bs.modal', resetCreateUserModal);
+        }
+    };
 
     function setupFormSelectStyling() {
         const selects = document.querySelectorAll('.form-select');
@@ -86,21 +112,21 @@
                 this.style.outline = 'none';
             });
         });
-    }
+    };
 
     function createSnowflakes() {
         const container = document.getElementById(ELEMENTS.snowflakes);
         if (!container) return;
 
         const fragment = document.createDocumentFragment();
-        const snowflakeCount = 50;
+        const snowflakeCount = SNOWFLAKE_CONFIG.COUNT;
 
         for (let i = 0; i < snowflakeCount; i++) {
             fragment.appendChild(createSnowflake());
         }
 
         container.appendChild(fragment);
-    }
+    };
 
     function createSnowflake() {
         const snowflake = document.createElement('div');
@@ -109,142 +135,53 @@
 
         Object.assign(snowflake.style, {
             left: `${Math.random() * 100}%`,
-            animationDuration: `${5 + Math.random() * 10}s`,
+            animationDuration: `${SNOWFLAKE_CONFIG.MIN_DURATION + Math.random() * (SNOWFLAKE_CONFIG.MAX_DURATION - SNOWFLAKE_CONFIG.MIN_DURATION)}s`,
             animationDelay: `${Math.random() * 5}s`,
-            fontSize: `${0.5 + Math.random() * 1.5}em`
+            fontSize: `${SNOWFLAKE_CONFIG.MIN_SIZE + Math.random() * (SNOWFLAKE_CONFIG.MAX_SIZE - SNOWFLAKE_CONFIG.MIN_SIZE)}em`
         });
 
         return snowflake;
-    }
+    };
 
-    function getAccessToken() {
-        let token = localStorage.getItem('accessToken');
-
-        if (!token || isTokenExpired(token)) {
-            return refreshAccessToken();
-        }
-
-        return token;
-    }
-
-    function refreshAccessToken() {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', API_ENDPOINTS.REFRESH, false);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-
-        try {
-            xhr.send();
-
-            if (xhr.status === 200) {
-                const response = JSON.parse(xhr.responseText);
-                if (response.accessToken) {
-                    localStorage.setItem('accessToken', response.accessToken);
-                    return response.accessToken;
-                }
-            }
-
-            redirectToLogin();
-            return null;
-        } catch (error) {
-            console.error('Token refresh error:', error);
-            redirectToLogin();
-            return null;
-        }
-    }
-
-    function isTokenExpired(token) {
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const currentTime = Math.floor(Date.now() / 1000);
-            return payload.exp < currentTime;
-        } catch (error) {
-            console.error('Token validation error:', error);
-            return true;
-        }
-    }
-
-    function redirectToLogin() {
-        clearAuthData();
-        window.location.href = '/ConsoleApp/login';
-    }
-
-    function clearAuthData() {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('username');
-    }
+    // ============================================================================
+    // AUTHENTICATION - Now using AuthUtils
+    // ============================================================================
 
     async function logout() {
-        try {
-            await fetch(API_ENDPOINTS.LOGOUT, {
-                method: 'POST',
-                credentials: 'include'
-            });
-        } catch (error) {
-            console.error('Logout error:', error);
-        } finally {
-            redirectToLogin();
-        }
-    }
+        await AuthUtils.logout();
+    };
 
-    async function makeAuthenticatedRequest(url, options = {}) {
-        const token = getAccessToken();
-        if (!token) {
-            redirectToLogin();
-            throw new Error('No valid access token');
-        }
-
-        const requestOptions = {
-            ...options,
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        };
-
-        const response = await fetch(url, requestOptions);
-
-        if (response.status === 401) {
-            redirectToLogin();
-            throw new Error('Authentication failed');
-        }
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `Request failed with status ${response.status}`);
-        }
-
-        return response;
-    }
+    // ============================================================================
+    // API REQUESTS - Now using AuthUtils
+    // ============================================================================
 
     async function loadUserStatistics() {
         try {
-            const response = await makeAuthenticatedRequest(API_ENDPOINTS.USER_STATS);
+            const response = await AuthUtils.makeAuthenticatedRequest(API_ENDPOINTS.USER_STATS);
             const data = await response.json();
-
             updateStatistics(data);
         } catch (error) {
             console.error('Error loading user statistics:', error);
             showAlert('Error loading user statistics', ALERT_TYPES.DANGER);
         }
-    }
+    };
 
     function updateStatistics(data) {
         updateElement(ELEMENTS.totalUsers, data.totalUsers || 0);
         updateElement(ELEMENTS.adminUsers, data.adminUsers || 0);
         updateElement(ELEMENTS.regularUsers, data.regularUsers || 0);
-    }
+    };
 
     function updateElement(elementId, value) {
         const element = document.getElementById(elementId);
         if (element) {
             element.textContent = value;
         }
-    }
+    };
 
     async function loadAllUsers() {
         try {
-            const response = await makeAuthenticatedRequest(API_ENDPOINTS.USERS);
+            const response = await AuthUtils.makeAuthenticatedRequest(API_ENDPOINTS.USERS);
             const data = await response.json();
 
             state.allUsers = Array.isArray(data) ? data : [];
@@ -255,7 +192,7 @@
             state.allUsers = [];
             displayUsers([]);
         }
-    }
+    };
 
     function displayUsers(users) {
         const container = document.getElementById(ELEMENTS.usersList);
@@ -274,7 +211,7 @@
         });
 
         container.appendChild(fragment);
-    }
+    };
 
     function createUserCard(user) {
         const card = document.createElement('div');
@@ -296,11 +233,11 @@
             </div>
         `;
         return card;
-    }
+    };
 
     function getRoleBadgeClass(role) {
         return ROLE_CLASSES[role] || ROLE_CLASSES.USER;
-    }
+    };
 
     function createActionButtons(user) {
         // Prevent self-deletion/editing if this is the current user
@@ -320,7 +257,7 @@
                 <i class="fas fa-trash"></i> Delete
             </button>
         `;
-    }
+    };
 
     function openEditRoleModal(userId, username, currentRole) {
         state.currentUserId = userId;
@@ -333,13 +270,13 @@
         }
 
         showModal(ELEMENTS.editRoleModal);
-    }
+    };
 
     function openDeleteUserModal(userId, username) {
         state.currentUserId = userId;
         updateElement(ELEMENTS.deleteUsername, username);
         showModal(ELEMENTS.deleteUserModal);
-    }
+    };
 
     function showModal(modalId) {
         const modalElement = document.getElementById(modalId);
@@ -347,7 +284,7 @@
             const modal = new bootstrap.Modal(modalElement);
             modal.show();
         }
-    }
+    };
 
     function hideModal(modalId) {
         const modalElement = document.getElementById(modalId);
@@ -357,7 +294,7 @@
                 modal.hide();
             }
         }
-    }
+    };
 
     async function confirmRoleChange() {
         const roleSelect = document.getElementById(ELEMENTS.roleSelect);
@@ -369,7 +306,7 @@
         const newRole = roleSelect.value;
 
         try {
-            const response = await makeAuthenticatedRequest(
+            const response = await AuthUtils.makeAuthenticatedRequest(
                 API_ENDPOINTS.USER_ROLE(state.currentUserId),
                 {
                     method: 'PUT',
@@ -389,13 +326,13 @@
             console.error('Error updating user role:', error);
             showAlert('Error updating user role', ALERT_TYPES.DANGER);
         }
-    }
+    };
 
     async function confirmDeleteUser() {
         if (!state.currentUserId) return;
 
         try {
-            const response = await makeAuthenticatedRequest(
+            const response = await AuthUtils.makeAuthenticatedRequest(
                 API_ENDPOINTS.DELETE_USER(state.currentUserId),
                 { method: 'DELETE' }
             );
@@ -412,7 +349,7 @@
             console.error('Error deleting user:', error);
             showAlert('Error deleting user', ALERT_TYPES.DANGER);
         }
-    }
+    };
 
     function searchUsers() {
         const searchInput = document.getElementById(ELEMENTS.searchInput);
@@ -426,7 +363,7 @@
         );
 
         displayUsers(filteredUsers);
-    }
+    };
 
     function debounce(func, wait) {
         let timeout;
@@ -438,7 +375,7 @@
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
-    }
+    };
 
     function handleKeyboardShortcuts(event) {
         // ESC key to close modals
@@ -451,13 +388,13 @@
                 }
             });
         }
-    }
+    };
 
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
-    }
+    };
 
     // ==================== CREATE USER ====================
 
@@ -477,7 +414,7 @@
             icon.classList.remove('fa-eye-slash');
             icon.classList.add('fa-eye');
         }
-    }
+    };
 
     /**
      * Validate password match
@@ -493,27 +430,51 @@
             document.getElementById('confirmPassword').setCustomValidity('');
             return true;
         }
-    }
+    };
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const confirmPasswordInput = document.getElementById('confirmPassword');
-        if (confirmPasswordInput) {
-            confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+    function resetCreateUserModal() {
+        // Reset form
+        const form = document.getElementById('createUserForm');
+        form.reset();
+
+        // Reset password visibility icons
+        const newPasswordIcon = document.getElementById('newPasswordIcon');
+        const confirmPasswordIcon = document.getElementById('confirmPasswordIcon');
+
+        if (newPasswordIcon) {
+            newPasswordIcon.classList.remove('fa-eye-slash');
+            newPasswordIcon.classList.add('fa-eye');
         }
-    });
 
+        if (confirmPasswordIcon) {
+            confirmPasswordIcon.classList.remove('fa-eye-slash');
+            confirmPasswordIcon.classList.add('fa-eye');
+        }
+
+        // Reset password input types
+        const newPassword = document.getElementById('newPassword');
+        const confirmPassword = document.getElementById('confirmPassword');
+
+        if (newPassword) newPassword.type = 'password';
+        if (confirmPassword) confirmPassword.type = 'password';
+
+        // Reset button state (in case it wasn't reset)
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-user-plus me-2"></i> Create User';
+        }
+    };
 
     async function createNewUser(event) {
         event.preventDefault();
 
-        // Prevent double submission
         const submitButton = event.target.querySelector('button[type="submit"]');
         if (submitButton.disabled) {
-            return; // Already processing
+            return;
         }
 
         try {
-            // Disable submit button to prevent double submission
             submitButton.disabled = true;
             submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
 
@@ -523,19 +484,22 @@
             const confirmPassword = document.getElementById('confirmPassword').value;
             const usernameGHUB = document.getElementById('newUsernameGHUB').value.trim();
 
-            // Validate required fields
             if (!username || !email || !password) {
                 showAlert('Please fill in all required fields', ALERT_TYPES.DANGER);
                 return;
             }
 
-            // Validate password match
             if (password !== confirmPassword) {
                 showAlert('Passwords do not match', ALERT_TYPES.DANGER);
                 return;
             }
 
-            // Validate email format
+            const passwordValidation = validatePasswordStrength(password);
+            if (!passwordValidation.isValid) {
+                showAlert(passwordValidation.errors.join('\n'), ALERT_TYPES.DANGER);
+                return;
+            }
+
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 showAlert('Please enter a valid email address', ALERT_TYPES.DANGER);
@@ -544,11 +508,11 @@
 
             const accessToken = localStorage.getItem('accessToken');
             if (!accessToken) {
-                window.location.href = '/ConsoleApp/login';
+                window.location.href = ROUTES.LOGIN;
                 return;
             }
 
-            const response = await fetch('/api/auth/register', {
+            const response = await fetch(API_ENDPOINTS.REGISTER, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -562,13 +526,11 @@
                 })
             });
 
-            // Parse response
             let data;
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 data = await response.json();
             } else {
-                // If response is not JSON (e.g., HTML error page), throw error
                 const text = await response.text();
                 console.error('Non-JSON response:', text);
                 throw new Error('Server returned an invalid response');
@@ -577,21 +539,17 @@
             if (response.ok) {
                 showAlert('User created successfully!', ALERT_TYPES.SUCCESS);
 
-                // Close modal
-                const modalElement = document.getElementById('createUserModal');
+                const modalElement = document.getElementById(ELEMENTS.createUserModal);
                 const modal = bootstrap.Modal.getInstance(modalElement);
                 if (modal) {
                     modal.hide();
                 }
 
-                // Reset form
                 document.getElementById('createUserForm').reset();
 
-                // Reload data
                 await loadUserStatistics();
                 await loadAllUsers();
             } else {
-                // Handle specific error messages from backend
                 const errorMessage = data.message || data.error || 'Failed to create user';
                 showAlert(errorMessage, ALERT_TYPES.DANGER);
             }
@@ -599,57 +557,92 @@
             console.error('Error creating user:', error);
             showAlert('An unexpected error occurred. Please try again.', ALERT_TYPES.DANGER);
         } finally {
-            // Re-enable submit button
             if (submitButton) {
                 submitButton.disabled = false;
                 submitButton.innerHTML = '<i class="fas fa-user-plus me-2"></i> Create User';
             }
         }
-    }
+    };
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const createUserModal = document.getElementById('createUserModal');
-        if (createUserModal) {
-            createUserModal.addEventListener('hidden.bs.modal', function () {
-                // Reset form
-                const form = document.getElementById('createUserForm');
-                form.reset();
+    function validatePasswordStrength(password) {
+        const errors = [];
 
-                // Reset password visibility icons
-                const newPasswordIcon = document.getElementById('newPasswordIcon');
-                const confirmPasswordIcon = document.getElementById('confirmPasswordIcon');
-
-                if (newPasswordIcon) {
-                    newPasswordIcon.classList.remove('fa-eye-slash');
-                    newPasswordIcon.classList.add('fa-eye');
-                }
-
-                if (confirmPasswordIcon) {
-                    confirmPasswordIcon.classList.remove('fa-eye-slash');
-                    confirmPasswordIcon.classList.add('fa-eye');
-                }
-
-                // Reset password input types
-                const newPassword = document.getElementById('newPassword');
-                const confirmPassword = document.getElementById('confirmPassword');
-
-                if (newPassword) newPassword.type = 'password';
-                if (confirmPassword) confirmPassword.type = 'password';
-
-                // Reset button state (in case it wasn't reset)
-                const submitButton = form.querySelector('button[type="submit"]');
-                if (submitButton) {
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = '<i class="fas fa-user-plus me-2"></i> Create User';
-                }
-            });
+        if (password.length < PASSWORD_CONFIG.MIN_LENGTH) {
+            errors.push(`Password must be at least ${PASSWORD_CONFIG.MIN_LENGTH} characters long`);
         }
-    });
+
+        if (PASSWORD_CONFIG.REQUIRE_UPPERCASE && !/[A-Z]/.test(password)) {
+            errors.push('Password must contain at least one uppercase letter');
+        }
+
+        if (PASSWORD_CONFIG.REQUIRE_LOWERCASE && !/[a-z]/.test(password)) {
+            errors.push('Password must contain at least one lowercase letter');
+        }
+
+        if (PASSWORD_CONFIG.REQUIRE_NUMBER && !/\d/.test(password)) {
+            errors.push('Password must contain at least one number');
+        }
+
+        if (PASSWORD_CONFIG.REQUIRE_SPECIAL && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+            errors.push('Password must contain at least one special character');
+        }
+
+        return {
+            isValid: errors.length === 0,
+            errors: errors
+        };
+    };
+
+    function isPasswordStrong(password) {
+        if (password.length < PASSWORD_CONFIG.MIN_LENGTH) {
+            return false;
+        }
+
+        if (PASSWORD_CONFIG.REQUIRE_UPPERCASE && !/[A-Z]/.test(password)) {
+            return false;
+        }
+
+        if (PASSWORD_CONFIG.REQUIRE_LOWERCASE && !/[a-z]/.test(password)) {
+            return false;
+        }
+
+        if (PASSWORD_CONFIG.REQUIRE_NUMBER && !/\d/.test(password)) {
+            return false;
+        }
+
+        if (PASSWORD_CONFIG.REQUIRE_SPECIAL && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+            return false;
+        }
+
+        return true;
+    };
 
     /**
      * Show alert message
      */
     function showAlert(message, type) {
-        // Simple alert implementation - could be replaced with a proper notification system
-        alert(`${type.charAt(0).toUpperCase() + type.slice(1)}: ${message}`);
+        const alertContainer = document.getElementById('alertContainer') || createAlertContainer();
+
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.role = 'alert';
+        alert.innerHTML = `
+            ${escapeHtml(message)}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        alertContainer.appendChild(alert);
+
+        setTimeout(() => {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 150);
+        }, 5000);
+    }
+
+    function createAlertContainer() {
+        const container = document.createElement('div');
+        container.id = 'alertContainer';
+        container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+        document.body.appendChild(container);
+        return container;
     }

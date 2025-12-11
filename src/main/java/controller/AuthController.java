@@ -1,26 +1,26 @@
-
 package controller;
 
 import dto.*;
-import dto.AuthenticationResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import repository.UserRepository;
 import service.AuthenticationService;
-
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import service.JwtService;
 import service.TokenRotationService;
 import tables.Users;
@@ -29,11 +29,6 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.dao.DataIntegrityViolationException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -197,8 +192,8 @@ public class AuthController {
                 log.info("Setting refresh token cookie with 30-day expiration for user: {}",
                         loginRequest.getUsername());
             } else {
-                refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
-                log.info("Setting refresh token cookie with 7-day expiration for user: {}",
+                refreshTokenCookie.setMaxAge(25 * 60); // 25 minutes
+                log.info("Setting refresh token cookie with 25 minutes expiration for user: {}",
                         loginRequest.getUsername());
             }
 
@@ -257,7 +252,7 @@ public class AuthController {
                 refreshTokenCookie.setMaxAge(30 * 24 * 60 * 60); // 30 days
                 log.info("Refreshing remember-me token for user: {}", authResponse.getUsername());
             } else {
-                refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
+                refreshTokenCookie.setMaxAge(25 * 60); // 25 minutes
                 log.info("Refreshing standard token for user: {}", authResponse.getUsername());
             }
 
@@ -273,7 +268,7 @@ public class AuthController {
         } catch (IllegalStateException e) {
             // Token reuse detected
             log.error("TOKEN REUSE DETECTED: {}", e.getMessage());
-            
+
             // Clear the cookie
             Cookie refreshTokenCookie = new Cookie("refreshToken", "");
             refreshTokenCookie.setHttpOnly(true);
@@ -281,7 +276,7 @@ public class AuthController {
             refreshTokenCookie.setPath("/");
             refreshTokenCookie.setMaxAge(0);
             response.addCookie(refreshTokenCookie);
-            
+
             // Return forbidden response
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new ErrorResponse("Token reuse detected", "Your session has been terminated for security reasons."));
@@ -297,11 +292,13 @@ public class AuthController {
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         try {
             String refreshToken = extractRefreshTokenFromCookies(request);
+            java.util.UUID userId = jwtService.extractUserId(refreshToken);
 
             if (refreshToken != null) {
                 authenticationService.logout(refreshToken);
                 log.info("Revoked refresh token");
             }
+            authenticationService.logoutAllDevices(userId);
             Cookie refreshTokenCookie = new Cookie("refreshToken", "");
             refreshTokenCookie.setHttpOnly(true);
             refreshTokenCookie.setSecure(true);

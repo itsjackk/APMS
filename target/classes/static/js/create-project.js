@@ -11,14 +11,11 @@ const state = {
 // CONSTANTS
 // ============================================================================
 const API_ENDPOINTS = {
-    REFRESH: '/api/auth/refresh',
-    DASHBOARD: '/api/auth/dashboard',
     USERS: '/api/admin/users',
     PROJECTS: '/api/projects'
 };
 
 const ROUTES = {
-    LOGIN: '/ConsoleApp/login',
     PROJECTS: '/ConsoleApp/projects'
 };
 
@@ -57,11 +54,19 @@ const PROJECT_TYPES = {
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     if (state.dataLoaded) return;
 
     state.dataLoaded = true;
-    initializePage();
+
+    // Check authentication first
+    const isAuth = await AuthUtils.isAuthenticated();
+    if (!isAuth) {
+        AuthUtils.redirectToLogin();
+        return;
+    }
+
+    await initializePage();
 });
 
 async function initializePage() {
@@ -123,102 +128,6 @@ function createSnowflake() {
 }
 
 // ============================================================================
-// AUTHENTICATION & TOKEN MANAGEMENT
-// ============================================================================
-function getAccessToken() {
-    const token = localStorage.getItem('accessToken');
-
-    if (!token || isTokenExpired(token)) {
-        localStorage.removeItem('accessToken');
-        return null;
-    }
-
-    return token;
-}
-
-function isTokenExpired(token) {
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const currentTime = Math.floor(Date.now() / 1000);
-        return payload.exp < currentTime;
-    } catch (error) {
-        console.error('Token validation error:', error);
-        return true;
-    }
-}
-
-async function refreshToken() {
-    try {
-        const response = await fetch(API_ENDPOINTS.REFRESH, {
-            method: 'POST',
-            credentials: 'include'
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            if (data.accessToken) {
-                localStorage.setItem('accessToken', data.accessToken);
-                return true;
-            }
-        }
-    } catch (error) {
-        console.error('Token refresh failed:', error);
-    }
-    return false;
-}
-
-function redirectToLogin() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('username');
-    window.location.href = ROUTES.LOGIN;
-}
-
-function logout() {
-    redirectToLogin();
-}
-
-// ============================================================================
-// API CALLS
-// ============================================================================
-async function makeAuthenticatedRequest(url, options = {}) {
-    let token = getAccessToken();
-
-    if (!token) {
-        const refreshed = await refreshToken();
-        if (!refreshed) {
-            redirectToLogin();
-            throw new Error('Authentication required');
-        }
-        token = getAccessToken();
-    }
-
-    const requestOptions = {
-        ...options,
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            ...options.headers
-        }
-    };
-
-    const response = await fetch(url, requestOptions);
-
-    if (response.status === 401) {
-        const refreshed = await refreshToken();
-        if (refreshed) {
-            // Retry with new token
-            token = getAccessToken();
-            requestOptions.headers['Authorization'] = `Bearer ${token}`;
-            return await fetch(url, requestOptions);
-        }
-        redirectToLogin();
-        throw new Error('Authentication failed');
-    }
-
-    return response;
-}
-
-// ============================================================================
 // USER ROLE MANAGEMENT
 // ============================================================================
 async function checkUserRole() {
@@ -232,14 +141,7 @@ async function checkUserRole() {
         }
 
         // Fallback to API check
-        const token = getAccessToken();
-        if (!token) {
-            console.log('No access token, redirecting to login');
-            redirectToLogin();
-            return;
-        }
-
-        const response = await makeAuthenticatedRequest(API_ENDPOINTS.DASHBOARD);
+        const response = await AuthUtils.makeAuthenticatedRequest(AuthUtils.CONFIG.API_ENDPOINTS.VERIFY);
 
         if (response.ok) {
             const data = await response.json();
@@ -254,7 +156,7 @@ async function checkUserRole() {
         console.error('Error checking user role:', error);
 
         // Fallback: check username
-        const username = localStorage.getItem('username');
+        const username = AuthUtils.getUsername();
         if (username && isAdminUsername(username)) {
             state.isAdmin = true;
             showAdminSection();
@@ -298,7 +200,7 @@ function handleProjectTypeChange(event) {
 
 async function loadUsers() {
     try {
-        const response = await makeAuthenticatedRequest(API_ENDPOINTS.USERS);
+        const response = await AuthUtils.makeAuthenticatedRequest(API_ENDPOINTS.USERS);
 
         if (response.ok) {
             const users = await response.json();
@@ -349,16 +251,8 @@ async function handleFormSubmit(event) {
             return;
         }
 
-        // Get access token
-        const accessToken = getAccessToken();
-        if (!accessToken) {
-            showAlert('Authentication required. Please log in again.', ALERT_TYPES.DANGER);
-            redirectToLogin();
-            return;
-        }
-
         // Submit project
-        await submitProject(projectData, accessToken);
+        await submitProject(projectData);
 
     } catch (error) {
         console.error('Error creating project:', error);
@@ -411,8 +305,8 @@ function validateProjectData(projectData) {
     return null;
 }
 
-async function submitProject(projectData, accessToken) {
-    const response = await makeAuthenticatedRequest(API_ENDPOINTS.PROJECTS, {
+async function submitProject(projectData) {
+    const response = await AuthUtils.makeAuthenticatedRequest(API_ENDPOINTS.PROJECTS, {
         method: 'POST',
         body: JSON.stringify(projectData)
     });
@@ -435,7 +329,7 @@ async function submitProject(projectData, accessToken) {
         if (response.status === 401) {
             showAlert('Session expired. Please log in again.', ALERT_TYPES.DANGER);
             setTimeout(() => {
-                redirectToLogin();
+                AuthUtils.redirectToLogin();
             }, 2000);
         } else {
             showAlert(result.message || 'Failed to create project', ALERT_TYPES.DANGER);
@@ -465,4 +359,14 @@ function showAlert(message, type) {
     `;
 
     alertContainer.appendChild(alertDiv);
+}
+
+async function logout() {
+    try {
+        await AuthUtils.logout();
+    } catch (error) {
+        console.error('Logout error:', error);
+        // Even if logout fails, redirect to login
+        AuthUtils.redirectToLogin();
+    }
 }

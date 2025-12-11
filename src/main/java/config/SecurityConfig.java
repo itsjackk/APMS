@@ -1,4 +1,3 @@
-
 package config;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -42,12 +41,12 @@ public class SecurityConfig {
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico", "/static/**").permitAll()
 
                         // Allow access to public API endpoints
-                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout", "/api/auth/logout-all", "/api/auth/dashboard", "/api/auth/verify").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout", "/api/auth/logout-all", "/api/auth/dashboard").permitAll()
 
                         // Allow access to Swagger/OpenAPI documentation
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
-                        //.requestMatchers("/api/auth/verify").authenticated()
+                        .requestMatchers("/api/auth/verify").authenticated()
 
                         // Admin endpoints - require authentication
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

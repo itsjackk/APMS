@@ -1,4 +1,3 @@
-
 package service;
 
 import dto.AuthenticationResponse;
@@ -91,7 +90,7 @@ public class AuthenticationService {
 
             log.info("User {} logged in with Remember Me (tokens valid for 30 days)", username);
         } else {
-            // Generate standard tokens (25 minutes access, 7 days refresh)
+            // Generate standard tokens (25 minutes access, 25 minutes refresh)
             accessToken = jwtService.generateAccessToken(
                     user.getId(),
                     user.getUsername(),
@@ -201,13 +200,13 @@ public class AuthenticationService {
                     rememberMe
             );
 
-            log.info("Token rotated successfully for user: {} (rotation count: {})", 
+            log.info("Token rotated successfully for user: {} (rotation count: {})",
                     username, newTokenEntity.getRotationCount());
 
             // 7. Return new tokens
             return new AuthenticationResponse(
-                    newAccessToken, 
-                    newTokenEntity.getToken(), 
+                    newAccessToken,
+                    newTokenEntity.getToken(),
                     user.getUsername()
             );
 
@@ -252,7 +251,7 @@ public class AuthenticationService {
 
         // Get all token families for this user
         var userTokens = refreshTokensRepository.findByUserId(userId);
-        
+
         // Revoke each token family
         userTokens.stream()
                 .map(RefreshTokens::getTokenFamily)
@@ -279,30 +278,30 @@ public class AuthenticationService {
     /**
      * Auto-revoke expired tokens (scheduled task)
      */
-    @Scheduled(fixedRate = 900000) // Every 15 minutes
+    @Scheduled(fixedRate = 120000) // Every 2 minutes
     @Transactional
     public void autoRevokeExpiredTokens() {
         log.info("Auto-revoking expired tokens");
         int revokedCount = refreshTokensRepository.revokeExpiredTokens(LocalDateTime.now());
         int deleteCount = refreshTokensRepository.deleteExpiredAndRevokedTokens(LocalDateTime.now());
-        log.info("Revoked {} expired tokens and deleted {} revoked or expired tokens", 
+        log.info("Revoked {} expired tokens and deleted {} revoked or expired tokens",
                 revokedCount, deleteCount);
     }
 
     /**
      * Security monitoring - check for suspicious activity
      */
-    @Scheduled(fixedRate = 3600000) // Every hour
+    @Scheduled(fixedRate = 900000) // Every 15 minutes
     @Transactional
     public void monitorSecurityIncidents() {
         log.info("Checking for security incidents...");
-        
+
         // Check for tokens with high rotation counts
         var suspiciousTokens = tokenRotationService.findSuspiciousTokens();
         if (!suspiciousTokens.isEmpty()) {
             log.warn("Found {} tokens with suspicious rotation patterns", suspiciousTokens.size());
         }
-        
+
         // Check for recent token reuse incidents
         var recentIncidents = tokenRotationService.getRecentSecurityIncidents(24);
         if (!recentIncidents.isEmpty()) {
@@ -316,15 +315,15 @@ public class AuthenticationService {
      */
     public SessionInfo getUserSessionInfo(UUID userId) {
         var tokens = refreshTokensRepository.findByUserId(userId);
-        
+
         long activeTokens = tokens.stream()
                 .filter(t -> !t.isRevoked() && !t.isExpired())
                 .count();
-        
+
         long totalRotations = tokens.stream()
                 .mapToLong(RefreshTokens::getRotationCount)
                 .sum();
-        
+
         return new SessionInfo(activeTokens, totalRotations);
     }
 }

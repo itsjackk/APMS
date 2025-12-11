@@ -1,4 +1,3 @@
-
 package service;
 
 import org.slf4j.Logger;
@@ -46,11 +45,11 @@ public class TokenRotationService {
 
     /**
      * Rotate a refresh token - creates new token and invalidates old one
-     * 
-     * @param oldToken The current refresh token to rotate
-     * @param userId The user ID
-     * @param username The username
-     * @param role The user role
+     *
+     * @param oldToken   The current refresh token to rotate
+     * @param userId     The user ID
+     * @param username   The username
+     * @param role       The user role
      * @param rememberMe Whether this is a remember-me token
      * @return New refresh token entity
      * @throws SecurityException if rotation fails security checks
@@ -74,7 +73,7 @@ public class TokenRotationService {
 
         // 5. Check rotation count limit
         if (oldTokenEntity.getRotationCount() >= maxRotationCount) {
-            log.warn("Token rotation count exceeded for user: {} (count: {})", 
+            log.warn("Token rotation count exceeded for user: {} (count: {})",
                     username, oldTokenEntity.getRotationCount());
             throw new SecurityException("Token rotation limit exceeded");
         }
@@ -82,7 +81,7 @@ public class TokenRotationService {
         // 6. Generate new refresh token (JWT)
         String newRefreshTokenJwt;
         LocalDateTime expiresAt;
-        
+
         if (rememberMe) {
             newRefreshTokenJwt = jwtService.generateRefreshToken(userId, username, role, 30); // 30 days
             expiresAt = jwtService.getRefreshTokenExpirationTime(30);
@@ -109,7 +108,7 @@ public class TokenRotationService {
         oldTokenEntity.revoke();
         refreshTokensRepository.save(oldTokenEntity);
 
-        log.info("Token rotated successfully for user: {} (rotation count: {})", 
+        log.info("Token rotated successfully for user: {} (rotation count: {})",
                 username, newTokenEntity.getRotationCount());
 
         return newTokenEntity;
@@ -126,14 +125,14 @@ public class TokenRotationService {
     private void checkForTokenReuse(String token, String tokenFamily) {
         // Check if this token was previously rotated (has a successor)
         Optional<RefreshTokens> successorToken = refreshTokensRepository.findByPreviousToken(token);
-        
+
         if (successorToken.isPresent()) {
             // TOKEN REUSE DETECTED! This is a security incident
             log.error("🚨 TOKEN REUSE DETECTED! Token family: {} - Revoking entire family", tokenFamily);
-            
+
             // Revoke entire token family
             revokeTokenFamily(tokenFamily, "Token reuse detected");
-            
+
             throw new SecurityException("Token reuse detected - all tokens revoked");
         }
     }
@@ -144,9 +143,9 @@ public class TokenRotationService {
     @Transactional
     public void revokeTokenFamily(String tokenFamily, String reason) {
         log.warn("Revoking token family: {} - Reason: {}", tokenFamily, reason);
-        
+
         refreshTokensRepository.revokeTokenFamily(tokenFamily, LocalDateTime.now());
-        
+
         // Optional: Send security alert to user
         // emailService.sendSecurityAlert(userId, "Token theft detected");
     }
@@ -177,12 +176,12 @@ public class TokenRotationService {
      */
     private void checkRotationRateLimit(String tokenFamily) {
         LocalDateTime rateLimitThreshold = LocalDateTime.now().minusSeconds(rateLimitSeconds);
-        
+
         List<RefreshTokens> recentRotations = refreshTokensRepository
                 .findRecentlyRotatedTokensInFamily(tokenFamily, rateLimitThreshold);
 
         if (recentRotations.size() >= maxRotationsPerMinute) {
-            log.warn("Rate limit exceeded for token family: {} ({} rotations in {} seconds)", 
+            log.warn("Rate limit exceeded for token family: {} ({} rotations in {} seconds)",
                     tokenFamily, recentRotations.size(), rateLimitSeconds);
             throw new SecurityException("Token rotation rate limit exceeded");
         }
@@ -205,13 +204,13 @@ public class TokenRotationService {
     public boolean hasMultipleActiveTokens(String tokenFamily) {
         long activeCount = refreshTokensRepository.countActiveTokensInFamily(
                 tokenFamily, LocalDateTime.now());
-        
+
         if (activeCount > 1) {
-            log.warn("Multiple active tokens detected in family: {} (count: {})", 
+            log.warn("Multiple active tokens detected in family: {} (count: {})",
                     tokenFamily, activeCount);
             return true;
         }
-        
+
         return false;
     }
 
@@ -259,17 +258,17 @@ public class TokenRotationService {
     @Transactional
     public void cleanupOldTokensInFamily(String tokenFamily, int keepCount) {
         List<RefreshTokens> tokens = refreshTokensRepository.findByTokenFamily(tokenFamily);
-        
+
         if (tokens.size() > keepCount) {
             // Sort by creation date (newest first)
             tokens.sort((t1, t2) -> t2.getCreatedAt().compareTo(t1.getCreatedAt()));
-            
+
             // Delete old tokens (keep only recent ones)
             for (int i = keepCount; i < tokens.size(); i++) {
                 refreshTokensRepository.delete(tokens.get(i));
             }
-            
-            log.debug("Cleaned up {} old tokens in family: {}", 
+
+            log.debug("Cleaned up {} old tokens in family: {}",
                     tokens.size() - keepCount, tokenFamily);
         }
     }

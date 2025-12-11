@@ -18,7 +18,7 @@ const CONFIG = {
         DASHBOARD: '/ConsoleApp/dashboard'
     },
     TOKEN: {
-        STANDARD_LIFETIME: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+        STANDARD_LIFETIME: 25 * 60 * 1000, // 25 minutes in milliseconds
         REMEMBER_ME_LIFETIME: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
         REFRESH_BUFFER: 5 * 60 * 1000 // Refresh 5 minutes before expiry
     },
@@ -31,79 +31,108 @@ const CONFIG = {
 };
 
 // ============================================================================
+// STORAGE MANAGER (Must be defined before AuthState)
+// ============================================================================
+
+const StorageManager = {
+    getItem(key) {
+        try {
+            return localStorage.getItem(key);
+        } catch (error) {
+            console.error('Error reading from localStorage');
+            return null;
+        }
+    },
+
+    setItem(key, value) {
+        try {
+            localStorage.setItem(key, value);
+            return true;
+        } catch (error) {
+            console.error('Error writing to localStorage');
+            if (error.name === 'QuotaExceededError') {
+                AlertUtils.show(
+                    'Storage quota exceeded. Please clear your browser data.',
+                    'warning'
+                );
+            }
+            return false;
+        }
+    },
+
+    removeItem(key) {
+        try {
+            localStorage.removeItem(key);
+            return true;
+        } catch (error) {
+            console.error('Error removing from localStorage');
+            return false;
+        }
+    },
+
+    clear() {
+        try {
+            localStorage.clear();
+        } catch (error) {
+            console.error('Error clearing localStorage');
+        }
+    },
+
+    isAvailable() {
+        try {
+            const test = '__storage_test__';
+            localStorage.setItem(test, test);
+            localStorage.removeItem(test);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+};
+
+// ============================================================================
 // STATE MANAGEMENT
 // ============================================================================
 
 const AuthState = {
     isLoading: false,
 
-    /**
-     * Get access token from localStorage
-     * @returns {string|null}
-     */
     getToken() {
-        return localStorage.getItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN);
+        return StorageManager.getItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN);
     },
 
-    /**
-     * Set access token in localStorage
-     * @param {string} token
-     */
     setToken(token) {
         if (token) {
-            localStorage.setItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN, token);
+            StorageManager.setItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN, token);
         }
     },
 
-    /**
-     * Get username from localStorage
-     * @returns {string|null}
-     */
     getUsername() {
-        return localStorage.getItem(CONFIG.STORAGE_KEYS.USERNAME);
+        return StorageManager.getItem(CONFIG.STORAGE_KEYS.USERNAME);
     },
 
-    /**
-     * Set username in localStorage
-     * @param {string} username
-     */
     setUsername(username) {
         if (username) {
-            localStorage.setItem(CONFIG.STORAGE_KEYS.USERNAME, username);
+            StorageManager.setItem(CONFIG.STORAGE_KEYS.USERNAME, username);
         }
     },
 
-    /**
-     * Set remember me preference
-     * @param {boolean} rememberMe
-     */
     setRememberMe(rememberMe) {
-        localStorage.setItem(CONFIG.STORAGE_KEYS.REMEMBER_ME, rememberMe.toString());
+        StorageManager.setItem(CONFIG.STORAGE_KEYS.REMEMBER_ME, rememberMe.toString());
     },
 
-    /**
-     * Get remember me preference
-     * @returns {boolean}
-     */
     getRememberMe() {
-        return localStorage.getItem(CONFIG.STORAGE_KEYS.REMEMBER_ME) === 'true';
+        return StorageManager.getItem(CONFIG.STORAGE_KEYS.REMEMBER_ME) === 'true';
     },
 
-    /**
-     * Check if remember me is enabled
-     * @returns {boolean}
-     */
     isRememberMeEnabled() {
         return this.getRememberMe();
     },
 
-    /**
-     * Clear all authentication data
-     */
     clearToken() {
-        localStorage.removeItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN);
-        localStorage.removeItem(CONFIG.STORAGE_KEYS.USERNAME);
-        localStorage.removeItem(CONFIG.STORAGE_KEYS.REMEMBER_ME);
+        StorageManager.removeItem(CONFIG.STORAGE_KEYS.ACCESS_TOKEN);
+        StorageManager.removeItem(CONFIG.STORAGE_KEYS.USERNAME);
+        StorageManager.removeItem(CONFIG.STORAGE_KEYS.REMEMBER_ME);
     }
 };
 
@@ -111,15 +140,28 @@ const AuthState = {
 // UTILITY FUNCTIONS
 // ============================================================================
 
-/**
- * Token utilities
- */
+const InputSanitizer = {
+    sanitizeUsername(username) {
+        return username
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9_.-]/g, '');
+    },
+
+    sanitizeEmail(email) {
+        return email
+            .trim()
+            .toLowerCase();
+    },
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+};
+
 const TokenUtils = {
-    /**
-     * Decode JWT token
-     * @param {string} token
-     * @returns {object|null}
-     */
     decode(token) {
         if (!token) return null;
 
@@ -134,16 +176,11 @@ const TokenUtils = {
             );
             return JSON.parse(jsonPayload);
         } catch (error) {
-            console.error('Error decoding token:', error);
+            console.error('Error decoding token');
             return null;
         }
     },
 
-    /**
-     * Check if token is expired
-     * @param {string} token
-     * @returns {boolean}
-     */
     isExpired(token) {
         const payload = this.decode(token);
         if (!payload || !payload.exp) return true;
@@ -152,11 +189,6 @@ const TokenUtils = {
         return payload.exp < currentTime;
     },
 
-    /**
-     * Check if token needs refresh (within buffer time)
-     * @param {string} token
-     * @returns {boolean}
-     */
     needsRefresh(token) {
         const payload = this.decode(token);
         if (!payload || !payload.exp) return true;
@@ -168,11 +200,6 @@ const TokenUtils = {
         return timeUntilExpiry < CONFIG.TOKEN.REFRESH_BUFFER;
     },
 
-    /**
-     * Get time until token expires
-     * @param {string} token
-     * @returns {number} - Time in milliseconds
-     */
     getTimeUntilExpiry(token) {
         const payload = this.decode(token);
         if (!payload || !payload.exp) return 0;
@@ -182,39 +209,24 @@ const TokenUtils = {
         return Math.max(0, expiryTime - currentTime);
     },
 
-    /**
-     * Check if token has remember me flag
-     * @param {string} token
-     * @returns {boolean}
-     */
     hasRememberMe(token) {
         const payload = this.decode(token);
         return payload?.rememberMe === true;
     }
 };
 
-/**
- * Redirect loop detection utilities
- */
 const RedirectLoopDetector = {
-    /**
-     * Increment redirect counter
-     */
     incrementCounter() {
         const count = this.getCounter();
         const timestamp = Date.now();
 
-        localStorage.setItem(CONFIG.REDIRECT_LOOP.STORAGE_KEY, (count + 1).toString());
-        localStorage.setItem(CONFIG.REDIRECT_LOOP.TIMESTAMP_KEY, timestamp.toString());
+        StorageManager.setItem(CONFIG.REDIRECT_LOOP.STORAGE_KEY, (count + 1).toString());
+        StorageManager.setItem(CONFIG.REDIRECT_LOOP.TIMESTAMP_KEY, timestamp.toString());
     },
 
-    /**
-     * Get current redirect counter
-     * @returns {number}
-     */
     getCounter() {
-        const count = localStorage.getItem(CONFIG.REDIRECT_LOOP.STORAGE_KEY);
-        const timestamp = localStorage.getItem(CONFIG.REDIRECT_LOOP.TIMESTAMP_KEY);
+        const count = StorageManager.getItem(CONFIG.REDIRECT_LOOP.STORAGE_KEY);
+        const timestamp = StorageManager.getItem(CONFIG.REDIRECT_LOOP.TIMESTAMP_KEY);
 
         if (!count || !timestamp) return 0;
 
@@ -228,42 +240,22 @@ const RedirectLoopDetector = {
         return parseInt(count) || 0;
     },
 
-    /**
-     * Check if in redirect loop
-     * @returns {boolean}
-     */
     isInLoop() {
         return this.getCounter() >= CONFIG.REDIRECT_LOOP.MAX_REDIRECTS;
     },
 
-    /**
-     * Reset redirect counter
-     */
     reset() {
-        localStorage.removeItem(CONFIG.REDIRECT_LOOP.STORAGE_KEY);
-        localStorage.removeItem(CONFIG.REDIRECT_LOOP.TIMESTAMP_KEY);
+        StorageManager.removeItem(CONFIG.REDIRECT_LOOP.STORAGE_KEY);
+        StorageManager.removeItem(CONFIG.REDIRECT_LOOP.TIMESTAMP_KEY);
     },
 
-    /**
-     * Check if was redirected from protected page
-     * @returns {boolean}
-     */
     wasRedirectedFromProtectedPage() {
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.has('redirect') || document.referrer.includes('/dashboard');
     }
 };
 
-/**
- * Alert/Notification utilities
- */
 const AlertUtils = {
-    /**
-     * Show alert message
-     * @param {string} message
-     * @param {string} type - 'success', 'danger', 'warning', 'info'
-     * @param {number} duration - Auto-hide duration in ms (0 = no auto-hide)
-     */
     show(message, type = 'info', duration = 0) {
         const alertContainer = document.getElementById('alertContainer');
         if (!alertContainer) {
@@ -288,9 +280,6 @@ const AlertUtils = {
         }
     },
 
-    /**
-     * Clear all alerts
-     */
     clear() {
         const alertContainer = document.getElementById('alertContainer');
         if (alertContainer) {
@@ -299,13 +288,7 @@ const AlertUtils = {
     }
 };
 
-/**
- * Visual effects utilities
- */
 const VisualEffects = {
-    /**
-     * Create snowflake effect
-     */
     createSnowflakes() {
         const container = document.getElementById('snowflakes');
         if (!container) return;
@@ -333,6 +316,77 @@ const VisualEffects = {
 };
 
 // ============================================================================
+// RATE LIMITING
+// ============================================================================
+
+const RateLimiter = {
+    MAX_ATTEMPTS: 5,
+    LOCKOUT_DURATION: 15 * 60 * 1000, // 15 minutes
+    STORAGE_KEY: 'loginAttempts',
+    LOCKOUT_KEY: 'loginLockout',
+
+    getAttempts() {
+        const attempts = StorageManager.getItem(this.STORAGE_KEY);
+        return attempts ? JSON.parse(attempts) : { count: 0, timestamp: Date.now() };
+    },
+
+    incrementAttempts() {
+        const attempts = this.getAttempts();
+
+        if (Date.now() - attempts.timestamp > 60000) {
+            attempts.count = 1;
+            attempts.timestamp = Date.now();
+        } else {
+            attempts.count++;
+        }
+
+        StorageManager.setItem(this.STORAGE_KEY, JSON.stringify(attempts));
+
+        if (attempts.count >= this.MAX_ATTEMPTS) {
+            this.lockAccount();
+        }
+
+        return attempts.count;
+    },
+
+    lockAccount() {
+        const lockoutTime = Date.now() + this.LOCKOUT_DURATION;
+        StorageManager.setItem(this.LOCKOUT_KEY, lockoutTime.toString());
+    },
+
+    isLocked() {
+        const lockoutTime = StorageManager.getItem(this.LOCKOUT_KEY);
+        if (!lockoutTime) return false;
+
+        const timeRemaining = parseInt(lockoutTime) - Date.now();
+        if (timeRemaining <= 0) {
+            this.reset();
+            return false;
+        }
+
+        return true;
+    },
+
+    getTimeRemaining() {
+        const lockoutTime = StorageManager.getItem(this.LOCKOUT_KEY);
+        if (!lockoutTime) return 0;
+
+        const timeRemaining = parseInt(lockoutTime) - Date.now();
+        return Math.max(0, Math.ceil(timeRemaining / 1000));
+    },
+
+    reset() {
+        StorageManager.removeItem(this.STORAGE_KEY);
+        StorageManager.removeItem(this.LOCKOUT_KEY);
+    },
+
+    getRemainingAttempts() {
+        const attempts = this.getAttempts();
+        return Math.max(0, this.MAX_ATTEMPTS - attempts.count);
+    }
+};
+
+// ============================================================================
 // UI MANAGEMENT
 // ============================================================================
 
@@ -348,9 +402,6 @@ const UIManager = {
         rememberMeCheckbox: null
     },
 
-    /**
-     * Initialize UI elements
-     */
     init() {
         this.elements.loginForm = document.getElementById('loginForm');
         this.elements.usernameInput = document.getElementById('username');
@@ -364,9 +415,6 @@ const UIManager = {
         this.attachEventListeners();
     },
 
-    /**
-     * Attach event listeners to UI elements
-     */
     attachEventListeners() {
         if (this.elements.loginForm) {
             this.elements.loginForm.addEventListener('submit', (e) => {
@@ -381,130 +429,124 @@ const UIManager = {
             });
         }
 
+        if (this.elements.usernameInput) {
+            this.elements.usernameInput.addEventListener('input', () => {
+                this.clearFieldError(this.elements.usernameInput);
+            });
+        }
+
         if (this.elements.passwordInput) {
-            this.elements.passwordInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    AuthService.handleLogin();
-                }
+            this.elements.passwordInput.addEventListener('input', () => {
+                this.clearFieldError(this.elements.passwordInput);
             });
         }
     },
 
-    /**
-     * Toggle password visibility
-     */
     togglePasswordVisibility() {
-        const passwordField = this.elements.passwordInput;
-        const icon = this.elements.togglePasswordBtn?.querySelector('i');
+        const type = this.elements.passwordInput.type === 'password' ? 'text' : 'password';
+        this.elements.passwordInput.type = type;
 
-        if (!passwordField || !icon) return;
-
-        if (passwordField.type === 'password') {
-            passwordField.type = 'text';
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-            this.elements.togglePasswordBtn.setAttribute('aria-label', 'Hide password');
-        } else {
-            passwordField.type = 'password';
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
-            this.elements.togglePasswordBtn.setAttribute('aria-label', 'Show password');
+        const icon = this.elements.togglePasswordBtn.querySelector('i');
+        if (icon) {
+            icon.className = type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
         }
     },
 
-    /**
-     * Set loading state for login button
-     * @param {boolean} loading - Whether to show loading state
-     */
-    setLoadingState(loading) {
-        if (!this.elements.loginBtn) return;
+    setLoadingState(isLoading) {
+        AuthState.isLoading = isLoading;
 
-        AuthState.isLoading = loading;
-
-        this.elements.loginBtn.disabled = loading;
+        if (this.elements.loginBtn) {
+            this.elements.loginBtn.disabled = isLoading;
+        }
 
         if (this.elements.loginBtnText) {
-            this.elements.loginBtnText.style.display = loading ? 'none' : 'inline';
+            this.elements.loginBtnText.style.display = isLoading ? 'none' : 'inline';
         }
 
         if (this.elements.loginBtnSpinner) {
-            this.elements.loginBtnSpinner.style.display = loading ? 'inline-block' : 'none';
+            this.elements.loginBtnSpinner.style.display = isLoading ? 'inline-block' : 'none';
         }
 
-        // Disable form inputs during loading
         if (this.elements.usernameInput) {
-            this.elements.usernameInput.disabled = loading;
+            this.elements.usernameInput.disabled = isLoading;
         }
+
         if (this.elements.passwordInput) {
-            this.elements.passwordInput.disabled = loading;
+            this.elements.passwordInput.disabled = isLoading;
+        }
+
+        if (this.elements.rememberMeCheckbox) {
+            this.elements.rememberMeCheckbox.disabled = isLoading;
         }
     },
 
-    /**
-     * Get form values
-     * @returns {object} - Form data
-     */
     getFormData() {
         return {
             username: this.elements.usernameInput?.value.trim() || '',
             password: this.elements.passwordInput?.value || '',
-            rememberMe: this.getRememberMeState()
+            rememberMe: this.elements.rememberMeCheckbox?.checked || false
         };
     },
 
-    /**
-     * Get remember me checkbox state
-     * @returns {boolean}
-     */
-    getRememberMeState() {
-        return this.elements.rememberMeCheckbox?.checked || false;
-    },
-
-    /**
-     * Clear form fields
-     */
     clearForm() {
-        if (this.elements.usernameInput) {
-            this.elements.usernameInput.value = '';
+        if (this.elements.loginForm) {
+            this.elements.loginForm.reset();
         }
-        if (this.elements.passwordInput) {
-            this.elements.passwordInput.value = '';
+        this.clearAllErrors();
+    },
+
+    showFieldError(field, message) {
+        if (!field) return;
+
+        field.classList.add('is-invalid');
+
+        let errorDiv = field.nextElementSibling;
+        if (!errorDiv || !errorDiv.classList.contains('invalid-feedback')) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback';
+            field.parentNode.insertBefore(errorDiv, field.nextSibling);
         }
-        if (this.elements.rememberMeCheckbox) {
-            this.elements.rememberMeCheckbox.checked = false;
+        errorDiv.textContent = message;
+    },
+
+    clearFieldError(field) {
+        if (!field) return;
+
+        field.classList.remove('is-invalid');
+        const errorDiv = field.nextElementSibling;
+        if (errorDiv && errorDiv.classList.contains('invalid-feedback')) {
+            errorDiv.remove();
         }
     },
 
-    /**
-     * Validate form inputs
-     * @returns {object} - Validation result
-     */
+    clearAllErrors() {
+        const invalidFields = document.querySelectorAll('.is-invalid');
+        invalidFields.forEach(field => this.clearFieldError(field));
+    },
+
     validateForm() {
-        const { username, password, rememberMe } = this.getFormData();
+        const { username, password } = this.getFormData();
+        this.clearAllErrors();
+
+        let isValid = true;
 
         if (!username) {
-            return {
-                valid: false,
-                message: 'Please enter your username'
-            };
+            this.showFieldError(this.elements.usernameInput, 'Username is required');
+            isValid = false;
+        } else if (username.length < 3) {
+            this.showFieldError(this.elements.usernameInput, 'Username must be at least 3 characters');
+            isValid = false;
         }
 
         if (!password) {
-            return {
-                valid: false,
-                message: 'Please enter your password'
-            };
+            this.showFieldError(this.elements.passwordInput, 'Password is required');
+            isValid = false;
+        } else if (password.length < 4) {
+            this.showFieldError(this.elements.passwordInput, 'Password must be at least 6 characters');
+            isValid = false;
         }
 
-        if (username.length < 3) {
-            return {
-                valid: false,
-                message: 'Username must be at least 3 characters'
-            };
-        }
-
-        return { valid: true };
+        return isValid;
     }
 };
 
@@ -512,260 +554,166 @@ const UIManager = {
 // AUTHENTICATION SERVICE
 // ============================================================================
 
+
+// ============================================================================
+// AUTHENTICATION SERVICE - Now using AuthUtils
+// ============================================================================
+
 const AuthService = {
-    /**
-     * Check if user is already authenticated
-     */
-    async checkExistingAuth() {
-        const storedToken = AuthState.getToken();
-
-        if (!storedToken) {
-            console.log('No stored token found');
-            return;
-        }
-
-        // Check for redirect loop first
-        if (RedirectLoopDetector.isInLoop()) {
-            console.warn('Redirect loop detected, clearing tokens');
-            AuthState.clearToken();
-            RedirectLoopDetector.reset();
-            AlertUtils.show('Your session is invalid. Please login again.', 'warning');
-            return;
-        }
-
-        // If we were redirected from a protected page, the token is likely invalid
-        if (RedirectLoopDetector.wasRedirectedFromProtectedPage()) {
-            console.log('Redirected from protected page, clearing potentially invalid token');
-            AuthState.clearToken();
-            RedirectLoopDetector.reset();
-            AlertUtils.show('Your session has expired. Please login again.', 'info');
-            return;
-        }
-
-        // Check if token is expired (client-side check)
-        if (TokenUtils.isExpired(storedToken)) {
-            console.log('Token expired, clearing storage');
-            AuthState.clearToken();
-            RedirectLoopDetector.reset();
-            return;
-        }
-
-        // Check if remember me was enabled in previous session
-        const rememberMeEnabled = AuthState.isRememberMeEnabled();
-        if (rememberMeEnabled) {
-            // For remember me sessions, check if token needs refresh
-            if (TokenUtils.needsRefresh(storedToken)) {
-                console.log('Token needs refresh, attempting refresh...');
-                const refreshed = await this.refreshAccessToken();
-                if (refreshed) {
-                    console.log('Token refreshed successfully, redirecting to dashboard');
-                    RedirectLoopDetector.incrementCounter();
-                    this.redirectToDashboard();
-                    return;
-                } else {
-                    console.log('Token refresh failed, clearing storage');
-                    AuthState.clearToken();
-                    RedirectLoopDetector.reset();
-                    AlertUtils.show('Your session has expired. Please login again.', 'info');
-                    return;
-                }
-            }
-        }
-
-        // Token appears valid, verify with server
-        console.log('Token found, verifying with server...');
-        const isValid = await this.verifyTokenWithServer(storedToken);
-
-        if (isValid) {
-            console.log('Token verified, redirecting to dashboard');
-            RedirectLoopDetector.incrementCounter();
-            this.redirectToDashboard();
-        } else {
-            console.log('Token invalid on server, clearing storage');
-            AuthState.clearToken();
-            RedirectLoopDetector.reset();
-            AlertUtils.show('Your session is no longer valid. Please login again.', 'info');
-        }
-    },
-
-    /**
-     * Refresh access token using HttpOnly cookie
-     * @returns {Promise<boolean>} - True if refresh successful
-     */
-    async refreshAccessToken() {
-        try {
-            // No need to get refresh token - it's in the cookie
-            const response = await fetch(CONFIG.API_ENDPOINTS.REFRESH, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                // No body needed - refresh token is in cookie
-                credentials: 'include' // This sends the HttpOnly cookie
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Token refresh successful:', data);
-
-                // Store new access token
-                AuthState.setToken(data.accessToken);
-
-                // Update remember me preference
-                const rememberMe = TokenUtils.hasRememberMe(data.accessToken);
-                AuthState.setRememberMe(rememberMe);
-
-                return true;
-            } else if (response.status === 403) {
-                // Handle token reuse detection
-                console.error('TOKEN REUSE DETECTED - All tokens revoked');
-                AuthState.clearToken();
-                AlertUtils.show(
-                    'Security violation detected. Please login again.',
-                    'danger'
-                );
-                return false;
-            } else if (response.status === 401) {
-                // Refresh token expired or invalid
-                console.warn('Refresh token expired');
-                AuthState.clearToken();
-                return false;
-            } else {
-                const errorData = await response.json().catch(() => ({}));
-                console.warn('Token refresh failed:', response.status, errorData);
-                return false;
-            }
-        } catch (error) {
-            console.error('Token refresh error:', error);
-            return false;
-        }
-    },
-
-    /**
-     * Verify token validity with server
-     * @param {string} token - Token to verify
-     * @returns {Promise<boolean>} - True if valid, false otherwise
-     */
-    async verifyTokenWithServer(token) {
-        try {
-            const response = await fetch(CONFIG.API_ENDPOINTS.VERIFY_TOKEN, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Token verification successful:', data);
-                return data.valid === true;
-            } else {
-                const errorData = await response.json().catch(() => ({}));
-                console.warn('Token verification failed:', response.status, errorData);
-                return false;
-            }
-        } catch (error) {
-            console.error('Token verification error:', error);
-            return false;
-        }
-    },
-
-    /**
-     * Handle login form submission
-     */
     async handleLogin() {
-        // Prevent multiple submissions
         if (AuthState.isLoading) return;
 
-        // Validate form
-        const validation = UIManager.validateForm();
-        if (!validation.valid) {
-            AlertUtils.show(validation.message, 'warning');
+        if (RateLimiter.isLocked()) {
+            const timeRemaining = RateLimiter.getTimeRemaining();
+            const minutes = Math.floor(timeRemaining / 60);
+            AlertUtils.show(
+                `Account locked. Try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`,
+                'danger'
+            );
             return;
         }
 
-        const { username, password, rememberMe } = UIManager.getFormData();
+        if (!UIManager.validateForm()) {
+            return;
+        }
 
         UIManager.setLoadingState(true);
         AlertUtils.clear();
+
+        const { username, password, rememberMe } = UIManager.getFormData();
 
         try {
             const response = await fetch(CONFIG.API_ENDPOINTS.LOGIN, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ username, password, rememberMe }),
-                credentials: 'include'
+                credentials: 'include',
+                body: JSON.stringify({
+                    username: InputSanitizer.sanitizeUsername(username),
+                    password: password,
+                    rememberMe: rememberMe
+                })
             });
 
             const data = await response.json();
 
-            if (response.ok) {
+            if (response.ok && data.accessToken) {
+                RateLimiter.reset();
                 await this.handleLoginSuccess(data, rememberMe);
             } else {
-                this.handleLoginError(data);
+                const remainingAttempts = RateLimiter.incrementAttempts();
+                const attemptsLeft = RateLimiter.getRemainingAttempts();
+
+                if (RateLimiter.isLocked()) {
+                    const timeRemaining = RateLimiter.getTimeRemaining();
+                    const minutes = Math.floor(timeRemaining / 60);
+                    AlertUtils.show(
+                        `Too many failed attempts. Account locked for ${minutes} minute${minutes !== 1 ? 's' : ''}.`,
+                        'danger'
+                    );
+                } else if (attemptsLeft <= 2) {
+                    AlertUtils.show(
+                        `${data.message || 'Login failed'}. ${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} remaining.`,
+                        'danger'
+                    );
+                } else {
+                    AlertUtils.show(
+                        data.message || 'Invalid username or password',
+                        'danger'
+                    );
+                }
             }
         } catch (error) {
             console.error('Login error:', error);
-            AlertUtils.show(`Network error: ${error.message}`, 'danger');
+            AlertUtils.show(
+                'Connection error. Please check your internet connection and try again.',
+                'danger'
+            );
         } finally {
             UIManager.setLoadingState(false);
         }
     },
 
-    /**
-     * Handle successful login
-     * @param {object} data - Response data from server
-     * @param {boolean} rememberMe - Remember me preference
-     */
     async handleLoginSuccess(data, rememberMe) {
-        console.log('Login successful');
-
-        // Clear any redirect loop tracking
-        RedirectLoopDetector.reset();
-
-        // Store authentication data (access token only)
         AuthState.setToken(data.accessToken);
         AuthState.setUsername(data.username);
         AuthState.setRememberMe(rememberMe);
 
-        // Refresh token is automatically stored in HttpOnly cookie by browser
+        UIManager.clearForm();
+        AlertUtils.show('Login successful! Redirecting...', 'success', 1500);
+        RedirectLoopDetector.reset();
 
-        // Show success message
-        AlertUtils.show(`Login successful! Welcome ${data.username}`, 'success', 2000);
+        setTimeout(() => {
+            this.redirectToDashboard();
+        }, 1500);
+    },
 
-        // Wait for localStorage to be written and alert to be visible
-        await new Promise(resolve => setTimeout(resolve, 500));
+    redirectToDashboard() {
+        window.location.href = CONFIG.ROUTES.DASHBOARD;
+    },
 
-        // Redirect to dashboard
+    async checkExistingAuth() {
+        const token = AuthState.getToken();
+
+        if (!token) {
+            return;
+        }
+
+        if (TokenUtils.isExpired(token)) {
+            await AuthUtils.refreshToken();
+            const newToken = AuthState.getToken();
+
+            if (newToken && !TokenUtils.isExpired(newToken)) {
+                if (RedirectLoopDetector.isInLoop()) {
+                    AuthState.clearToken();
+                    AlertUtils.show('Session expired. Please login again.', 'warning');
+                    return;
+                }
+                RedirectLoopDetector.incrementCounter();
+                this.redirectToDashboard();
+            } else {
+                AuthState.clearToken();
+            }
+            return;
+        }
+
+        if (RedirectLoopDetector.isInLoop()) {
+            AuthState.clearToken();
+            AlertUtils.show('Session expired. Please login again.', 'warning');
+            return;
+        }
+
+        RedirectLoopDetector.incrementCounter();
         this.redirectToDashboard();
     },
 
-    /**
-     * Handle login error
-     * @param {object} data - Error data from server
-     */
-    handleLoginError(data) {
-        console.error('Login failed:', data);
+    async logout() {
+        await AuthUtils.logout();
+        RateLimiter.reset();
+        RedirectLoopDetector.reset();
+        AlertUtils.show('Logged out successfully', 'success', 2000);
+    }
+};
+// ============================================================================
+// KEYBOARD SHORTCUTS
+// ============================================================================
 
-        const errorMessage = data.message || 'Login failed. Please check your credentials.';
-        AlertUtils.show(errorMessage, 'danger');
+const KeyboardShortcuts = {
+    init() {
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + K to focus username
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                UIManager.elements.usernameInput?.focus();
+            }
 
-        // Clear password field on error
-        if (UIManager.elements.passwordInput) {
-            UIManager.elements.passwordInput.value = '';
-            UIManager.elements.passwordInput.focus();
-        }
-    },
-
-    /**
-     * Redirect to dashboard
-     */
-    redirectToDashboard() {
-        window.location.href = CONFIG.ROUTES.DASHBOARD;
+            // Escape to clear form
+            if (e.key === 'Escape') {
+                UIManager.clearForm();
+                AlertUtils.clear();
+            }
+        });
     }
 };
 
@@ -773,29 +721,34 @@ const AuthService = {
 // APPLICATION INITIALIZATION
 // ============================================================================
 
-/**
- * Initialize the application when DOM is ready
- */
 function initializeApp() {
-    console.log('Initializing login page...');
+    if (!StorageManager.isAvailable()) {
+        AlertUtils.show(
+            'Local storage is disabled. Some features may not work properly.',
+            'warning'
+        );
+    }
 
-    // Create visual effects
     VisualEffects.createSnowflakes();
-
-    // Initialize UI
     UIManager.init();
+    KeyboardShortcuts.init();
 
-    // Check for existing authentication
+    if (RateLimiter.isLocked()) {
+        const timeRemaining = RateLimiter.getTimeRemaining();
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        AlertUtils.show(
+            `Too many failed attempts. Please try again in ${minutes}m ${seconds}s`,
+            'danger'
+        );
+    }
+
     AuthService.checkExistingAuth();
-
-    console.log('Login page initialized');
 }
 
-// Initialize when DOM is fully loaded
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
-    // DOM already loaded
     initializeApp();
 }
 
@@ -810,3 +763,56 @@ window.addEventListener('error', (event) => {
 window.addEventListener('unhandledrejection', (event) => {
     console.error('Unhandled promise rejection:', event.reason);
 });
+
+// ============================================================================
+// NETWORK UTILITIES
+// ============================================================================
+
+const NetworkUtils = {
+    isOnline() {
+        return navigator.onLine;
+    },
+
+    checkBeforeRequest() {
+        if (!this.isOnline()) {
+            AlertUtils.show(
+                'No internet connection. Please check your network and try again.',
+                'danger'
+            );
+            return false;
+        }
+        return true;
+    },
+
+    init() {
+        window.addEventListener('online', () => {
+            AlertUtils.show('Connection restored', 'success', 3000);
+        });
+
+        window.addEventListener('offline', () => {
+            AlertUtils.show('Connection lost. Please check your internet connection.', 'danger');
+        });
+    }
+};
+
+NetworkUtils.init();
+
+// ============================================================================
+// EXPORT FOR TESTING (if needed)
+// ============================================================================
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        CONFIG,
+        AuthState,
+        InputSanitizer,
+        TokenUtils,
+        RedirectLoopDetector,
+        AlertUtils,
+        RateLimiter,
+        UIManager,
+        AuthService,
+        StorageManager,
+        NetworkUtils
+    };
+}

@@ -1,4 +1,3 @@
-
 package controller;
 
 import dto.*;
@@ -20,7 +19,6 @@ import tables.Users;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/user")

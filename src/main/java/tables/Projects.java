@@ -1,4 +1,3 @@
-
 package tables;
 
 import jakarta.persistence.*;
@@ -29,7 +28,7 @@ public class Projects {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ProjectPriority priority = ProjectPriority.MEDIUM;
+    private ProjectPriority priority = ProjectPriority.LOW;
 
     @Column(name = "progress", nullable = false)
     private Integer progress = 0;

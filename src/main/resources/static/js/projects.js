@@ -1,4 +1,3 @@
-
 // ============================================================================
 // STATE MANAGEMENT
 // ============================================================================
@@ -12,6 +11,40 @@ const state = {
 // ============================================================================
 // CONSTANTS
 // ============================================================================
+
+const API_ENDPOINTS = {
+    PROJECTS: '/api/projects',
+    PROJECTS_UPDATED: '/api/projects/projects-updated',
+    PROJECT_PROGRESS: (id) => `/api/projects/${id}/progress`,
+    PROJECT_BY_ID: (id) => `/api/projects/${id}`
+};
+
+const ROUTES = {
+    CREATE_PROJECT: '/ConsoleApp/projects/create',
+    EDIT_PROJECT: (id) => `/ConsoleApp/projects/edit/${id}`
+};
+
+const ALERT_TYPES = {
+    SUCCESS: 'success',
+    DANGER: 'danger',
+    INFO: 'info',
+    WARNING: 'warning'
+};
+
+const ELEMENTS = {
+    projectsList: 'projectsList',
+    statusFilter: 'statusFilter',
+    sortBy: 'sortBy',
+    logoutBtn: 'logoutBtn',
+    saveProgressBtn: 'saveProgressBtn',
+    progressModal: 'progressModal',
+    progressRange: 'progressRange',
+    progressBarText: 'progressBarText',
+    progressPreview: 'progressPreview',
+    notificationToast: 'notificationToast',
+    toastMessage: 'toastMessage',
+    snowflakes: 'snowflakes'
+};
 
 const STATUS_COLORS = {
     COMPLETED: 'success',
@@ -34,11 +67,39 @@ const PRIORITY_ORDER = {
     LOW: 1
 };
 
+const STATUS_ORDER = {
+    PLANNING: 1,
+    IN_PROGRESS: 2,
+    ON_HOLD: 3,
+    COMPLETED: 4,
+    CANCELLED: 5
+};
+
+const PROGRESS_THRESHOLDS = {
+    LOW: 30,
+    MEDIUM: 70
+};
+
+const SNOWFLAKE_CONFIG = {
+    COUNT: 50,
+    MIN_DURATION: 5,
+    MAX_DURATION: 15,
+    MIN_SIZE: 0.5,
+    MAX_SIZE: 2
+};
+
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Check authentication first
+    const isAuth = await AuthUtils.isAuthenticated();
+    if (!isAuth) {
+        AuthUtils.redirectToLogin();
+        return;
+    }
+
     createSnowflakes();
     loadProjects();
     initializeProgressModal();
@@ -47,10 +108,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function attachEventListeners() {
     const elements = {
-        statusFilter: document.getElementById('statusFilter'),
-        sortBy: document.getElementById('sortBy'),
-        logoutBtn: document.getElementById('logoutBtn'),
-        saveProgressBtn: document.getElementById('saveProgressBtn')
+        statusFilter: document.getElementById(ELEMENTS.statusFilter),
+        sortBy: document.getElementById(ELEMENTS.sortBy),
+        logoutBtn: document.getElementById(ELEMENTS.logoutBtn),
+        saveProgressBtn: document.getElementById(ELEMENTS.saveProgressBtn)
     };
 
     if (elements.statusFilter) {
@@ -60,9 +121,9 @@ function attachEventListeners() {
         elements.sortBy.addEventListener('change', sortProjects);
     }
     if (elements.logoutBtn) {
-        elements.logoutBtn.addEventListener('click', (e) => {
+        elements.logoutBtn.addEventListener('click', async (e) => {
             e.preventDefault();
-            logout();
+            await AuthUtils.logout();
         });
     }
     if (elements.saveProgressBtn) {
@@ -71,14 +132,14 @@ function attachEventListeners() {
 }
 
 function initializeProgressModal() {
-    const modalElement = document.getElementById('progressModal');
+    const modalElement = document.getElementById(ELEMENTS.progressModal);
     if (!modalElement) return;
 
     state.progressModal = new bootstrap.Modal(modalElement);
 
-    const progressRange = document.getElementById('progressRange');
-    const progressBarText = document.getElementById('progressBarText');
-    const progressPreview = document.getElementById('progressPreview');
+    const progressRange = document.getElementById(ELEMENTS.progressRange);
+    const progressBarText = document.getElementById(ELEMENTS.progressBarText);
+    const progressPreview = document.getElementById(ELEMENTS.progressPreview);
 
     if (progressRange && progressBarText && progressPreview) {
         progressRange.addEventListener('input', (e) => {
@@ -102,9 +163,9 @@ function openProgressModal(projectId, currentProgress) {
     state.currentProjectId = projectId;
 
     const elements = {
-        range: document.getElementById('progressRange'),
-        text: document.getElementById('progressBarText'),
-        preview: document.getElementById('progressPreview')
+        range: document.getElementById(ELEMENTS.progressRange),
+        text: document.getElementById(ELEMENTS.progressBarText),
+        preview: document.getElementById(ELEMENTS.progressPreview)
     };
 
     if (!elements.range || !elements.text || !elements.preview) return;
@@ -122,11 +183,11 @@ function openProgressModal(projectId, currentProgress) {
 // ============================================================================
 
 function createSnowflakes() {
-    const container = document.getElementById('snowflakes');
+    const container = document.getElementById(ELEMENTS.snowflakes);
     if (!container) return;
 
     const fragment = document.createDocumentFragment();
-    const snowflakeCount = 50;
+    const snowflakeCount = SNOWFLAKE_CONFIG.COUNT;
 
     for (let i = 0; i < snowflakeCount; i++) {
         const snowflake = createSnowflake();
@@ -143,98 +204,12 @@ function createSnowflake() {
 
     Object.assign(snowflake.style, {
         left: `${Math.random() * 100}%`,
-        animationDuration: `${5 + Math.random() * 10}s`,
+        animationDuration: `${SNOWFLAKE_CONFIG.MIN_DURATION + Math.random() * (SNOWFLAKE_CONFIG.MAX_DURATION - SNOWFLAKE_CONFIG.MIN_DURATION)}s`,
         animationDelay: `${Math.random() * 5}s`,
-        fontSize: `${0.5 + Math.random() * 1.5}em`
+        fontSize: `${SNOWFLAKE_CONFIG.MIN_SIZE + Math.random() * (SNOWFLAKE_CONFIG.MAX_SIZE - SNOWFLAKE_CONFIG.MIN_SIZE)}em`
     });
 
     return snowflake;
-}
-
-// ============================================================================
-// AUTHENTICATION
-// ============================================================================
-
-async function logout() {
-    try {
-        await fetch('/api/auth/logout', {
-            method: 'POST',
-            credentials: 'include'
-        });
-    } finally {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('username');
-        window.location.href = '/ConsoleApp/login';
-    }
-}
-
-async function refreshToken() {
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) {
-        redirectToLogin();
-        return false;
-    }
-
-    try {
-        const response = await fetch('/api/auth/refresh', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({ refreshToken })
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            localStorage.setItem('accessToken', data.accessToken);
-            if (data.refreshToken) {
-                localStorage.setItem('refreshToken', data.refreshToken);
-            }
-            return true;
-        }
-    } catch (error) {
-        // Silent error handling
-    }
-
-    redirectToLogin();
-    return false;
-}
-
-async function makeAuthenticatedRequest(url, options = {}) {
-    const accessToken = localStorage.getItem('accessToken');
-    if (!accessToken) {
-        throw new Error('No access token available');
-    }
-
-    const requestOptions = {
-        ...options,
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
-            ...options.headers
-        }
-    };
-
-    let response = await fetch(url, requestOptions);
-
-    if (response.status === 401) {
-        const refreshed = await refreshToken();
-        if (refreshed) {
-            const newAccessToken = localStorage.getItem('accessToken');
-            requestOptions.headers['Authorization'] = `Bearer ${newAccessToken}`;
-            response = await fetch(url, requestOptions);
-        } else {
-            throw new Error('Authentication failed');
-        }
-    }
-
-    return response;
-}
-
-function redirectToLogin() {
-    window.location.href = '/ConsoleApp/login';
 }
 
 // ============================================================================
@@ -243,49 +218,48 @@ function redirectToLogin() {
 
 async function loadProjects() {
     try {
-        const accessToken = localStorage.getItem('accessToken');
-        if (!accessToken) {
-            redirectToLogin();
-            return;
-        }
-
-        const response = await fetch('/api/projects/projects-updated', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
-            }
+        const response = await AuthUtils.makeAuthenticatedRequest(API_ENDPOINTS.PROJECTS_UPDATED, {
+            method: 'GET'
         });
 
         if (response.ok) {
             state.allProjects = await response.json();
             displayProjects(state.allProjects);
-        } else if (response.status === 401) {
-            const refreshed = await refreshToken();
-            if (refreshed) {
-                await loadProjects();
-            } else {
-                redirectToLogin();
-            }
         } else {
-            throw new Error('Failed to load projects');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `Failed to load projects (Status: ${response.status})`);
         }
     } catch (error) {
-        showError('Error loading projects. Please try again.');
+        console.error('Error loading projects:', error);
+        showError(`Error loading projects: ${error.message}`);
     }
 }
 
 function displayProjects(projects) {
-    const container = document.getElementById('projectsList');
-    if (!container) return;
+    const container = document.getElementById(ELEMENTS.projectsList);
+    if (!container) {
+        console.error('Projects list container not found');
+        return;
+    }
+
+    if (!Array.isArray(projects)) {
+        console.error('Invalid projects data:', projects);
+        showError('Invalid project data received');
+        return;
+    }
 
     if (projects.length === 0) {
         container.innerHTML = createEmptyState();
         return;
     }
 
-    const projectsHtml = projects.map(createProjectCard).join('');
-    container.innerHTML = `<div class="row">${projectsHtml}</div>`;
+    try {
+        const projectsHtml = projects.map(createProjectCard).join('');
+        container.innerHTML = `<div class="row">${projectsHtml}</div>`;
+    } catch (error) {
+        console.error('Error creating project cards:', error);
+        showError('Error displaying projects');
+    }
 }
 
 function createEmptyState() {
@@ -294,7 +268,7 @@ function createEmptyState() {
             <i class="fas fa-folder-open fa-3x mb-3"></i>
             <h4>No Projects Found</h4>
             <p>Create your first project to get started!</p>
-            <a href="/ConsoleApp/projects/create" class="btn btn-primary">
+            <a href="${ROUTES.CREATE_PROJECT}" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i> Create Project
             </a>
         </div>
@@ -427,8 +401,8 @@ function escapeHtml(text) {
 }
 
 function getProgressColor(progress) {
-    if (progress < 30) return 'danger';
-    if (progress < 70) return 'warning';
+    if (progress < PROGRESS_THRESHOLDS.LOW) return 'danger';
+    if (progress < PROGRESS_THRESHOLDS.MEDIUM) return 'warning';
     return 'success';
 }
 
@@ -442,18 +416,22 @@ function formatDate(dateString) {
 // ============================================================================
 
 function filterProjects() {
-    const statusFilter = document.getElementById('statusFilter');
-    if (!statusFilter) return;
+    const statusFilter = document.getElementById(ELEMENTS.statusFilter);
+    if (!statusFilter) {
+        console.warn('Status filter element not found');
+        return;
+    }
 
     const statusValue = statusFilter.value;
     const filtered = statusValue
         ? state.allProjects.filter(p => p.status === statusValue)
-        : state.allProjects;
+        : [...state.allProjects]; // Create a copy to avoid mutation
+
     displayProjects(filtered);
 }
 
 function sortProjects() {
-    const sortByElement = document.getElementById('sortBy');
+    const sortByElement = document.getElementById(ELEMENTS.sortBy);
     if (!sortByElement) return;
 
     const sortBy = sortByElement.value;
@@ -472,6 +450,9 @@ function sortProjects() {
         case 'priority':
             sorted.sort((a, b) => (PRIORITY_ORDER[b.priority] || 0) - (PRIORITY_ORDER[a.priority] || 0));
             break;
+        case 'status':
+            sorted.sort((a, b) => (STATUS_ORDER[a.status] || 0) - (STATUS_ORDER[b.status] || 0));
+            break;
     }
 
     displayProjects(sorted);
@@ -483,27 +464,44 @@ function sortProjects() {
 
 async function saveProgress() {
     if (!state.currentProjectId) {
-        showToast('Error: No project selected', 'danger');
+        showToast('Error: No project selected', ALERT_TYPES.DANGER);
         return;
     }
 
-    const progressValue = document.getElementById('progressRange').value;
-    const saveBtn = document.getElementById('saveProgressBtn');
+    const progressElement = document.getElementById(ELEMENTS.progressRange);
+    if (!progressElement) {
+        showToast('Error: Progress input not found', ALERT_TYPES.DANGER);
+        return;
+    }
+
+    const progressValue = parseInt(progressElement.value);
+
+    // Validate progress value
+    if (isNaN(progressValue) || progressValue < 0 || progressValue > 100) {
+        showToast('Error: Invalid progress value (must be 0-100)', ALERT_TYPES.DANGER);
+        return;
+    }
+
+    const saveBtn = document.getElementById(ELEMENTS.saveProgressBtn);
+    if (!saveBtn) return;
 
     saveBtn.disabled = true;
     saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Saving...';
 
     try {
-        const response = await makeAuthenticatedRequest(`/api/projects/${state.currentProjectId}/progress`, {
-            method: 'PATCH',
-            body: JSON.stringify({ progress: parseInt(progressValue) })
-        });
+        const response = await AuthUtils.makeAuthenticatedRequest(
+            API_ENDPOINTS.PROJECT_PROGRESS(state.currentProjectId),
+            {
+                method: 'PATCH',
+                body: JSON.stringify({ progress: progressValue })
+            }
+        );
 
         if (response.ok) {
             await response.json();
 
             state.progressModal.hide();
-            showToast('Progress updated successfully!', 'success');
+            showToast('Progress updated successfully!', ALERT_TYPES.SUCCESS);
             await loadProjects();
         } else {
             const errorData = await response.json().catch(() => ({}));
@@ -511,7 +509,8 @@ async function saveProgress() {
             throw new Error(errorMessage);
         }
     } catch (error) {
-        showToast('Error updating progress: ' + error.message, 'danger');
+        console.error('Error updating progress:', error);
+        showToast(`Error updating progress: ${error.message}`, ALERT_TYPES.DANGER);
     } finally {
         saveBtn.disabled = false;
         saveBtn.innerHTML = '<i class="fas fa-save me-2"></i> Save Progress';
@@ -523,38 +522,28 @@ async function saveProgress() {
 // ============================================================================
 
 function editProject(projectId) {
-    window.location.href = `/ConsoleApp/projects/edit/${projectId}`;
+    window.location.href = ROUTES.EDIT_PROJECT(projectId);
 }
 
 async function deleteProject(projectId) {
-    if (!confirm('Are you sure you want to delete this project?')) return;
-
-    const accessToken = localStorage.getItem('accessToken');
+    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) return;
 
     try {
-        const response = await fetch(`/api/projects/${projectId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`
-            }
+        const response = await AuthUtils.makeAuthenticatedRequest(API_ENDPOINTS.PROJECT_BY_ID(projectId), {
+            method: 'DELETE'
         });
 
         if (response.ok) {
             state.allProjects = state.allProjects.filter(p => p.id !== projectId);
             displayProjects(state.allProjects);
-            showToast('Project deleted successfully!', 'success');
-        } else if (response.status === 401) {
-            const refreshed = await refreshToken();
-            if (refreshed) {
-                await deleteProject(projectId);
-            } else {
-                redirectToLogin();
-            }
+            showToast('Project deleted successfully!', ALERT_TYPES.SUCCESS);
         } else {
-            throw new Error('Failed to delete project');
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `Failed to delete project (Status: ${response.status})`);
         }
     } catch (error) {
-        showToast('Failed to delete project. Please try again.', 'danger');
+        console.error('Error deleting project:', error);
+        showToast(`Failed to delete project: ${error.message}`, ALERT_TYPES.DANGER);
     }
 }
 
@@ -562,9 +551,9 @@ async function deleteProject(projectId) {
 // NOTIFICATION SYSTEM
 // ============================================================================
 
-function showToast(message, type = 'info') {
-    const toastEl = document.getElementById('notificationToast');
-    const toastBody = document.getElementById('toastMessage');
+function showToast(message, type = ALERT_TYPES.INFO) {
+    const toastEl = document.getElementById(ELEMENTS.notificationToast);
+    const toastBody = document.getElementById(ELEMENTS.toastMessage);
     const toastHeader = toastEl.querySelector('.toast-header');
 
     if (!toastEl || !toastBody || !toastHeader) return;
@@ -572,11 +561,11 @@ function showToast(message, type = 'info') {
     toastBody.textContent = message;
     toastHeader.className = 'toast-header';
 
-    if (type === 'success') {
+    if (type === ALERT_TYPES.SUCCESS) {
         toastHeader.classList.add('bg-success', 'text-white');
-    } else if (type === 'danger') {
+    } else if (type === ALERT_TYPES.DANGER) {
         toastHeader.classList.add('bg-danger', 'text-white');
-    } else if (type === 'warning') {
+    } else if (type === ALERT_TYPES.WARNING) {
         toastHeader.classList.add('bg-warning');
     }
 
@@ -585,7 +574,7 @@ function showToast(message, type = 'info') {
 }
 
 function showError(message) {
-    const projectsList = document.getElementById('projectsList');
+    const projectsList = document.getElementById(ELEMENTS.projectsList);
     if (projectsList) {
         projectsList.innerHTML = `
             <div class="alert alert-danger">

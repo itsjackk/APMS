@@ -24,63 +24,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================================================
-// AUTHENTICATION & TOKEN MANAGEMENT
+// AUTHENTICATION & TOKEN MANAGEMENT - Now using AuthUtils
 // ============================================================================
-
-function isTokenExpired(token) {
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const currentTime = Math.floor(Date.now() / 1000);
-        return payload.exp < currentTime;
-    } catch (error) {
-        return true;
-    }
-}
-
-function clearAuthData() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('username');
-}
-
-function getAccessToken() {
-    const token = localStorage.getItem('accessToken');
-
-    if (!token) {
-        return null;
-    }
-
-    if (isTokenExpired(token)) {
-        clearAuthData();
-        window.location.href = '/ConsoleApp/login';
-        return null;
-    }
-
-    return token;
-}
-
-async function makeAuthenticatedRequest(url, options = {}) {
-    const accessToken = getAccessToken();
-
-    if (!accessToken) {
-        throw new Error('Authentication failed - no valid access token');
-    }
-
-    const headers = {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        ...options.headers
-    };
-
-    const response = await fetch(url, { ...options, headers });
-
-    if (response.status === 401) {
-        clearAuthData();
-        window.location.href = '/ConsoleApp/login';
-        throw new Error('Authentication failed - redirecting to login');
-    }
-
-    return response;
-}
 
 // ============================================================================
 // UI STATE MANAGEMENT
@@ -158,14 +103,14 @@ function createSnowflakes() {
 }
 
 // ============================================================================
-// PROJECT DATA MANAGEMENT
+// PROJECT DATA MANAGEMENT - Now using AuthUtils
 // ============================================================================
 
 async function loadProjectDetails() {
     showLoading();
 
     try {
-        const response = await makeAuthenticatedRequest(`/api/projects/${projectId}`);
+        const response = await AuthUtils.makeAuthenticatedRequest(`/api/projects/${projectId}`);
 
         if (response.ok) {
             const project = await response.json();
@@ -178,8 +123,8 @@ async function loadProjectDetails() {
             throw new Error(errorMessage);
         }
     } catch (error) {
-        if (error.message.includes('Authentication failed')) {
-            return;
+        if (error.message.includes('Authentication failed') || error.message.includes('Unauthorized')) {
+            return; // AuthUtils already handles redirect
         }
         showError(error.message);
     }
@@ -205,7 +150,7 @@ function populateForm(project) {
 
 async function updateProject(projectData) {
     try {
-        const response = await makeAuthenticatedRequest(`/api/projects/${projectId}`, {
+        const response = await AuthUtils.makeAuthenticatedRequest(`/api/projects/${projectId}`, {
             method: 'PUT',
             body: JSON.stringify(projectData)
         });
@@ -224,8 +169,8 @@ async function updateProject(projectData) {
             throw new Error(errorMessage);
         }
     } catch (error) {
-        if (error.message.includes('Authentication failed')) {
-            return;
+        if (error.message.includes('Authentication failed') || error.message.includes('Unauthorized')) {
+            return; // AuthUtils already handles redirect
         }
         throw error;
     }
@@ -284,8 +229,8 @@ async function handleFormSubmit(e) {
 
         await updateProject(projectData);
     } catch (error) {
-        if (error.message.includes('Authentication failed')) {
-            return;
+        if (error.message.includes('Authentication failed') || error.message.includes('Unauthorized')) {
+            return; // AuthUtils already handles redirect
         }
         showAlert(error.message, 'danger');
     } finally {
@@ -296,18 +241,9 @@ async function handleFormSubmit(e) {
 }
 
 // ============================================================================
-// LOGOUT FUNCTIONALITY
+// LOGOUT FUNCTIONALITY - Now using AuthUtils
 // ============================================================================
 
 async function logout() {
-    try {
-        await fetch('/api/auth/logout', {
-            method: 'POST',
-            credentials: 'include'
-        });
-    } catch (error) {
-    } finally {
-        clearAuthData();
-        window.location.href = '/ConsoleApp/login';
-    }
+    await AuthUtils.logout();
 }
