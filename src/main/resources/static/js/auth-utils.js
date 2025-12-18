@@ -176,3 +176,77 @@ getAccessToken() {
 
 // Make it available globally
 window.AuthUtils = AuthUtils;
+
+
+
+// Add this at the end of the file, after the existing code
+
+/**
+ * Toggle snowflakes visibility
+ */
+function toggleSnowflakes() {
+    const snowflakesContainer = document.getElementById('snowflakes');
+    const toggleButton = document.getElementById('snowflakeToggle');
+
+    if (!snowflakesContainer) return;
+
+    // Get current state from localStorage, default to 'visible'
+    const currentState = localStorage.getItem('snowflakesVisible') || 'visible';
+    const newState = currentState === 'visible' ? 'hidden' : 'visible';
+
+    // Update localStorage
+    localStorage.setItem('snowflakesVisible', newState);
+
+    // Toggle visibility
+    if (newState === 'hidden') {
+        snowflakesContainer.style.display = 'none';
+        if (toggleButton) {
+            toggleButton.classList.remove('active');
+            toggleButton.style.opacity = '0.5';
+        }
+    } else {
+        snowflakesContainer.style.display = 'block';
+        if (toggleButton) {
+            toggleButton.classList.add('active');
+            toggleButton.style.opacity = '1';
+        }
+    }
+}
+
+
+function initializeSnowflakesState() {
+    const snowflakesContainer = document.getElementById('snowflakes');
+    const toggleButton = document.getElementById('snowflakeToggle');
+
+    if (!snowflakesContainer) return;
+
+    // Get saved state from localStorage, default to 'visible'
+    const savedState = localStorage.getItem('snowflakesVisible') || 'visible';
+
+    // Apply saved state
+    if (savedState === 'hidden') {
+        snowflakesContainer.style.display = 'none';
+        if (toggleButton) {
+            toggleButton.classList.remove('active');
+            toggleButton.style.opacity = '0.5';
+        }
+    } else {
+        snowflakesContainer.style.display = 'block';
+        if (toggleButton) {
+            toggleButton.classList.add('active');
+            toggleButton.style.opacity = '1';
+        }
+    }
+
+    // Add event listener to toggle button
+    if (toggleButton) {
+        toggleButton.addEventListener('click', toggleSnowflakes);
+    }
+}
+
+// Initialize snowflakes state when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeSnowflakesState);
+} else {
+    initializeSnowflakesState();
+}

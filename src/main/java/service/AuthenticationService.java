@@ -135,9 +135,6 @@ public class AuthenticationService {
         return login(username, password, false);
     }
 
-    /**
-     * Refresh token with automatic rotation
-     */
     @Transactional
     public AuthenticationResponse refreshToken(String refreshToken) {
         try {
@@ -220,9 +217,6 @@ public class AuthenticationService {
         }
     }
 
-    /**
-     * Logout - revokes current token
-     */
     @Transactional
     public void logout(String refreshToken) {
         Optional<RefreshTokens> tokenOpt = refreshTokensRepository.findByToken(refreshToken);
@@ -242,16 +236,11 @@ public class AuthenticationService {
         }
     }
 
-    /**
-     * Logout all devices - revokes entire token family
-     */
     @Transactional
     public void logoutAllDevices(UUID userId) {
         log.info("Logging out all devices for user ID: {}", userId);
-
         // Get all token families for this user
         var userTokens = refreshTokensRepository.findByUserId(userId);
-
         // Revoke each token family
         userTokens.stream()
                 .map(RefreshTokens::getTokenFamily)
@@ -259,15 +248,10 @@ public class AuthenticationService {
                 .forEach(family -> {
                     tokenRotationService.revokeTokenFamily(family, "User logged out all devices");
                 });
-
-        // Delete all tokens for this user
         refreshTokensRepository.deleteByUserId(userId);
         log.info("Deleted all tokens for user ID: {}", userId);
     }
 
-    /**
-     * Cleanup expired tokens
-     */
     @Transactional
     public void cleanupExpiredTokens() {
         log.info("Cleaning up expired and revoked tokens");
@@ -275,9 +259,6 @@ public class AuthenticationService {
         log.info("Deleted {} expired and revoked tokens", deletedCount);
     }
 
-    /**
-     * Auto-revoke expired tokens (scheduled task)
-     */
     @Scheduled(fixedRate = 120000) // Every 2 minutes
     @Transactional
     public void autoRevokeExpiredTokens() {
@@ -288,9 +269,7 @@ public class AuthenticationService {
                 revokedCount, deleteCount);
     }
 
-    /**
-     * Security monitoring - check for suspicious activity
-     */
+
     @Scheduled(fixedRate = 900000) // Every 15 minutes
     @Transactional
     public void monitorSecurityIncidents() {
@@ -301,7 +280,6 @@ public class AuthenticationService {
         if (!suspiciousTokens.isEmpty()) {
             log.warn("Found {} tokens with suspicious rotation patterns", suspiciousTokens.size());
         }
-
         // Check for recent token reuse incidents
         var recentIncidents = tokenRotationService.getRecentSecurityIncidents(24);
         if (!recentIncidents.isEmpty()) {
@@ -310,9 +288,6 @@ public class AuthenticationService {
         }
     }
 
-    /**
-     * Get user's current session info
-     */
     public SessionInfo getUserSessionInfo(UUID userId) {
         var tokens = refreshTokensRepository.findByUserId(userId);
 
