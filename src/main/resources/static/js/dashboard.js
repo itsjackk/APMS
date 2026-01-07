@@ -180,30 +180,6 @@
             }
         };
 
-        // Create snowflakes
-        function createSnowflakes() {
-            const snowflakesContainer = document.getElementById('snowflakes');
-            const snowflakeCount = 50;
-
-            for (let i = 0; i < snowflakeCount; i++) {
-                const snowflake = document.createElement('div');
-                snowflake.className = 'snowflake';
-                snowflake.innerHTML = '❄';
-
-                // Random position and animation duration
-                const leftPos = Math.random() * 100;
-                const animationDuration = 5 + Math.random() * 10;
-                const animationDelay = Math.random() * 5;
-                const size = 0.5 + Math.random() * 1.5;
-
-                snowflake.style.left = `${leftPos}%`;
-                snowflake.style.animationDuration = `${animationDuration}s`;
-                snowflake.style.animationDelay = `${animationDelay}s`;
-                snowflake.style.fontSize = `${size}em`;
-
-                snowflakesContainer.appendChild(snowflake);
-            }
-        }
 
         // ==================== PAGE LOAD ====================
 
@@ -394,8 +370,7 @@ function initChristmasCountdown() {
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
-    // Initialize UI elements
-    createSnowflakes();
+    VisualEffects.createSnowflakes();
     initChristmasCountdown();
 
     // Check authentication

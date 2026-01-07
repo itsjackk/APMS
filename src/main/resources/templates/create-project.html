@@ -32,6 +32,7 @@
     <!-- Preload JavaScript -->
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" as="script">
     <link rel="preload" th:href="@{/js/auth-utils.js}" as="script">
+    <link rel="preload" th:href="@{/js/visual-effects.js}" as="script">
     <link rel="preload" th:href="@{/js/create-project.js}" as="script">
 </head>
 <body>
@@ -57,7 +58,7 @@
         <nav class="col-md-3 col-lg-2 sidebar p-0" aria-label="Main navigation">
             <div class="p-3">
                 <h4 class="text-center mb-4">
-                    <button class="btn btn-sm btn-outline-light snowflake-toggle" id="snowflakeToggle" title="Toggle Snowflakes">
+                    <button class="btn btn-sm snowflake-toggle" id="snowflakeToggle" title="Toggle Snowflakes">
                         <i class="fas fa-snowflake"></i>
                     </button>
                     <i class="fas fa-project-diagram"></i> APMS
@@ -72,9 +73,6 @@
                     <a class="nav-link active" href="/ConsoleApp/projects/create" aria-current="page">
                         <i class="fas fa-plus me-2"></i> Create Project
                     </a>
-                    <!--<a class="nav-link" href="/ConsoleApp/projects/assigned">
-                        <i class="fas fa-tasks me-2"></i> Assigned Projects
-                    </a>-->
                     <hr th:if="${role == 'ADMIN'}">
                     <small class="text-muted px-3" th:if="${role == 'ADMIN'}">ADMIN</small>
                     <a class="nav-link" href="/ConsoleApp/admin/projects" th:if="${role == 'ADMIN'}">
@@ -230,6 +228,7 @@
 <!-- Defer all JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" defer></script>
 <script th:src="@{/js/auth-utils.js}" defer></script>
+<script th:src="@{/js/visual-effects.js}" defer></script>
 <script th:src="@{/js/create-project.js}" defer></script>
 </body>
 </html>

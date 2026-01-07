@@ -95,7 +95,7 @@
             padding: 1.5rem;
             border-radius: 15px;
             margin-bottom: 2rem;
-            border: 3px solid #C41E3A;
+            border: 3px solid #ffd700;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
@@ -110,7 +110,7 @@
 
         .project-card {
             background: white;
-            border: 3px solid #C41E3A;
+            border: 3px solid #ffd700;
             border-radius: 15px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
             transition: all 0.3s ease;
@@ -132,7 +132,7 @@
 
         .project-card:hover {
             transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 15px 35px rgba(196, 30, 58, 0.4);
+            box-shadow: 0 15px 25px rgba(255,255,0,0.2);
             border-color: #FFD700;
         }
 
@@ -170,7 +170,7 @@
             height: 25px;
             border-radius: 15px;
             background: #f0f0f0;
-            border: 2px solid #C41E3A;
+            border: 3px solid #ffd700;
             overflow: hidden;
         }
 
@@ -258,7 +258,7 @@
         .form-select, .form-control {
             background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
             color: white;
-            border: 2px solid #C41E3A;
+            border: 3px solid #ffd700;
             border-radius: 15px;
             transition: all 0.3s ease;
         }

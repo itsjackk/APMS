@@ -12,7 +12,7 @@ let currentProject = null;
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    createSnowflakes();
+    VisualEffects.createSnowflakes();
 
     if (!projectId || projectId === '' || projectId === 'null') {
         showError('No project ID provided. Please navigate to this page from the projects list.');
@@ -22,10 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeFormHandler();
     loadProjectDetails();
 });
-
-// ============================================================================
-// AUTHENTICATION & TOKEN MANAGEMENT - Now using AuthUtils
-// ============================================================================
 
 // ============================================================================
 // UI STATE MANAGEMENT
@@ -74,36 +70,7 @@ function showAlert(message, type = 'info') {
 }
 
 // ============================================================================
-// SNOWFLAKES ANIMATION
-// ============================================================================
-
-function createSnowflakes() {
-    const snowflakesContainer = document.getElementById('snowflakes');
-    if (!snowflakesContainer) return;
-
-    const snowflakeCount = 50;
-
-    for (let i = 0; i < snowflakeCount; i++) {
-        const snowflake = document.createElement('div');
-        snowflake.className = 'snowflake';
-        snowflake.innerHTML = '❄';
-
-        const leftPos = Math.random() * 100;
-        const animationDuration = 5 + Math.random() * 10;
-        const animationDelay = Math.random() * 5;
-        const size = 0.5 + Math.random() * 1.5;
-
-        snowflake.style.left = `${leftPos}%`;
-        snowflake.style.animationDuration = `${animationDuration}s`;
-        snowflake.style.animationDelay = `${animationDelay}s`;
-        snowflake.style.fontSize = `${size}em`;
-
-        snowflakesContainer.appendChild(snowflake);
-    }
-}
-
-// ============================================================================
-// PROJECT DATA MANAGEMENT - Now using AuthUtils
+// PROJECT DATA MANAGEMENT
 // ============================================================================
 
 async function loadProjectDetails() {
@@ -241,7 +208,7 @@ async function handleFormSubmit(e) {
 }
 
 // ============================================================================
-// LOGOUT FUNCTIONALITY - Now using AuthUtils
+// LOGOUT FUNCTIONALITY
 // ============================================================================
 
 async function logout() {

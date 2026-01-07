@@ -60,42 +60,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    createSnowflakes();
+    VisualEffects.createSnowflakes();
     initializeEventListeners();
     loadUserProfile();
 });
 
-// ============================================================================
-// UI EFFECTS
-// ============================================================================
-function createSnowflakes() {
-    const container = document.getElementById(ELEMENTS.snowflakes);
-    if (!container) return;
-
-    const fragment = document.createDocumentFragment();
-    const snowflakeCount = 50;
-
-    for (let i = 0; i < snowflakeCount; i++) {
-        fragment.appendChild(createSnowflake());
-    }
-
-    container.appendChild(fragment);
-}
-
-function createSnowflake() {
-    const snowflake = document.createElement('div');
-    snowflake.className = 'snowflake';
-    snowflake.innerHTML = '❄';
-
-    Object.assign(snowflake.style, {
-        left: `${Math.random() * 100}%`,
-        animationDuration: `${5 + Math.random() * 10}s`,
-        animationDelay: `${Math.random() * 5}s`,
-        fontSize: `${0.5 + Math.random() * 1.5}em`
-    });
-
-    return snowflake;
-}
 
 // ============================================================================
 // PROFILE MANAGEMENT

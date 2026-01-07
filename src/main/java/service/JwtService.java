@@ -108,9 +108,6 @@ public class JwtService {
         return extractClaim(token, claims -> claims.get("type", String.class));
     }
 
-    /**
-     * Check if token was created with Remember Me option
-     */
     public boolean isRememberMeToken(String token) {
         try {
             Boolean rememberMe = extractClaim(token, claims -> claims.get("rememberMe", Boolean.class));
@@ -138,10 +135,6 @@ public class JwtService {
         return expiration.before(new Date());
     }
 
-    /**
-     * Validate access token
-     * Checks: username match, not expired, and token type is "access"
-     */
     public boolean isAccessTokenValid(String token, String username) {
         try {
             // First check expiration (also validates signature)
@@ -164,10 +157,6 @@ public class JwtService {
         }
     }
 
-    /**
-     * Validate refresh token
-     * Checks: username match, not expired, and token type is "refresh"
-     */
     public boolean isRefreshTokenValid(String token, String username) {
         try {
             // First check expiration (also validates signature)
@@ -190,18 +179,10 @@ public class JwtService {
         }
     }
 
-    /**
-     * Get standard refresh token expiration time (25 minutes from now)
-     */
     public LocalDateTime getRefreshTokenExpirationTime() {
         return LocalDateTime.now().plusSeconds(refreshTokenExpiration);
     }
 
-    /**
-     * Get custom refresh token expiration time
-     *
-     * @param expirationDays Number of days until expiration
-     */
     public LocalDateTime getRefreshTokenExpirationTime(int expirationDays) {
         return LocalDateTime.now().plusDays(expirationDays);
     }
@@ -210,10 +191,6 @@ public class JwtService {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
-    /**
-     * Generic token validation
-     * Checks: not null, not empty, not expired, valid signature
-     */
     public boolean isTokenValid(String token) {
         try {
             if (token == null || token.trim().isEmpty()) {

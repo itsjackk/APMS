@@ -1,25 +1,378 @@
-        .snowflake {
-            position: fixed;
-            top: -10px;
-            z-index: 9999;
-            color: #fff;
-            font-size: 1em;
-            text-shadow: 0 0 5px #000;
-            animation: fall linear infinite;
-            pointer-events: none;
-        }
-        .footer {
-                    text-align: center;
-                    padding: 20px;
-                    color: #ffd700;
-                    font-weight: 600;
-                    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-        }
+/* Snowflakes container */
+#snowflakes {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+    /* Remove perspective from container - it's expensive */
+}
 
-    .sidebar .nav-link.logout-link:hover {
-        background: rgba(196, 30, 58, 0.2);
-        border-color: rgb(196, 30, 58);
-        transform: translateX(5px);
-        color: white;
-        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+/* 3D Snowflake base styles */
+.snowflake-3d {
+    position: absolute;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    pointer-events: none;
+    user-select: none;
+    /* Use GPU acceleration */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    /* Remove transform-style: preserve-3d - it's very expensive */
+}
+
+/* Layer 0 - Background (smallest, slowest, most blurred) */
+.snowflake-3d[data-layer="0"] {
+    font-size: 0.6em;
+    opacity: 0.4;
+    /* Reduce blur - it's expensive */
+    filter: blur(1px);
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+    animation: fall-slow 15s linear infinite;
+}
+
+/* Layer 1 - Middle (medium size and speed) */
+.snowflake-3d[data-layer="1"] {
+    font-size: 1em;
+    opacity: 0.7;
+    /* Minimal blur */
+    filter: blur(0.5px);
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+    animation: fall-medium 10s linear infinite;
+}
+
+/* Layer 2 - Foreground (largest, fastest, sharpest) */
+.snowflake-3d[data-layer="2"] {
+    font-size: 1.6em;
+    opacity: 1;
+    /* No blur for foreground */
+    filter: none;
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    animation: fall-fast 7s linear infinite;
+}
+
+/* Simplified falling animations - only use translateX and translateY */
+/* Remove translateZ and multiple rotations - they're expensive */
+@keyframes fall-slow {
+    0% {
+        transform: translate3d(0, -10vh, 0) rotate(0deg);
     }
+    100% {
+        transform: translate3d(50px, 110vh, 0) rotate(360deg);
+    }
+}
+
+@keyframes fall-medium {
+    0% {
+        transform: translate3d(0, -10vh, 0) rotate(0deg);
+    }
+    100% {
+        transform: translate3d(-50px, 110vh, 0) rotate(360deg);
+    }
+}
+
+@keyframes fall-fast {
+    0% {
+        transform: translate3d(0, -10vh, 0) rotate(0deg);
+    }
+    100% {
+        transform: translate3d(70px, 110vh, 0) rotate(360deg);
+    }
+}
+
+/* Remove pulse animation - it causes repaints */
+/* If you really want pulse, use opacity only on a few snowflakes */
+@keyframes pulse-light {
+    0%, 100% {
+        opacity: 0.7;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Apply pulse only to some middle layer snowflakes */
+.snowflake-3d[data-layer="1"]:nth-child(3n) {
+    animation: fall-medium 10s linear infinite, pulse-light 3s ease-in-out infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .snowflake-3d[data-layer="0"] {
+        font-size: 0.5em;
+    }
+
+    .snowflake-3d[data-layer="1"] {
+        font-size: 0.8em;
+    }
+
+    .snowflake-3d[data-layer="2"] {
+        font-size: 1.2em;
+    }
+
+    /* Reduce animation complexity on mobile */
+    @keyframes fall-slow {
+        0% {
+            transform: translate3d(0, -10vh, 0);
+        }
+        100% {
+            transform: translate3d(30px, 110vh, 0);
+        }
+    }
+
+    @keyframes fall-medium {
+        0% {
+            transform: translate3d(0, -10vh, 0);
+        }
+        100% {
+            transform: translate3d(-30px, 110vh, 0);
+        }
+    }
+
+    @keyframes fall-fast {
+        0% {
+            transform: translate3d(0, -10vh, 0);
+        }
+        100% {
+            transform: translate3d(40px, 110vh, 0);
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .snowflake-3d[data-layer="0"] {
+        font-size: 0.4em;
+    }
+
+    .snowflake-3d[data-layer="1"] {
+        font-size: 0.7em;
+    }
+
+    .snowflake-3d[data-layer="2"] {
+        font-size: 1em;
+    }
+}
+
+/* Performance optimization for reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .snowflake-3d {
+        animation: none !important;
+        opacity: 0.3;
+        transform: translateY(50vh);
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .snowflake-3d {
+        color: #ffffff;
+        text-shadow: 0 0 10px #000000;
+    }
+}
+
+/* Rest of your existing styles */
+.footer {
+    text-align: center;
+    padding: 20px;
+    color: #ffd700;
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.sidebar .nav-link.logout-link:hover {
+    background: rgba(196, 30, 58, 0.2);
+    border-color: rgb(196, 30, 58);
+    transform: translateX(5px);
+    color: white;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+}
+
+.snowflake-toggle {
+    border: none; /* Remove border completely */
+    outline: none; /* Remove outline */
+    transition: all 0.3s ease;
+    margin-right: 0.5rem;
+    background-color: rgba(128, 128, 128, 0.3);
+    padding: 0.5rem; /* Add some padding since we removed border */
+}
+
+.snowflake-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: none;
+    outline: none;
+    transform: scale(1.05);
+}
+
+.snowflake-toggle:focus {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.snowflake-toggle.active {
+    background-color: rgba(0, 123, 255, 0.3);
+    border: none;
+    outline: none;
+    box-shadow: none;
+}
+
+.snowflake-toggle.active:hover {
+    background-color: rgba(0, 123, 255, 0.4);
+    border: none;
+    outline: none;
+    box-shadow: none;
+}
+
+.snowflake-toggle.active:focus {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.snowflake-toggle i {
+    transition: all 0.3s ease;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.snowflake-toggle.active i {
+    color: #00bfff;
+    filter: drop-shadow(0 0 5px rgba(0, 191, 255, 0.8));
+    transform: rotate(0deg);
+}
+
+.snowflake-toggle:hover i {
+    transform: rotate(90deg);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.snowflake-toggle.active:hover i {
+    transform: rotate(90deg);
+    color: #00d4ff;
+    filter: drop-shadow(0 0 8px rgba(0, 212, 255, 1));
+}
+
+/* Disabled state (when snowflakes are off) */
+.snowflake-toggle:not(.active) i {
+    color: rgba(245, 242, 242, 1);
+    filter: grayscale(100%);
+}
+
+.snowflake-toggle:not(.active):hover i {
+    color: rgba(200, 200, 200, 0.8);
+    filter: grayscale(50%);
+}
+
+/* Remove any Bootstrap button outline overrides */
+.snowflake-toggle.btn:focus,
+.snowflake-toggle.btn:active,
+.snowflake-toggle.btn:active:focus {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    opacity: 1;
+    transition: opacity 0.3s ease-out;
+}
+
+.page-loader.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loader-content {
+    text-align: center;
+    color: white;
+}
+
+.snowflake-loader {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    animation: snowflakeRotate 2s linear infinite;
+}
+
+.snowflake-loader i {
+    display: inline-block;
+    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8));
+}
+
+@keyframes snowflakeRotate {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+    50% {
+        transform: rotate(180deg) scale(1.2);
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+    }
+}
+
+.loader-text {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: textPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes textPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.loader-progress {
+    width: 200px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.loader-progress-bar {
+    height: 100%;
+    background: white;
+    border-radius: 2px;
+    animation: progressBar 1.5s ease-in-out infinite;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes progressBar {
+    0% {
+        width: 0%;
+        margin-left: 0%;
+    }
+    50% {
+        width: 70%;
+        margin-left: 15%;
+    }
+    100% {
+        width: 0%;
+        margin-left: 100%;
+    }
+}
+
+body.loader-active {
+    overflow: hidden;
+}

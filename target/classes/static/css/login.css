@@ -130,3 +130,14 @@
         a:hover {
             color: #165B33;
         }
+/* snowflakes color override     */
+#snowflakes,
+#snowflakes * {
+    color: #fff !important;
+}
+
+.snowflake,
+.snowflake-3d,
+.snowflake-advanced {
+    color: #fff !important;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.8) !important;

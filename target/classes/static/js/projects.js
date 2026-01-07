@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    createSnowflakes();
+    VisualEffects.createSnowflakes();
     loadProjects();
     initializeProgressModal();
     attachEventListeners();
@@ -176,40 +176,6 @@ function openProgressModal(projectId, currentProgress) {
     if (state.progressModal) {
         state.progressModal.show();
     }
-}
-
-// ============================================================================
-// UI EFFECTS
-// ============================================================================
-
-function createSnowflakes() {
-    const container = document.getElementById(ELEMENTS.snowflakes);
-    if (!container) return;
-
-    const fragment = document.createDocumentFragment();
-    const snowflakeCount = SNOWFLAKE_CONFIG.COUNT;
-
-    for (let i = 0; i < snowflakeCount; i++) {
-        const snowflake = createSnowflake();
-        fragment.appendChild(snowflake);
-    }
-
-    container.appendChild(fragment);
-}
-
-function createSnowflake() {
-    const snowflake = document.createElement('div');
-    snowflake.className = 'snowflake';
-    snowflake.innerHTML = '❄';
-
-    Object.assign(snowflake.style, {
-        left: `${Math.random() * 100}%`,
-        animationDuration: `${SNOWFLAKE_CONFIG.MIN_DURATION + Math.random() * (SNOWFLAKE_CONFIG.MAX_DURATION - SNOWFLAKE_CONFIG.MIN_DURATION)}s`,
-        animationDelay: `${Math.random() * 5}s`,
-        fontSize: `${SNOWFLAKE_CONFIG.MIN_SIZE + Math.random() * (SNOWFLAKE_CONFIG.MAX_SIZE - SNOWFLAKE_CONFIG.MIN_SIZE)}em`
-    });
-
-    return snowflake;
 }
 
 // ============================================================================

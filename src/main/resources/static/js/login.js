@@ -288,32 +288,6 @@ const AlertUtils = {
     }
 };
 
-const VisualEffects = {
-    createSnowflakes() {
-        const container = document.getElementById('snowflakes');
-        if (!container) return;
-
-        const fragment = document.createDocumentFragment();
-        const snowflakeCount = 50;
-
-        for (let i = 0; i < snowflakeCount; i++) {
-            const snowflake = document.createElement('div');
-            snowflake.className = 'snowflake';
-            snowflake.innerHTML = '❄';
-
-            Object.assign(snowflake.style, {
-                left: `${Math.random() * 100}%`,
-                animationDuration: `${5 + Math.random() * 10}s`,
-                animationDelay: `${Math.random() * 5}s`,
-                fontSize: `${0.5 + Math.random() * 1.5}em`
-            });
-
-            fragment.appendChild(snowflake);
-        }
-
-        container.appendChild(fragment);
-    }
-};
 
 // ============================================================================
 // RATE LIMITING
@@ -448,7 +422,7 @@ const UIManager = {
 
         const icon = this.elements.togglePasswordBtn.querySelector('i');
         if (icon) {
-            icon.className = type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+            icon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
         }
     },
 
@@ -722,12 +696,6 @@ const KeyboardShortcuts = {
 // ============================================================================
 
 function initializeApp() {
-    if (!StorageManager.isAvailable()) {
-        AlertUtils.show(
-            'Local storage is disabled. Some features may not work properly.',
-            'warning'
-        );
-    }
 
     VisualEffects.createSnowflakes();
     UIManager.init();
@@ -796,23 +764,3 @@ const NetworkUtils = {
 };
 
 NetworkUtils.init();
-
-// ============================================================================
-// EXPORT FOR TESTING (if needed)
-// ============================================================================
-
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        CONFIG,
-        AuthState,
-        InputSanitizer,
-        TokenUtils,
-        RedirectLoopDetector,
-        AlertUtils,
-        RateLimiter,
-        UIManager,
-        AuthService,
-        StorageManager,
-        NetworkUtils
-    };
-}

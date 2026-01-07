@@ -78,33 +78,6 @@ const Utils = {
 };
 
 // ============================================================================
-// VISUAL EFFECTS
-// ============================================================================
-
-function createSnowflakes() {
-    const container = document.getElementById('snowflakes');
-    if (!container) return;
-
-    for (let i = 0; i < CONFIG.UI.SNOWFLAKE_COUNT; i++) {
-        const snowflake = document.createElement('div');
-        snowflake.className = 'snowflake';
-        snowflake.innerHTML = '❄';
-
-        const leftPos = Math.random() * 100;
-        const animationDuration = 5 + Math.random() * 10;
-        const animationDelay = Math.random() * 5;
-        const size = 0.5 + Math.random() * 1.5;
-
-        snowflake.style.left = `${leftPos}%`;
-        snowflake.style.animationDuration = `${animationDuration}s`;
-        snowflake.style.animationDelay = `${animationDelay}s`;
-        snowflake.style.fontSize = `${size}em`;
-
-        container.appendChild(snowflake);
-    }
-}
-
-// ============================================================================
 // API SERVICE
 // ============================================================================
 
@@ -539,7 +512,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     ModalManager.init();
-    createSnowflakes();
+    VisualEffects.createSnowflakes();
 
     ProjectManager.loadProjects();
 });
