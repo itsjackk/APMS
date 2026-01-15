@@ -412,6 +412,7 @@ const ProjectManager = {
         document.getElementById('editProjectType').value = project.isGlobal ? 'global' : 'personal';
         document.getElementById('editProjectProgress').value = project.progress || 0;
         document.getElementById('editProjectOwner').value = project.createdByName || '';
+        document.getElementById('editProjectEndDate').value = project.endDate || null;
 
         const assignUserSection = document.getElementById('editAssignUserSection');
 
@@ -436,7 +437,8 @@ const ProjectManager = {
             status: document.getElementById('editProjectStatus').value,
             priority: document.getElementById('editProjectPriority').value,
             isGlobal: isGlobal,
-            progress: parseInt(document.getElementById('editProjectProgress').value)
+            progress: parseInt(document.getElementById('editProjectProgress').value),
+            endDate: document.getElementById('editProjectEndDate').value
         };
 
         if (isGlobal) {
@@ -445,13 +447,12 @@ const ProjectManager = {
         } else {
             updatedProject.assignedUserId = null;
         }
-
         try {
             await APIService.updateProject(projectId, updatedProject);
             ModalManager.hide();
             await this.loadProjects();
         } catch (error) {
-            alert('Failed to update project. Please try again.');
+            alert('Failed to update project. Please try again.',error);
         }
     },
 

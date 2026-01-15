@@ -226,7 +226,7 @@ async function handlePasswordChange() {
         }
     } catch (error) {
         console.error('Error changing password:', error);
-        showAlert('Error changing password', ALERT_TYPES.DANGER);
+        showAlert('The current Password is incorrect', ALERT_TYPES.DANGER);
     }
 }
 
