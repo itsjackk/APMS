@@ -57,9 +57,6 @@ public class CustomErrorController implements ErrorController {
         response.sendRedirect("/ConsoleApp/login");
     }
 
-    /**
-     * Check if the request should be ignored (static resources or browser-specific requests)
-     */
     private boolean shouldIgnoreRequest(String uri) {
         if (uri == null) {
             return false;

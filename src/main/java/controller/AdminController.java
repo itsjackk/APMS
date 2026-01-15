@@ -18,10 +18,8 @@ import service.ProjectService;
 import tables.Projects;
 import tables.Users;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -221,6 +219,17 @@ public class AdminController {
                     project.setAssignedTo(null);
                 }
             }
+            if (updates.containsKey("endDate")) {
+                Object endDateObj = updates.get("endDate");
+                if (endDateObj != null) {
+                    String endDateStr = (String) endDateObj;
+                    LocalDate endDate;
+                    endDate = LocalDate.parse(endDateStr);
+                    project.setEndDate(endDate);
+                } else {
+                    project.setEndDate(null);
+                }
+            }
             Projects updated = projectService.updateProjectAsAdmin(projectId, project, admin);
 
             String creatorUsername = updated.getCreatedBy() != null ? updated.getCreatedBy().getUsername() : null;
@@ -231,10 +240,11 @@ public class AdminController {
             }
 
             return ResponseEntity.ok(ProjectsResponse.fromEntity(updated, creatorUsername, assignedUsername));
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
+            log.error("Error updating project: " + e.getMessage(), e);
             if (e.getMessage().contains("not found")) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            }
+                }
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
@@ -294,8 +304,6 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
-
-    // ==================== ADMIN STATISTICS ====================
 
     @Operation(summary = "Get admin statistics")
     @SecurityRequirement(name = "bearerAuth")
@@ -405,8 +413,6 @@ public class AdminController {
                     .body(Map.of("error", "Failed to update user role"));
         }
     }
-
-    // ==================== HELPER METHODS ====================
 
     private Users getCurrentUser(Authentication authentication) {
         String username = authentication.getName();

@@ -22,11 +22,9 @@ public class CreateProjectRequest {
     private LocalDate endDate;
     private Integer progress;
 
-    // New fields for admin functionality
     private String projectType; // "personal" or "global"
     private UUID assignedUserId; // For global project assignment
 
-    // Constructors
     public CreateProjectRequest() {
     }
 
@@ -44,7 +42,6 @@ public class CreateProjectRequest {
         this.assignedUserId = assignedUserId;
     }
 
-    // Getters and Setters
     public String getName() {
         return name;
     }

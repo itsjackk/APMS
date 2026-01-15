@@ -13,7 +13,6 @@ public class RefreshResponse {
         this.message = message;
     }
 
-    // Getters and Setters
     public String getAccessToken() {
         return accessToken;
     }

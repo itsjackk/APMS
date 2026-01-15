@@ -11,7 +11,6 @@ public class UpdateProgressRequest {
     @Max(value = 100, message = "Progress must be between 0 and 100")
     private Integer progress;
 
-    // Constructors
     public UpdateProgressRequest() {
     }
 
@@ -19,7 +18,6 @@ public class UpdateProgressRequest {
         this.progress = progress;
     }
 
-    // Getters and Setters
     public Integer getProgress() {
         return progress;
     }

@@ -1,458 +1,370 @@
 @import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
 
-    * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-    }
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
 
-    body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1a472a 0%, #0d2818 50%, #1a472a 100%);
-            min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
-    }
+body {
+font-family: 'Poppins', sans-serif;
+background: linear-gradient(135deg, #1a472a 0%, #0d2818 50%, #1a472a 100%);
+min-height: 100vh;
+position: relative;
+overflow-x: hidden;
+}
 
-    .sidebar {
-        min-height: 100vh;
-        background: linear-gradient(135deg, #1a472a 0%, #0d2818 50%, #1a472a 100%);
-        color: white;
-        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
-        position: relative;
-        border-right: 3px solid #ffd700;
-    }
+@keyframes fall {
+to {
+transform: translateY(100vh);
+}
+}
 
-    .sidebar::before {
-        content: '🎄';
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        font-size: 2rem;
-        animation: rotate 4s linear infinite;
-    }
+/* Christmas Lights */
+.christmas-lights {
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+height: 30px;
+z-index: 1000;
+display: flex;
+justify-content: space-around;
+padding: 0 20px;
+}
 
-    @keyframes rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
+.light {
+width: 10px;
+height: 10px;
+border-radius: 50%;
+animation: blink 1.5s infinite;
+}
 
-    .sidebar h4 {
-        font-family: 'Mountains of Christmas', cursive;
-        font-weight: 700;
-        font-size: 1.8rem;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        border-bottom: 2px solid #ffd700;
-        padding-bottom: 10px;
-    }
+.light:nth-child(1) { background: #ff0000; animation-delay: 0s; }
+.light:nth-child(2) { background: #00ff00; animation-delay: 0.3s; }
+.light:nth-child(3) { background: #0000ff; animation-delay: 0.6s; }
+.light:nth-child(4) { background: #ffff00; animation-delay: 0.9s; }
+.light:nth-child(5) { background: #ff00ff; animation-delay: 1.2s; }
 
-    .sidebar .nav-link {
-        color: rgba(255, 255, 255, 0.9);
-        padding: 12px 20px;
-        margin: 5px 0;
-        border-radius: 15px;
-        transition: all 0.3s ease;
-        font-weight: 500;
-        border: 2px solid transparent;
-    }
+@keyframes blink {
+0%, 100% { opacity: 1; box-shadow: 0 0 10px currentColor; }
+50% { opacity: 0.3; box-shadow: none; }
+}
 
-    .sidebar .nav-link:hover {
-        background: rgba(255, 215, 0, 0.2);
-        border-color: #ffd700;
-        transform: translateX(5px);
-        color: #ffd700;
-    }
+/* Christmas Tree Decoration */
+.christmas-tree {
+position: fixed;
+bottom: 20px;
+right: 20px;
+font-size: 3rem;
+z-index: 1000;
+animation: sway 3s ease-in-out infinite;
+filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+}
 
-    .sidebar .nav-link.active {
-        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-        color: #8b0000;
-        font-weight: 600;
-        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
-    }
+@keyframes sway {
+0%, 100% { transform: rotate(-2deg); }
+50% { transform: rotate(2deg); }
+}
 
-    .sidebar .nav-link i {
-        margin-right: 10px;
-        width: 20px;
-        text-align: center;
-        color: #FFD700;
-    }
+/* Main Content */
+.main-content {
+padding: 30px;
+position: relative;
+z-index: 1;
+}
 
-    .sidebar hr {
-        border-color: rgba(255, 215, 0, 0.3);
-        margin: 15px 0;
-    }
+/* Header Styling */
+.main-content h2 {
+font-family: 'Mountains of Christmas', cursive;
+color: #ffd700;
+text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+font-size: 2.5rem;
+margin-bottom: 20px;
+}
 
-    .sidebar .text-muted {
-        color: rgba(255, 255, 255, 0.6) !important;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        font-weight: 600;
-    }
+.container {
+max-width: 1400px;
+padding-top: 50px;
+}
 
-        @keyframes fall {
-            to {
-                transform: translateY(100vh);
-            }
-        }
+.page-header {
+background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+border: 3px solid #FFD700;
+border-radius: 15px;
+padding: 2rem;
+margin-bottom: 2rem;
+box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
 
-        /* Christmas Lights */
-        .christmas-lights {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 30px;
-            z-index: 1000;
-            display: flex;
-            justify-content: space-around;
-            padding: 0 20px;
-        }
+.page-header h2 {
+color: white;
+font-family: 'Mountains of Christmas', cursive;
+text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+margin: 0;
+}
 
-        .light {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            animation: blink 1.5s infinite;
-        }
+/* Stats Cards */
+.stats-card {
+background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+border: 3px solid #FFD700;
+border-radius: 15px;
+padding: 2rem;
+margin-bottom: 2rem;
+box-shadow: 0 4px 15px rgba(255,255,0,0.2);
+backdrop-filter: blur(10px);
+transition: all 0.3s;
+}
 
-        .light:nth-child(1) { background: #ff0000; animation-delay: 0s; }
-        .light:nth-child(2) { background: #00ff00; animation-delay: 0.3s; }
-        .light:nth-child(3) { background: #0000ff; animation-delay: 0.6s; }
-        .light:nth-child(4) { background: #ffff00; animation-delay: 0.9s; }
-        .light:nth-child(5) { background: #ff00ff; animation-delay: 1.2s; }
+.stats-card:hover {
+transform: translateY(-5px);
+box-shadow: 0 8px 25px rgba(255,255,0,0.2);
+}
 
-        @keyframes blink {
-            0%, 100% { opacity: 1; box-shadow: 0 0 10px currentColor; }
-            50% { opacity: 0.3; box-shadow: none; }
-        }
+.stats-card h3 {
+color: #fff;
+font-size: 2.5rem;
+margin: 10px 0;
+}
 
-        /* Christmas Tree Decoration */
-        .christmas-tree {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            font-size: 3rem;
-            z-index: 1000;
-            animation: sway 3s ease-in-out infinite;
-            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
-        }
+.stats-card p {
+color: rgba(255, 255, 255, 0.8);
+margin: 0;
+}
 
-        @keyframes sway {
-            0%, 100% { transform: rotate(-2deg); }
-            50% { transform: rotate(2deg); }
-        }
+.stats-icon {
+font-size: 2.5rem;
+margin-bottom: 10px;
+}
 
-        .candy-cane-border {
-            height: 3px;
-            background: repeating-linear-gradient(
-                45deg,
-                #ff0000,
-                #ff0000 10px,
-                #ffffff 10px,
-                #ffffff 20px
-            );
-            margin: 15px 0;
-        }
+/* Filter Section */
+.filter-section {
+background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+border: 3px solid #FFD700;
+border-radius: 15px;
+padding: 2rem;
+margin-bottom: 2rem;
+box-shadow: 0 4px 15px rgba(255,255,0,0.2);
+backdrop-filter: blur(10px);
+transition: all 0.3s;
+}
 
-        /* Main Content */
-        .main-content {
-            padding: 30px;
-            position: relative;
-            z-index: 1;
-        }
+.form-label {
+color: white;
+font-weight: 500;
+}
 
-        /* Header Styling */
-        .main-content h2 {
-            font-family: 'Mountains of Christmas', cursive;
-            color: #ffd700;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-        }
+.filter-section .form-select {
+background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+border: 1px solid rgba(255, 255,0, 0.3);
+color: white;
+}
 
-        .container {
-            max-width: 1400px;
-            padding-top: 50px;
-        }
+.filter-section .form-select option {
+background: #2c5364;
+color: white;
+}
 
-        .page-header {
-            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
-            border: 3px solid #FFD700;
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
+/* Project Cards */
+.project-card {
+background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+border: 3px solid #FFD700;
+border-radius: 15px;
+padding: 20px;
+margin-bottom: 20px;
+backdrop-filter: blur(10px);
+transition: all 0.3s;
+box-shadow: 0 4px 15px rgba(255,255,0,0.2);
+}
 
-        .page-header h2 {
-            color: white;
-            font-family: 'Mountains of Christmas', cursive;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            margin: 0;
-        }
+.project-card:hover {
+transform: translateY(-5px);
+box-shadow: 0 8px 25px rgba(255,255,0,0.2);
+}
 
-        /* Stats Cards */
-        .stats-card {
-            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
-            border: 3px solid #FFD700;
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 15px rgba(255,255,0,0.2);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s;
-        }
+.project-card h4 {
+color: #fff;
+margin-bottom: 10px;
+}
 
-        .stats-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(255,255,0,0.2);
-        }
+.project-card .text-muted {
+color: white !important;
+}
 
-        .stats-card h3 {
-            color: #fff;
-            font-size: 2.5rem;
-            margin: 10px 0;
-        }
+/* Badges */
+.status-badge, .priority-badge {
+padding: 5px 12px;
+border-radius: 15px;
+font-size: 0.85rem;
+font-weight: 500;
+}
 
-        .stats-card p {
-            color: rgba(255, 255, 255, 0.8);
-            margin: 0;
-        }
+.user-badge {
+background: rgba(255, 255, 255, 0.1);
+padding: 5px 12px;
+border-radius: 15px;
+font-size: 0.85rem;
+color: rgba(255, 255, 255, 0.9);
+}
 
-        .stats-icon {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
+/* Progress Bar */
+.progress {
+background: rgba(255, 255, 255, 0.1);
+border-radius: 15px;
+height: 10px;
+}
 
-        /* Filter Section */
-        .filter-section {
-            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
-            border: 3px solid #FFD700;
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 15px rgba(255,255,0,0.2);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s;
-        }
+.progress-bar {
+background: linear-gradient(135deg, #0d2818 0%, #1a472a 100%);
+border-radius: 15px;
+}
 
-        .form-label {
-            color: white;
-            font-weight: 500;
-        }
+/* Buttons */
 
-        .filter-section .form-select {
-            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
-            border: 1px solid rgba(255, 255,0, 0.3);
-            color: white;
-        }
+.btn-primary {
+background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+border: 2px solid yellow;
+color: white;
+font-weight: bold;
+transition: all 0.3s ease;
+border-radius: 15px;
+}
 
-        .filter-section .form-select option {
-            background: #2c5364;
-            color: white;
-        }
+.btn-primary:hover {
+border: 2px solid yellow;
+color: white;
+box-shadow: 0 3px 10px rgba(255,255,0,0.3);
+transform: translateY(-3px);
+}
+.btn-primary:focus{
+box-shadow: yellow;
+}
+.btn-outline-primary {
+border: 2px solid #ffd700;
+color: white;
+background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+font-weight: bold;
+padding: 10px 25px;
+border-radius: 15px;
+transition: all 0.3s ease;
+}
 
-        /* Project Cards */
-        .project-card {
-            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
-            border: 3px solid #FFD700;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(255,255,0,0.2);
-        }
+.btn-outline-primary:hover {
+border: 2px solid #ffd700;
+color: white;
+transform: translateY(-3px);
+box-shadow: 0 12px 35px rgba(255, 255, 0, 0.3);
+}
 
-        .project-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(255,255,0,0.2);
-        }
+.btn-outline-danger {
+border: 2px solid red;
+color: white;
+background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+font-weight: bold;
+transition: all 0.3s ease;
+border-radius: 15px;
+}
 
-        .project-card h4 {
-            color: #fff;
-            margin-bottom: 10px;
-        }
+.btn-outline-danger:hover {
+border: 2px solid red;
+color: white;
+transform: translateY(-3px);
+box-shadow: 0 3px 10px rgba(255,0,0, 0.3);
+}
 
-        .project-card .text-muted {
-            color: white !important;
-        }
+.btn-secondary {
+background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+border: 2px solid yellow;
+color: white;
+font-weight: bold;
+transition: all 0.3s ease;
+border-radius: 15px;
+}
 
-        /* Badges */
-        .status-badge, .priority-badge {
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
+.btn-secondary:hover {
+border: 2px solid yellow;
+color: white;
+box-shadow: 0 3px 10px rgba(255,255,0,0.3);
+transform: translateY(-3px);
+}
 
-        .user-badge {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.9);
-        }
+/* Loading Spinner */
+.loading-spinner {
+border: 3px solid rgba(255, 255, 255, 0.3);
+border-top: 3px solid #d4af37;
+border-radius: 50%;
+width: 40px;
+height: 40px;
+animation: spin 1s linear infinite;
+margin: 0 auto;
+}
 
-        /* Progress Bar */
-        .progress {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            height: 10px;
-        }
+@keyframes spin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
 
-        .progress-bar {
-            background: linear-gradient(135deg, #0d2818 0%, #1a472a 100%);
-            border-radius: 15px;
-        }
+/* Modal */
+.modal-content {
+background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+border-radius: 15px;
+border: 3px solid #FFD700;
+}
 
-        /* Buttons */
+.modal-header {
+color: white;
+border-bottom: none;
+}
+.modal-body .form-control, .modal-body .form-select {
+background: rgba(255, 255,0, 0.1);
+border: 1px solid rgba(255, 255,0, 0.3);
+color: white;
+}
 
-        .btn-primary {
-            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
-            border: 2px solid yellow;
-            color: white;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            border-radius: 15px;
-        }
+.modal-body .form-control:focus, .modal-body .form-select:focus {
+background: rgba(255, 255,0, 0.15);
+border-color: #d4af37;
+box-shadow: 0 0 0 0.2rem rgba(255, 255, 0, 0.25);
+}
+.modal-footer {
+border-top: none;
+}
 
-        .btn-primary:hover {
-            border: 2px solid yellow;
-            color: white;
-            box-shadow: 0 3px 10px rgba(255,255,0,0.3);
-            transform: translateY(-3px);
-        }
-        .btn-primary:focus{
-            box-shadow: yellow;
-        }
-        .btn-outline-primary {
-            border: 2px solid #ffd700;
-            color: white;
-            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
-            font-weight: bold;
-            padding: 10px 25px;
-            border-radius: 15px;
-            transition: all 0.3s ease;
-        }
+.btn-christmas {
+background: linear-gradient(135deg, #c41e3a 0%, #a01729 100%);
+color: white;
+border: 2px solid #ffd700;
+border-radius: 15px;
+padding: 10px 20px;
+font-weight: 600;
+transition: all 0.3s ease;
+box-shadow: 0 4px 10px rgba(196, 30, 58, 0.3);
+}
 
-        .btn-outline-primary:hover {
-            border: 2px solid #ffd700;
-            color: white;
-            transform: translateY(-3px);
-            box-shadow: 0 12px 35px rgba(255, 255, 0, 0.3);
-        }
+.btn-christmas:hover {
+background: linear-gradient(135deg, #a01729 0%, #c41e3a 100%);
+transform: translateY(-2px);
+box-shadow: 0 6px 15px rgba(196, 30, 58, 0.4);
+color: white;
+}
 
-        .btn-outline-danger {
-            border: 2px solid red;
-            color: white;
-            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
-            font-weight: bold;
-            transition: all 0.3s ease;
-            border-radius: 15px;
-        }
+.btn-outline-christmas {
+background: transparent;
+color: white;
+border: 2px solid #ffd700;
+border-radius: 15px;
+padding: 10px 20px;
+font-weight: 600;
+transition: all 0.3s ease;
+}
 
-        .btn-outline-danger:hover {
-            border: 2px solid red;
-            color: white;
-            transform: translateY(-3px);
-            box-shadow: 0 3px 10px rgba(255,0,0, 0.3);
-        }
+.btn-outline-christmas:hover {
+background: rgba(255, 215, 0, 0.2);
+border-color: #ffd700;
+color: white;
+transform: translateY(-2px);
+}
 
-        .btn-secondary {
-            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
-            border: 2px solid yellow;
-            color: white;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            border-radius: 15px;
-        }
-
-        .btn-secondary:hover {
-            border: 2px solid yellow;
-            color: white;
-            box-shadow: 0 3px 10px rgba(255,255,0,0.3);
-            transform: translateY(-3px);
-        }
-
-        /* Loading Spinner */
-        .loading-spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top: 3px solid #d4af37;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Modal */
-        .modal-content {
-            background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
-            border-radius: 15px;
-            border: 3px solid #FFD700;
-        }
-
-        .modal-header {
-            color: white;
-            border-bottom: none;
-        }
-        .modal-body .form-control, .modal-body .form-select {
-            background: rgba(255, 255,0, 0.1);
-            border: 1px solid rgba(255, 255,0, 0.3);
-            color: white;
-        }
-
-        .modal-body .form-control:focus, .modal-body .form-select:focus {
-            background: rgba(255, 255,0, 0.15);
-            border-color: #d4af37;
-            box-shadow: 0 0 0 0.2rem rgba(255, 255, 0, 0.25);
-        }
-        .modal-footer {
-        border-top: none;
-        }
-
-        .btn-christmas {
-            background: linear-gradient(135deg, #c41e3a 0%, #a01729 100%);
-            color: white;
-            border: 2px solid #ffd700;
-            border-radius: 15px;
-            padding: 10px 20px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(196, 30, 58, 0.3);
-        }
-
-        .btn-christmas:hover {
-            background: linear-gradient(135deg, #a01729 0%, #c41e3a 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(196, 30, 58, 0.4);
-            color: white;
-        }
-
-        .btn-outline-christmas {
-            background: transparent;
-            color: white;
-            border: 2px solid #ffd700;
-            border-radius: 15px;
-            padding: 10px 20px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .btn-outline-christmas:hover {
-            background: rgba(255, 215, 0, 0.2);
-            border-color: #ffd700;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-    .h2 {
-        color: white;
-    }
+.h2 {
+color: white;
+}

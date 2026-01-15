@@ -30,10 +30,6 @@ public class GitHubService {
     @Value("${github.api.token:}")
     private String githubToken;
 
-    /**
-     * Automatically sync GitHub repositories for a user
-     * Uses the logged-in username to search for GitHub repos
-     */
     @Transactional
     public void autoSyncGitHubProjects(Users user) {
         try {
@@ -96,9 +92,6 @@ public class GitHubService {
         }
     }
 
-    /**
-     * Connect to GitHub API using token from properties
-     */
     private GitHub connectToGitHub() throws IOException {
         if (githubToken != null && !githubToken.isEmpty()) {
             log.debug("Connecting to GitHub with authentication token");
@@ -109,9 +102,6 @@ public class GitHubService {
         }
     }
 
-    /**
-     * Get user's public repositories
-     */
     private List<GHRepository> getUserRepositories(GitHub github, String username) throws IOException {
         List<GHRepository> repositories = new ArrayList<>();
 
@@ -139,9 +129,6 @@ public class GitHubService {
         return repositories;
     }
 
-    /**
-     * Create a Project entity from a GitHub repository
-     */
     private Projects createProjectFromRepo(GHRepository repo, Users user) throws IOException {
         Projects project = new Projects();
 
@@ -190,18 +177,12 @@ public class GitHubService {
         return project;
     }
 
-    /**
-     * Manual sync - can be called by user action
-     */
     @Transactional
     public int manualSyncGitHubProjects(Users user) {
         autoSyncGitHubProjects(user);
         return projectRepository.findByCreatedByAndIsGithubImportTrue(user).size();
     }
 
-    /**
-     * Get GitHub rate limit info (useful for debugging)
-     */
     public String getRateLimitInfo() {
         try {
             GitHub github = connectToGitHub();

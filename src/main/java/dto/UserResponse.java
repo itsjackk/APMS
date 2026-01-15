@@ -28,7 +28,6 @@ public class UserResponse {
         this.updatedAt = updatedAt;
     }
 
-    // Static factory method to create from Users entity
     public static UserResponse fromEntity(Users user) {
         return new UserResponse(
                 user.getId(),
@@ -41,7 +40,6 @@ public class UserResponse {
         );
     }
 
-    // Getters and Setters
     public UUID getId() {
         return id;
     }

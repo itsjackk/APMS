@@ -3,7 +3,6 @@ package dto;
 public class LogoutResponse {
     private String message;
 
-    // Constructors
     public LogoutResponse() {
     }
 
@@ -11,7 +10,6 @@ public class LogoutResponse {
         this.message = message;
     }
 
-    // Getters and Setters
     public String getMessage() {
         return message;
     }

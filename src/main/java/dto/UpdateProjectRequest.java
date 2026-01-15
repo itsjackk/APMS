@@ -11,11 +11,9 @@ public class UpdateProjectRequest {
     private String startDate; // Changed from LocalDateTime to String
     private String endDate;   // Changed from LocalDateTime to String
 
-    // Constructors
     public UpdateProjectRequest() {
     }
 
-    // Getters and Setters
     public String getName() {
         return name;
     }

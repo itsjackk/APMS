@@ -16,7 +16,6 @@ public class ProjectStats {
         this.onHoldProjects = onHoldProjects;
     }
 
-    // Getters
     public Long getTotalProjects() {
         return totalProjects;
     }

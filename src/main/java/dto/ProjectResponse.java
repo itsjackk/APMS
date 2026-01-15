@@ -6,7 +6,6 @@ public class ProjectResponse {
     private String message;
     private Projects project;
 
-    // Constructors
     public ProjectResponse() {
     }
 
@@ -15,7 +14,6 @@ public class ProjectResponse {
         this.project = project;
     }
 
-    // Getters and Setters
     public String getMessage() {
         return message;
     }

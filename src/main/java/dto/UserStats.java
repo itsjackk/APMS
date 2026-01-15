@@ -16,7 +16,7 @@ public class UserStats {
         this.disabledUsers = disabledUsers;
     }
 
-    // Getters
+
     public long getTotalUsers() {
         return totalUsers;
     }

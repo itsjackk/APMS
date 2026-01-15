@@ -73,7 +73,6 @@ public class ProjectsResponse {
         return response;
     }
 
-    // Getters and Setters
     public UUID getId() {
         return id;
     }

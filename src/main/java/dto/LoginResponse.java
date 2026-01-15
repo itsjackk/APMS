@@ -5,7 +5,6 @@ public class LoginResponse {
     private String username;
     private String message;
 
-    // Constructors
     public LoginResponse() {
     }
 
@@ -15,7 +14,6 @@ public class LoginResponse {
         this.message = message;
     }
 
-    // Getters and Setters
     public String getAccessToken() {
         return accessToken;
     }

@@ -31,23 +31,23 @@
             position: relative;
         }
 
-        .login-header::before {
+/*         .login-header::before {
             content: "🎄";
             position: absolute;
             left: 20px;
             top: 50%;
             transform: translateY(-50%);
             font-size: 2rem;
-        }
+        } */
 
-        .login-header::after {
+/*         .login-header::after {
             content: "🎅";
             position: absolute;
             right: 20px;
             top: 50%;
             transform: translateY(-50%);
             font-size: 2rem;
-        }
+        } */
 
         .login-body {
             padding: 2rem;

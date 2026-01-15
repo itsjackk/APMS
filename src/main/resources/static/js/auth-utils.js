@@ -15,8 +15,8 @@ const AuthUtils = {
         },
         TOKEN_EXPIRY_BUFFER: 60, // Refresh 60 seconds before expiry
         PAGE_LOADER: {
-            MIN_DISPLAY_TIME: 500, // Minimum time to show loader (ms)
-            MAX_DISPLAY_TIME: 2000, // Maximum time to show loader (ms)
+            MIN_DISPLAY_TIME: 1500, // Minimum time to show loader (ms)
+            MAX_DISPLAY_TIME: 2500, // Maximum time to show loader (ms)
             FADE_OUT_DURATION: 1500 // Fade out animation duration (ms)
         }
     },
@@ -180,12 +180,9 @@ function createPageLoader() {
         <div id="pageLoader" class="page-loader">
             <div class="loader-content">
                 <div class="snowflake-loader">
-                    <i class="fas fa-snowflake"></i>
+                   <i class="fa-solid fa-spinner fa-spin-pulse"></i>
                 </div>
                 <div class="loader-text">Loading...</div>
-                <div class="loader-progress">
-                    <div class="loader-progress-bar"></div>
-                </div>
             </div>
         </div>
     `;

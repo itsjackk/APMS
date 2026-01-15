@@ -5,7 +5,6 @@ public class LoginRequest {
     private String password;
     private boolean rememberMe = false; // Default to false for backward compatibility
 
-    // Constructors
     public LoginRequest() {
     }
 
@@ -21,7 +20,6 @@ public class LoginRequest {
         this.rememberMe = rememberMe;
     }
 
-    // Getters and Setters
     public String getUsername() {
         return username;
     }

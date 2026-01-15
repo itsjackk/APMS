@@ -4,7 +4,6 @@ public class ErrorResponse {
     private String error;
     private String message;
 
-    // Constructors
     public ErrorResponse() {
     }
 
@@ -13,7 +12,6 @@ public class ErrorResponse {
         this.message = message;
     }
 
-    // Getters and Setters
     public String getError() {
         return error;
     }

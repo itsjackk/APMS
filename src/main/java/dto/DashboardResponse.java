@@ -11,7 +11,6 @@ public class DashboardResponse {
         this.accessTime = accessTime;
     }
 
-    // Getters
     public String getMessage() {
         return message;
     }

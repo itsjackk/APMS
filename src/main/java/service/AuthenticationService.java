@@ -42,13 +42,9 @@ public class AuthenticationService {
 
     private Logger log = LoggerFactory.getLogger(AuthenticationService.class);
 
-    // Token expiration constants (in days)
     private static final int REMEMBER_ME_ACCESS_TOKEN_DAYS = 30;
     private static final int REMEMBER_ME_REFRESH_TOKEN_DAYS = 30;
 
-    /**
-     * Login with rememberMe support and token rotation
-     */
     @Transactional
     public AuthenticationResponse login(String username, String password, boolean rememberMe) {
         Optional<Users> userOpt = usersRepository.findByUsername(username);
@@ -127,9 +123,6 @@ public class AuthenticationService {
         return new AuthenticationResponse(accessToken, refreshToken, user.getUsername());
     }
 
-    /**
-     * Login without rememberMe (backward compatibility)
-     */
     @Transactional
     public AuthenticationResponse login(String username, String password) {
         return login(username, password, false);

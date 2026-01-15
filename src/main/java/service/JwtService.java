@@ -29,9 +29,6 @@ public class JwtService {
     // Constants for day-based expiration (in seconds)
     private static final long SECONDS_PER_DAY = 86400L; // 24 * 60 * 60
 
-    /**
-     * Generate standard access token (uses configured expiration - 25 minutes)
-     */
     public String generateAccessToken(UUID userId, String username, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId.toString());
@@ -40,11 +37,6 @@ public class JwtService {
         return createToken(claims, username, accessTokenExpiration);
     }
 
-    /**
-     * Generate access token with custom expiration (for Remember Me)
-     *
-     * @param expirationDays Number of days until token expires
-     */
     public String generateAccessToken(UUID userId, String username, String role, int expirationDays) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId.toString());
@@ -55,9 +47,6 @@ public class JwtService {
         return createToken(claims, username, expirationSeconds);
     }
 
-    /**
-     * Generate standard refresh token (uses configured expiration - 25 minutes)
-     */
     public String generateRefreshToken(UUID userId, String username, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId.toString());
@@ -66,11 +55,6 @@ public class JwtService {
         return createToken(claims, username, refreshTokenExpiration);
     }
 
-    /**
-     * Generate refresh token with custom expiration (for Remember Me)
-     *
-     * @param expirationDays Number of days until token expires
-     */
     public String generateRefreshToken(UUID userId, String username, String role, int expirationDays) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId.toString());

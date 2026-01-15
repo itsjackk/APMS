@@ -14,10 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Service responsible for secure token rotation
- * Implements automatic token rotation with reuse detection
- */
+
 @Service
 public class TokenRotationService {
 
@@ -39,21 +36,6 @@ public class TokenRotationService {
     @Value("${jwt.rotation.max-rotations-per-minute:5}")
     private int maxRotationsPerMinute;
 
-    // ============================================================================
-    // TOKEN ROTATION
-    // ============================================================================
-
-    /**
-     * Rotate a refresh token - creates new token and invalidates old one
-     *
-     * @param oldToken   The current refresh token to rotate
-     * @param userId     The user ID
-     * @param username   The username
-     * @param role       The user role
-     * @param rememberMe Whether this is a remember-me token
-     * @return New refresh token entity
-     * @throws SecurityException if rotation fails security checks
-     */
     @Transactional
     public RefreshTokens rotateToken(String oldToken, UUID userId, String username, String role, boolean rememberMe) {
         log.debug("Starting token rotation for user: {}", username);
@@ -62,23 +44,16 @@ public class TokenRotationService {
         RefreshTokens oldTokenEntity = refreshTokensRepository.findByToken(oldToken)
                 .orElseThrow(() -> new SecurityException("Token not found in database"));
 
-        // 2. Validate the old token
         validateTokenForRotation(oldTokenEntity);
-
-        // 3. Check for token reuse (CRITICAL SECURITY CHECK)
         checkForTokenReuse(oldToken, oldTokenEntity.getTokenFamily());
-
-        // 4. Check rotation rate limit
         checkRotationRateLimit(oldTokenEntity.getTokenFamily());
 
-        // 5. Check rotation count limit
         if (oldTokenEntity.getRotationCount() >= maxRotationCount) {
             log.warn("Token rotation count exceeded for user: {} (count: {})",
                     username, oldTokenEntity.getRotationCount());
             throw new SecurityException("Token rotation limit exceeded");
         }
 
-        // 6. Generate new refresh token (JWT)
         String newRefreshTokenJwt;
         LocalDateTime expiresAt;
 
@@ -90,7 +65,6 @@ public class TokenRotationService {
             expiresAt = jwtService.getRefreshTokenExpirationTime();
         }
 
-        // 7. Create new token entity
         RefreshTokens newTokenEntity = new RefreshTokens();
         newTokenEntity.setUserId(userId);
         newTokenEntity.setToken(newRefreshTokenJwt);
@@ -101,10 +75,8 @@ public class TokenRotationService {
         newTokenEntity.setPreviousToken(oldToken); // Link to old token
         newTokenEntity.setLastRotatedAt(LocalDateTime.now());
 
-        // 8. Save new token
         newTokenEntity = refreshTokensRepository.save(newTokenEntity);
 
-        // 9. Revoke old token
         oldTokenEntity.revoke();
         refreshTokensRepository.save(oldTokenEntity);
 
@@ -114,32 +86,18 @@ public class TokenRotationService {
         return newTokenEntity;
     }
 
-    // ============================================================================
-    // REUSE DETECTION
-    // ============================================================================
-
-    /**
-     * Check if a token has been reused (CRITICAL SECURITY FEATURE)
-     * If an old token is used after rotation, it indicates token theft
-     */
     private void checkForTokenReuse(String token, String tokenFamily) {
-        // Check if this token was previously rotated (has a successor)
         Optional<RefreshTokens> successorToken = refreshTokensRepository.findByPreviousToken(token);
 
         if (successorToken.isPresent()) {
-            // TOKEN REUSE DETECTED! This is a security incident
             log.error("🚨 TOKEN REUSE DETECTED! Token family: {} - Revoking entire family", tokenFamily);
 
-            // Revoke entire token family
             revokeTokenFamily(tokenFamily, "Token reuse detected");
 
             throw new SecurityException("Token reuse detected - all tokens revoked");
         }
     }
 
-    /**
-     * Revoke entire token family (used when reuse is detected)
-     */
     @Transactional
     public void revokeTokenFamily(String tokenFamily, String reason) {
         log.warn("Revoking token family: {} - Reason: {}", tokenFamily, reason);
@@ -150,13 +108,6 @@ public class TokenRotationService {
         // emailService.sendSecurityAlert(userId, "Token theft detected");
     }
 
-    // ============================================================================
-    // VALIDATION
-    // ============================================================================
-
-    /**
-     * Validate token before rotation
-     */
     private void validateTokenForRotation(RefreshTokens token) {
         if (token.isRevoked()) {
             throw new SecurityException("Cannot rotate revoked token");
@@ -187,20 +138,11 @@ public class TokenRotationService {
         }
     }
 
-    // ============================================================================
-    // TOKEN FAMILY MANAGEMENT
-    // ============================================================================
 
-    /**
-     * Generate a new unique token family ID
-     */
     public String generateTokenFamily() {
         return UUID.randomUUID().toString();
     }
 
-    /**
-     * Check if multiple tokens are active in a family (shouldn't happen)
-     */
     public boolean hasMultipleActiveTokens(String tokenFamily) {
         long activeCount = refreshTokensRepository.countActiveTokensInFamily(
                 tokenFamily, LocalDateTime.now());
@@ -214,47 +156,24 @@ public class TokenRotationService {
         return false;
     }
 
-    /**
-     * Get all tokens in a family (for debugging/auditing)
-     */
     public List<RefreshTokens> getTokenFamily(String tokenFamily) {
         return refreshTokensRepository.findByTokenFamily(tokenFamily);
     }
 
-    // ============================================================================
-    // SECURITY MONITORING
-    // ============================================================================
-
-    /**
-     * Find tokens with suspicious rotation patterns
-     */
     public List<RefreshTokens> findSuspiciousTokens() {
         return refreshTokensRepository.findTokensWithHighRotationCount(maxRotationCount - 10);
     }
 
-    /**
-     * Get recent security incidents (tokens revoked due to reuse)
-     */
     public List<RefreshTokens> getRecentSecurityIncidents(int hours) {
         LocalDateTime since = LocalDateTime.now().minusHours(hours);
         return refreshTokensRepository.findTokensRevokedForReuse(since);
     }
 
-    /**
-     * Get total rotation count for a user
-     */
     public Long getUserRotationCount(UUID userId) {
         Long count = refreshTokensRepository.getTotalRotationCountForUser(userId);
         return count != null ? count : 0L;
     }
 
-    // ============================================================================
-    // CLEANUP
-    // ============================================================================
-
-    /**
-     * Clean up old tokens in a family (keep only recent ones)
-     */
     @Transactional
     public void cleanupOldTokensInFamily(String tokenFamily, int keepCount) {
         List<RefreshTokens> tokens = refreshTokensRepository.findByTokenFamily(tokenFamily);

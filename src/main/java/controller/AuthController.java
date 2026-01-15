@@ -266,10 +266,8 @@ public class AuthController {
             ));
 
         } catch (IllegalStateException e) {
-            // Token reuse detected
             log.error("TOKEN REUSE DETECTED: {}", e.getMessage());
 
-            // Clear the cookie
             Cookie refreshTokenCookie = new Cookie("refreshToken", "");
             refreshTokenCookie.setHttpOnly(true);
             refreshTokenCookie.setSecure(true);
@@ -435,9 +433,6 @@ public class AuthController {
         }
     }
 
-    /**
-     * Extract JWT token from Authorization header
-     */
     private String extractTokenFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
 

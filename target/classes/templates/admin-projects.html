@@ -55,7 +55,7 @@
 <body>
 <div id="snowflakes" aria-hidden="true"></div>
 
-<div class="christmas-tree" aria-hidden="true">🎄</div>
+<!--<div class="christmas-tree" aria-hidden="true">🎄</div>-->
 
 <div class="container-fluid">
     <div class="row">
@@ -96,12 +96,12 @@
             </div>
         </nav>
 
-        <main class="col-md-9 col-lg-10" role="main">
+        <main class="main-content-wrapper" role="main">
             <div class="main-content">
                 <header class="page-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h1 class="h2">
-                            <i class="fas fa-shield-alt me-2" aria-hidden="true"></i>Admin - Manage Projects 🎄
+                            <i class="fas fa-shield-alt me-2" aria-hidden="true"></i>Admin - Manage Projects
                         </h1>
                         <div>
                             <a href="/ConsoleApp/dashboard" class="btn btn-outline-christmas">
@@ -174,7 +174,7 @@
                 </section>
 
                 <footer class="footer">
-                    <p>Merry Christmas & Happy New Year! 🎄✨</p>
+                    <p>Happy New Year! ✨</p>
                 </footer>
             </div>
         </main>
@@ -244,16 +244,28 @@
                             </div>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Owner</label>
-                        <input type="text" class="form-control" id="editProjectOwner" disabled>
-                        <small class="text-muted">Project owner cannot be changed</small>
-                    </div>
                     <div class="mb-3" id="editAssignUserSection" style="display: none;">
                         <label for="editAssignedUser" class="form-label">Assign to User</label>
                         <select class="form-select" id="editAssignedUser">
                             <option value="">Not assigned</option>
                         </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Owner</label>
+                                <input type="text" class="form-control" id="editProjectOwner" disabled>
+                                <small class="text-muted">Project owner cannot be changed</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editProjectEndDate" class="form-label">
+                                    <i class="fas fa-calendar-check me-2" aria-hidden="true"></i>End Date
+                                </label>
+                                <input type="date" class="form-control" id="editProjectEndDate" required>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>

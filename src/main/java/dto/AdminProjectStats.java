@@ -28,7 +28,6 @@ public class AdminProjectStats {
         this.totalUsers = totalUsers;
     }
 
-    // Getters
     public Long getTotalProjects() {
         return totalProjects;
     }

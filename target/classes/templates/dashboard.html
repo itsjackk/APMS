@@ -47,11 +47,9 @@
     <link rel="preload" th:href="@{/js/dashboard.js}" as="script">
 </head>
 <body>
-<!-- Snowflakes -->
 <div id="snowflakes" aria-hidden="true"></div>
 <div class="container-fluid">
     <div class="row">
-        <!-- Sidebar -->
         <nav class="col-md-3 col-lg-2 sidebar p-0" aria-label="Main navigation">
             <div class="p-3">
                 <h4 class="h4 text-center mb-4">
@@ -89,8 +87,7 @@
             </div>
         </nav>
 
-        <!-- Main Content -->
-        <main class="col-md-9 col-lg-10">
+        <main class="main-content-wrapper">
             <div class="main-content">
                 <header class="page-header">
                     <div class="d-flex justify-content-between align-items-center">
@@ -101,37 +98,30 @@
                             <span id="countdownText"></span>
                         </div>
                     </div>
-                    <div class="candy-cane-border" aria-hidden="true"></div>
+                    <!--<div class="candy-cane-border" aria-hidden="true"></div>-->
                 </header>
 
                 <!-- Statistics -->
                 <section class="row mb-4" aria-label="Project statistics">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="stat-card text-center">
                             <i class="fas fa-project-diagram fa-2x mb-2" aria-hidden="true"></i>
                             <h3 class="h3" id="totalProjects">0</h3>
                             <p class="mb-0">Total Projects</p>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="stat-card text-center">
                             <i class="fas fa-spinner fa-2x mb-2" aria-hidden="true"></i>
                             <h3 class="h3" id="activeProjects">0</h3>
                             <p class="mb-0">Active Projects</p>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="stat-card text-center">
                             <i class="fas fa-check-circle fa-2x mb-2" aria-hidden="true"></i>
                             <h3 class="h3" id="completedProjects">0</h3>
                             <p class="mb-0">Completed</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="stat-card text-center">
-                            <i class="fas fa-clock fa-2x mb-2" aria-hidden="true"></i>
-                            <h3 class="h3" id="pendingTasks">0</h3>
-                            <p class="mb-0">Pending Tasks</p>
                         </div>
                     </div>
                 </section>
@@ -161,7 +151,7 @@
                 </section>
 
                 <footer class="footer">
-                    <p>Merry Christmas & Happy New Year! 🎄✨</p>
+                    <p>Happy New Year! ✨</p>
                 </footer>
             </div>
         </main>
