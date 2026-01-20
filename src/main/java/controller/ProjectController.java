@@ -293,7 +293,6 @@ public class ProjectController {
             Authentication authentication) {
         try {
             Users user = userService.getCurrentUser(authentication);
-
             if (request.getName() == null || request.getName().trim().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(new ProjectResponse("Project name is required", null));

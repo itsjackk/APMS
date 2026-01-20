@@ -34,39 +34,23 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authz -> authz
-                        // Allow access to web pages (UI) - these don't need JWT
                         .requestMatchers("/ConsoleApp/**").permitAll()
-
-                        // Allow access to static resources
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico", "/static/**").permitAll()
-
-                        // Allow access to public API endpoints
                         .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout", "/api/auth/logout-all", "/api/auth/dashboard").permitAll()
-
-                        // Allow access to Swagger/OpenAPI documentation
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-
                         .requestMatchers("/api/auth/verify").authenticated()
-
-                        // Admin endpoints - require authentication
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-                        // Protect all other API endpoints
                         .requestMatchers("/api/**").authenticated()
-
-                        // All other requests are permitted (for web pages)
-                        .anyRequest().permitAll()  // Changed from .authenticated()
+                        .anyRequest().permitAll()
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
-                            // Only redirect to login for API requests, not web pages
                             String requestURI = request.getRequestURI();
                             if (requestURI.startsWith("/api/")) {
                                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                                 response.setContentType("application/json");
                                 response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}");
                             } else {
-                                // For web pages, let them load (they'll handle auth in JavaScript)
                                 response.sendRedirect("/ConsoleApp/login");
                             }
                         })
@@ -89,12 +73,10 @@ public class SecurityConfig {
                 "https://localhost:*"
         ));
 
-        // Allow specific methods
         configuration.setAllowedMethods(Arrays.asList(
                 "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
         ));
 
-        // Allow specific headers
         configuration.setAllowedHeaders(Arrays.asList(
                 "Authorization",
                 "Content-Type",
@@ -106,18 +88,13 @@ public class SecurityConfig {
                 "X-CSRF-TOKEN"
         ));
 
-        // Expose headers that the client can access
         configuration.setExposedHeaders(Arrays.asList(
                 "Authorization",
                 "X-Total-Count"
         ));
 
-        // Allow credentials (cookies, authorization headers)
         configuration.setAllowCredentials(true);
-
-        // How long the browser can cache preflight requests (1 hour)
         configuration.setMaxAge(3600L);
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 

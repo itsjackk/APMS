@@ -82,9 +82,7 @@ public class UserController {
                 log.warn("User not found from authentication");
                 return ResponseEntity.notFound().build();
             }
-
             boolean hasChanges = false;
-
             if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
                 if (!request.getEmail().equals(user.getEmail())) {
                     Optional<Users> existingUser = usersRepository.findByEmail(request.getEmail());
@@ -93,7 +91,6 @@ public class UserController {
                         return ResponseEntity.badRequest()
                                 .body(new ErrorResponse("Email update failed", "Email already exists"));
                     }
-
                     user.setEmail(request.getEmail());
                     hasChanges = true;
                 }
@@ -107,12 +104,10 @@ public class UserController {
                         return ResponseEntity.badRequest()
                                 .body(new ErrorResponse("Username update failed", "Username already exists"));
                     }
-
                     user.setUsernameGHUB(request.getUsernameGHUB());
                     hasChanges = true;
                 }
             }
-
             Users updatedUser = user;
             if (hasChanges) {
                 user.setUpdatedAt(LocalDateTime.now());
@@ -121,7 +116,6 @@ public class UserController {
             } else {
                 log.info("No changes detected for user profile: {}", user.getUsername());
             }
-
             return ResponseEntity.ok(new UserProfileResponse(
                     updatedUser.getUsername(),
                     updatedUser.getUsernameGHUB(),

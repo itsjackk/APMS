@@ -20,12 +20,9 @@ public class RequestLoggingFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         String uri = httpRequest.getRequestURI();
         String method = httpRequest.getMethod();
-
-        // Skip logging for static resources to reduce noise
         if (!isStaticResource(uri)) {
             log.info("{} request to: {} (Referer: {})", method, uri, httpRequest.getHeader("Referer"));
         }
-
         chain.doFilter(request, response);
     }
 

@@ -15,12 +15,10 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint, Se
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
-        // Check if it's an API request
         String requestURI = request.getRequestURI();
         if (requestURI.startsWith("/api/")) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
         } else {
-            // For non-API requests, redirect to login
             response.sendRedirect("/ConsoleApp/login");
         }
     }
