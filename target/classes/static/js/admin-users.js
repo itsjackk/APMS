@@ -49,7 +49,7 @@ const SNOWFLAKE_CONFIG = {
 };
 
 const PASSWORD_CONFIG = {
-    MIN_LENGTH: 8,
+    MIN_LENGTH: 6,
     REQUIRE_UPPERCASE: true,
     REQUIRE_LOWERCASE: true,
     REQUIRE_NUMBER: true,
@@ -269,6 +269,7 @@ function hideModal(modalId) {
 async function confirmRoleChange() {
     const roleSelect = document.getElementById(ELEMENTS.roleSelect);
     if (!roleSelect || !state.currentUserId) {
+        console.log('Invalid role selection');
         showAlert('Invalid role selection', ALERT_TYPES.WARNING);
         return;
     }
@@ -455,11 +456,13 @@ async function createNewUser(event) {
         const usernameGHUB = document.getElementById('newUsernameGHUB').value.trim();
 
         if (!username || !email || !password) {
+            console.log('Please fill in all required fields');
             showAlert('Please fill in all required fields', ALERT_TYPES.DANGER);
             return;
         }
 
         if (password !== confirmPassword) {
+            console.log('Passwords do not match');
             showAlert('Passwords do not match', ALERT_TYPES.DANGER);
             return;
         }
@@ -472,6 +475,7 @@ async function createNewUser(event) {
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
+            console.log('Please enter a valid email address');
             showAlert('Please enter a valid email address', ALERT_TYPES.DANGER);
             return;
         }
@@ -507,6 +511,7 @@ async function createNewUser(event) {
         }
 
         if (response.ok) {
+            console.log('User created successfully:');
             showAlert('User created successfully!', ALERT_TYPES.SUCCESS);
 
             const modalElement = document.getElementById(ELEMENTS.createUserModal);
@@ -521,6 +526,7 @@ async function createNewUser(event) {
             await loadAllUsers();
         } else {
             const errorMessage = data.message || data.error || 'Failed to create user';
+            console.error('Error creating user:', errorMessage);
             showAlert(errorMessage, ALERT_TYPES.DANGER);
         }
     } catch (error) {
@@ -593,6 +599,7 @@ function isPasswordStrong(password) {
 function showAlert(message, type) {
     const alertContainer = document.getElementById('alertContainer') || createAlertContainer();
 
+    alertContainer.innerHTML = '';
     const alert = document.createElement('div');
     alert.className = `alert alert-${type} alert-dismissible fade show`;
     alert.role = 'alert';

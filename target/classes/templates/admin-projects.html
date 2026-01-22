@@ -187,7 +187,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="editModalLabel">Edit Project</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
             </div>
             <div class="modal-body">
                 <form id="editProjectForm">
@@ -199,7 +199,7 @@
                     <div class="mb-3">
                         <label for="editProjectDescription" class="form-label">Description</label>
                         <textarea class="form-control" id="editProjectDescription" rows="3"
-                                  aria-label="Project description"></textarea>
+                                  aria-label="Project description" maxlength="500"></textarea>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
@@ -270,7 +270,9 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i> Cancel
+                </button>
                 <button type="button" class="btn btn-primary" onclick="saveProjectChanges()">
                     <i class="fas fa-save me-2"></i>Save Changes
                 </button>

@@ -14,7 +14,6 @@ transform: translateY(100vh);
 }
 }
 
-/* Christmas lights decoration */
 .christmas-lights {
 position: fixed;
 top: 0;
@@ -255,18 +254,6 @@ box-shadow: 0 3px 10px rgba(255,255,0,0.3);
 transform: translateY(-3px);
 }
 
-.form-select, .form-control {
-background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
-color: white;
-border: 3px solid #ffd700;
-border-radius: 15px;
-transition: all 0.3s ease;
-}
-
-.form-select:focus, .form-control:focus {
-border-color: #FFD700;
-box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-}
 .select-color {
 color: black;
 }
@@ -455,4 +442,17 @@ line-height: 1.5;
 
 .project-description .fa-link {
 color: #6c757d;
+}
+
+.form-select, .form-control {
+background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+color: white;
+border: 3px solid #ffd700;
+border-radius: 15px;
+transition: all 0.3s ease;
+}
+
+.form-select:focus, .form-control:focus {
+border-color: #FFD700;
+box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }

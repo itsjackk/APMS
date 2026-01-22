@@ -91,15 +91,6 @@ position: relative;
 overflow: hidden;
 }
 
-/*         .stat-card::before {
-content: "❄️";
-position: absolute;
-top: -10px;
-right: -10px;
-font-size: 4rem;
-opacity: 0.2;
-} */
-
 .stat-card:hover {
 transform: translateY(-5px) scale(1.02);
 box-shadow: 0 12px 35px rgba(255, 215, 0, 0.5);
@@ -119,7 +110,6 @@ box-shadow: 0 12px 35px rgba(255, 215, 0, 0.5);
 border: 3px solid #FFD700;
 }
 
-/* Christmas lights decoration */
 .christmas-lights {
 position: fixed;
 top: 0;
@@ -151,14 +141,6 @@ background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
 border: 2px solid #FFD700;
 }
 
-/*         .page-header::before {
-content: "🎅";
-position: absolute;
-right: 20px;
-top: 50%;
-transform: translateY(-50%);
-font-size: 2rem;
-} */
 
 .progress {
 background: rgba(255, 255, 255, 0.3) !important;
@@ -173,14 +155,12 @@ border-radius: 15px;
 transition: width 0.6s ease;
 }
 
-/* Prevent hover effects on progress bar */
 .progress:hover,
 .progress-bar:hover {
 transform: none !important;
 box-shadow: none !important;
 }
 
-/* Ensure project card hover doesn't affect progress bar */
 .project-card:hover .progress,
 .project-card:hover .progress-bar {
 transform: none !important;
@@ -215,7 +195,6 @@ padding: 1.5rem;
 height: 100%;
 }
 
-/* Fixed height for description area */
 .project-description {
 min-height: 60px;
 max-height: 60px;
@@ -224,7 +203,6 @@ text-overflow: ellipsis;
 margin-bottom: 1rem;
 }
 
-/* Push footer content to bottom */
 .project-footer {
 margin-top: auto;
 padding-top: 1rem;

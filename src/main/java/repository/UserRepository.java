@@ -1,6 +1,8 @@
 package repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import tables.Users;
 
@@ -24,11 +26,9 @@ public interface UserRepository extends JpaRepository<Users, UUID> {
 
     List<Users> findAll();
 
-    // Find users by role
     List<Users> findByRole(Users.Role role);
 
     long countByRole(Users.Role role);
 
-    // Find all regular users (for admin to assign projects)
     List<Users> findByRoleAndEnabledTrue(Users.Role role, Boolean enabled);
 }

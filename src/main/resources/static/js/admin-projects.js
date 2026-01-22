@@ -203,6 +203,7 @@ const UIManager = {
                         </div>
                         <small class="text-muted d-block">${project.progress || 0}% Complete</small>
                         <small class="text-muted d-block mb-2">Created: ${Utils.formatDate(project.createdAt)}</small>
+                        <small class="text-muted d-block mb-2">Ends: ${Utils.formatDate(project.endDate) || "N/D"}</small>
                         <div class="d-flex justify-content-end gap-2">
                             <button class="btn btn-sm btn-primary" onclick="editProject('${project.id}')">
                                 <i class="fas fa-edit me-1"></i>Edit

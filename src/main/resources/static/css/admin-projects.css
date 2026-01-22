@@ -20,7 +20,6 @@ transform: translateY(100vh);
 }
 }
 
-/* Christmas Lights */
 .christmas-lights {
 position: fixed;
 top: 0;
@@ -147,22 +146,6 @@ margin-bottom: 2rem;
 box-shadow: 0 4px 15px rgba(255,255,0,0.2);
 backdrop-filter: blur(10px);
 transition: all 0.3s;
-}
-
-.form-label {
-color: white;
-font-weight: 500;
-}
-
-.filter-section .form-select {
-background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
-border: 1px solid rgba(255, 255,0, 0.3);
-color: white;
-}
-
-.filter-section .form-select option {
-background: #2c5364;
-color: white;
 }
 
 /* Project Cards */
@@ -315,17 +298,7 @@ border: 3px solid #FFD700;
 color: white;
 border-bottom: none;
 }
-.modal-body .form-control, .modal-body .form-select {
-background: rgba(255, 255,0, 0.1);
-border: 1px solid rgba(255, 255,0, 0.3);
-color: white;
-}
 
-.modal-body .form-control:focus, .modal-body .form-select:focus {
-background: rgba(255, 255,0, 0.15);
-border-color: #d4af37;
-box-shadow: 0 0 0 0.2rem rgba(255, 255, 0, 0.25);
-}
 .modal-footer {
 border-top: none;
 }
@@ -367,4 +340,129 @@ transform: translateY(-2px);
 
 .h2 {
 color: white;
+}
+
+.form-label {
+color: white;
+font-weight: 500;
+}
+
+.filter-section .form-select {
+background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+border: 1px solid rgba(255, 255,0, 0.3);
+color: white;
+}
+
+.filter-section .form-select option {
+background: #2c5364;
+color: white;
+}
+
+.modal-body .form-control, .modal-body .form-select {
+background: rgba(255, 255,0, 0.1);
+border: 1px solid rgba(255, 255,0, 0.3);
+color: white;
+}
+
+.modal-body .form-control:focus, .modal-body .form-select:focus {
+background: rgba(255, 255,0, 0.15);
+border-color: #d4af37;
+box-shadow: 0 0 0 0.2rem rgba(255, 255, 0, 0.25);
+}
+
+.form-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+.form-wrapper,
+.styled-form,
+.form-section {
+    width: 100%;
+    border-radius: 15px;
+}
+
+.form-wrapper {
+    padding: 30px;
+}
+
+.form-section {
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.form-section-title {
+    color: #667eea;
+    font-weight: 600;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.form-section-title i,
+.styled-form .form-label i {
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.styled-form .form-label i {
+    color: #FFD700;
+    margin-right: 8px;
+}
+
+.form-control,
+.form-select,
+.styled-form .form-control,
+.styled-form .form-select {
+    background: linear-gradient(135deg, #130606 0%, #651719 50%, #320303 100%);
+    border: 3px solid #ffd700;
+    color: white;
+    border-radius: 15px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.form-control:focus,
+.form-select:focus,
+.styled-form .form-control:focus,
+.styled-form .form-select:focus {
+    background: rgba(255, 255, 255, 0.10);
+    border: 3px solid #ffd700;
+    color: #fff;
+    box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
+}
+
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.form-select option {
+    background: #2c5364;
+    color: #fff;
+}
+
+.form-label,
+.styled-form .form-label {
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.form-check-input {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.form-check-input:checked {
+    background-color: #d4af37;
+    border-color: #d4af37;
+}
+
+.form-check-label {
+    color: rgba(255, 255, 255, 0.9);
 }

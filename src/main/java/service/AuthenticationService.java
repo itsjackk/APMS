@@ -50,7 +50,8 @@ public class AuthenticationService {
         Optional<Users> userOpt = usersRepository.findByUsername(username);
 
         if (userOpt.isEmpty()) {
-            throw new RuntimeException("Invalid credentials");
+            log.error("Invalid Username: {}", username);
+            throw new RuntimeException("Invalid Username");
         }
 
         Users user = userOpt.get();
@@ -60,16 +61,15 @@ public class AuthenticationService {
         }
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
+            log.error("Invalid credentials for user " + username);
             throw new RuntimeException("Invalid credentials");
         }
 
-        // Generate tokens based on rememberMe flag
         String accessToken;
         String refreshToken;
         LocalDateTime refreshTokenExpiration;
 
         if (rememberMe) {
-            // Generate long-lived tokens (30 days)
             accessToken = jwtService.generateAccessToken(
                     user.getId(),
                     user.getUsername(),
@@ -86,7 +86,6 @@ public class AuthenticationService {
 
             log.info("User {} logged in with Remember Me (tokens valid for 30 days)", username);
         } else {
-            // Generate standard tokens (25 minutes access, 25 minutes refresh)
             accessToken = jwtService.generateAccessToken(
                     user.getId(),
                     user.getUsername(),
@@ -102,10 +101,7 @@ public class AuthenticationService {
             log.info("User {} logged in (standard session - 25 minutes)", username);
         }
 
-        // Generate a new token family for this login session
         String tokenFamily = tokenRotationService.generateTokenFamily();
-
-        // Save refresh token to database with token family
         RefreshTokens refreshTokenEntity = new RefreshTokens();
         refreshTokenEntity.setUserId(user.getId());
         refreshTokenEntity.setToken(refreshToken);

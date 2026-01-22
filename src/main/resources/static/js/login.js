@@ -557,7 +557,7 @@ const AuthService = {
             },
             credentials: 'include',
             body: JSON.stringify({
-                username: InputSanitizer.sanitizeUsername(username),
+                username: username,
                 password: password,
                 rememberMe: rememberMe
             })

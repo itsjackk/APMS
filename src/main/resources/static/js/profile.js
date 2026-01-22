@@ -236,8 +236,8 @@ function validatePasswordChange(newPassword, confirmPassword) {
         return false;
     }
 
-    if (newPassword.length < 8) {
-        showAlert('Password must be at least 8 characters long!', ALERT_TYPES.DANGER);
+    if (newPassword.length < 6) {
+        showAlert('Password must be at least 6 characters long!', ALERT_TYPES.DANGER);
         return false;
     }
 

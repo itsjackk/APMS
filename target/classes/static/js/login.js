@@ -287,7 +287,6 @@ const AlertUtils = {
     }
 };
 
-
 // ============================================================================
 // RATE LIMITING
 // ============================================================================
@@ -529,139 +528,139 @@ const UIManager = {
 
 const AuthService = {
     async handleLogin() {
-        if (AuthState.isLoading) return;
+    if (AuthState.isLoading) return;
 
-        if (RateLimiter.isLocked()) {
-            const timeRemaining = RateLimiter.getTimeRemaining();
-            const minutes = Math.floor(timeRemaining / 60);
-            AlertUtils.show(
-                `Account locked. Try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`,
-                'danger'
-            );
-            return;
-        }
-
-        if (!UIManager.validateForm()) {
-            return;
-        }
-
-        UIManager.setLoadingState(true);
-        AlertUtils.clear();
-
-        const { username, password, rememberMe } = UIManager.getFormData();
-
-        try {
-            const response = await fetch(CONFIG.API_ENDPOINTS.LOGIN, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                    username: InputSanitizer.sanitizeUsername(username),
-                    password: password,
-                    rememberMe: rememberMe
-                })
-            });
-
-            const data = await response.json();
-
-            if (response.ok && data.accessToken) {
-                RateLimiter.reset();
-                await this.handleLoginSuccess(data, rememberMe);
-            } else {
-                const remainingAttempts = RateLimiter.incrementAttempts();
-                const attemptsLeft = RateLimiter.getRemainingAttempts();
-
-                if (RateLimiter.isLocked()) {
-                    const timeRemaining = RateLimiter.getTimeRemaining();
-                    const minutes = Math.floor(timeRemaining / 60);
-                    AlertUtils.show(
-                        `Too many failed attempts. Account locked for ${minutes} minute${minutes !== 1 ? 's' : ''}.`,
-                        'danger'
-                    );
-                } else if (attemptsLeft <= 2) {
-                    AlertUtils.show(
-                        `${data.message || 'Login failed'}. ${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} remaining.`,
-                        'danger'
-                    );
-                } else {
-                    AlertUtils.show(
-                        data.message || 'Invalid username or password',
-                        'danger'
-                    );
-                }
-            }
-        } catch (error) {
-            console.error('Login error:', error);
-            AlertUtils.show(
-                'Connection error. Please check your internet connection and try again.',
-                'danger'
-            );
-        } finally {
-            UIManager.setLoadingState(false);
-        }
-    },
-
-    async handleLoginSuccess(data, rememberMe) {
-        AuthState.setToken(data.accessToken);
-        AuthState.setUsername(data.username);
-        AuthState.setRememberMe(rememberMe);
-
-        UIManager.clearForm();
-        AlertUtils.show('Login successful! Redirecting...', 'success', 1500);
-        RedirectLoopDetector.reset();
-
-        setTimeout(() => {
-            this.redirectToDashboard();
-        }, 1500);
-    },
-
-    redirectToDashboard() {
-        window.location.href = CONFIG.ROUTES.DASHBOARD;
-    },
-
-    async checkExistingAuth() {
-        const token = AuthState.getToken();
-
-        if (!token) {
-            return;
-        }
-
-        if (TokenUtils.isExpired(token)) {
-            await AuthUtils.refreshToken();
-            const newToken = AuthState.getToken();
-
-            if (newToken && !TokenUtils.isExpired(newToken)) {
-                if (RedirectLoopDetector.isInLoop()) {
-                    AuthState.clearToken();
-                    AlertUtils.show('Session expired. Please login again.', 'warning');
-                    return;
-                }
-                RedirectLoopDetector.incrementCounter();
-                this.redirectToDashboard();
-            } else {
-                AuthState.clearToken();
-            }
-            return;
-        }
-
-        if (RedirectLoopDetector.isInLoop()) {
-            AuthState.clearToken();
-            AlertUtils.show('Session expired. Please login again.', 'warning');
-            return;
-        }
-
-        RedirectLoopDetector.incrementCounter();
-        this.redirectToDashboard();
-    },
-
-    async logout() {
-        await AuthUtils.logout();
-        RateLimiter.reset();
-        RedirectLoopDetector.reset();
-        AlertUtils.show('Logged out successfully', 'success', 2000);
+    if (RateLimiter.isLocked()) {
+        const timeRemaining = RateLimiter.getTimeRemaining();
+        const minutes = Math.floor(timeRemaining / 60);
+        AlertUtils.show(
+            `Account locked. Try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`,
+            'danger'
+        );
+        return;
     }
+
+    if (!UIManager.validateForm()) {
+        return;
+    }
+
+    UIManager.setLoadingState(true);
+    AlertUtils.clear();
+
+    const { username, password, rememberMe } = UIManager.getFormData();
+
+    try {
+        const response = await fetch(CONFIG.API_ENDPOINTS.LOGIN, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                username: username,
+                password: password,
+                rememberMe: rememberMe
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.accessToken) {
+            RateLimiter.reset();
+            await this.handleLoginSuccess(data, rememberMe);
+        } else {
+            const remainingAttempts = RateLimiter.incrementAttempts();
+            const attemptsLeft = RateLimiter.getRemainingAttempts();
+
+            if (RateLimiter.isLocked()) {
+                const timeRemaining = RateLimiter.getTimeRemaining();
+                const minutes = Math.floor(timeRemaining / 60);
+                AlertUtils.show(
+                    `Too many failed attempts. Account locked for ${minutes} minute${minutes !== 1 ? 's' : ''}.`,
+                    'danger'
+                );
+            } else if (attemptsLeft <= 2) {
+                AlertUtils.show(
+                    `${data.message || 'Login failed'}. ${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} remaining.`,
+                    'danger'
+                );
+            } else {
+                AlertUtils.show(
+                    data.message || 'Invalid username or password',
+                    'danger'
+                );
+            }
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        AlertUtils.show(
+            'Connection error. Please check your internet connection and try again.',
+            'danger'
+        );
+    } finally {
+        UIManager.setLoadingState(false);
+    }
+},
+
+async handleLoginSuccess(data, rememberMe) {
+    AuthState.setToken(data.accessToken);
+    AuthState.setUsername(data.username);
+    AuthState.setRememberMe(rememberMe);
+
+    UIManager.clearForm();
+    AlertUtils.show('Login successful! Redirecting...', 'success', 1500);
+    RedirectLoopDetector.reset();
+
+    setTimeout(() => {
+        this.redirectToDashboard();
+    }, 1500);
+},
+
+redirectToDashboard() {
+    window.location.href = CONFIG.ROUTES.DASHBOARD;
+},
+
+async checkExistingAuth() {
+    const token = AuthState.getToken();
+
+    if (!token) {
+        return;
+    }
+
+    if (TokenUtils.isExpired(token)) {
+        await AuthUtils.refreshToken();
+        const newToken = AuthState.getToken();
+
+        if (newToken && !TokenUtils.isExpired(newToken)) {
+            if (RedirectLoopDetector.isInLoop()) {
+                AuthState.clearToken();
+                AlertUtils.show('Session expired. Please login again.', 'warning');
+                return;
+            }
+            RedirectLoopDetector.incrementCounter();
+            this.redirectToDashboard();
+        } else {
+            AuthState.clearToken();
+        }
+        return;
+    }
+
+    if (RedirectLoopDetector.isInLoop()) {
+        AuthState.clearToken();
+        AlertUtils.show('Session expired. Please login again.', 'warning');
+        return;
+    }
+
+    RedirectLoopDetector.incrementCounter();
+    this.redirectToDashboard();
+},
+
+async logout() {
+    await AuthUtils.logout();
+    RateLimiter.reset();
+    RedirectLoopDetector.reset();
+    AlertUtils.show('Logged out successfully', 'success', 2000);
+}
 };
 // ============================================================================
 // KEYBOARD SHORTCUTS
@@ -669,20 +668,20 @@ const AuthService = {
 
 const KeyboardShortcuts = {
     init() {
-        document.addEventListener('keydown', (e) => {
-            // Ctrl/Cmd + K to focus username
-            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                e.preventDefault();
-                UIManager.elements.usernameInput?.focus();
-            }
+    document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + K to focus username
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            UIManager.elements.usernameInput?.focus();
+        }
 
-            // Escape to clear form
-            if (e.key === 'Escape') {
-                UIManager.clearForm();
-                AlertUtils.clear();
-            }
-        });
-    }
+        // Escape to clear form
+        if (e.key === 'Escape') {
+            UIManager.clearForm();
+            AlertUtils.clear();
+        }
+    });
+}
 };
 
 // ============================================================================

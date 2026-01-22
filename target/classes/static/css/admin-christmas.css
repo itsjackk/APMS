@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
 
 * {
@@ -39,7 +38,6 @@ opacity: 0.3;
 }
 }
 
-/* Christmas Lights */
 .christmas-lights {
 position: fixed;
 top: 0;
