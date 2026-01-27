@@ -28,6 +28,7 @@
           crossorigin="anonymous">
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" th:href="@{/css/snowflakes.css}">
+    <link rel="stylesheet" th:href="@{/css/theme-dark.css}">
 
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style"
           onload="this.onload=null;this.rel='stylesheet'">
@@ -50,6 +51,9 @@
                 <h4 class="h4 text-center mb-4">
                     <button class="btn btn-sm snowflake-toggle" id="snowflakeToggle" title="Toggle Snowflakes">
                         <i class="fas fa-snowflake"></i>
+                    </button>
+                    <button class="btn btn-sm" id="themeToggle" title="Toggle Dark Mode">
+                        <i class="fas fa-moon"></i>
                     </button>
                     <i class="fas fa-project-diagram" aria-hidden="true"></i> APMS
                 </h4>
@@ -153,9 +157,12 @@
     </div>
 </div>
 
-<!-- Defer all JavaScript -->
+<!-- Defer all JavaScript - Load order is important -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" defer
         crossorigin="anonymous"></script>
+<script th:src="@{/js/shared-utils.js}" defer></script>
+<script th:src="@{/js/theme-manager.js}" defer></script>
+<script th:src="@{/js/pwa-init.js}" defer></script>
 <script th:src="@{/js/auth-utils.js}" defer></script>
 <script th:src="@{/js/visual-effects.js}" defer></script>
 <script th:src="@{/js/dashboard.js}" defer></script>

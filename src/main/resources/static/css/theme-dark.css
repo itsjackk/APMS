@@ -1,0 +1,288 @@
+/**
+ * Dark Mode Theme Styles for APMS
+ * Applied when data-theme="dark" is set on body element
+ */
+
+/* ============================================================================
+   DARK MODE VARIABLES
+   ============================================================================ */
+body[data-theme="dark"] {
+    /* Colors */
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-tertiary: #0f3460;
+    --text-primary: #e9ecef;
+    --text-secondary: #adb5bd;
+    --text-muted: #6c757d;
+    
+    /* Borders */
+    --border-color: #2d3748;
+    --border-hover: #4a5568;
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+    
+    /* Cards */
+    --card-bg: #16213e;
+    --card-hover: #1e2a47;
+    
+    /* Input */
+    --input-bg: #0f3460;
+    --input-border: #2d3748;
+    --input-focus-border: #4299e1;
+}
+
+/* ============================================================================
+   BASE ELEMENTS
+   ============================================================================ */
+body[data-theme="dark"] {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+body[data-theme="dark"] .sidebar {
+    background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border-right-color: var(--border-color);
+}
+
+body[data-theme="dark"] .main-content-wrapper {
+    background-color: var(--bg-primary);
+}
+
+/* ============================================================================
+   CARDS
+   ============================================================================ */
+body[data-theme="dark"] .card,
+body[data-theme="dark"] .project-card,
+body[data-theme="dark"] .user-card,
+body[data-theme="dark"] .stat-card {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+body[data-theme="dark"] .card:hover,
+body[data-theme="dark"] .project-card:hover {
+    background-color: var(--card-hover);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ============================================================================
+   FORMS
+   ============================================================================ */
+body[data-theme="dark"] .form-control,
+body[data-theme="dark"] .form-select {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-primary);
+}
+
+body[data-theme="dark"] .form-control:focus,
+body[data-theme="dark"] .form-select:focus {
+    background-color: var(--input-bg);
+    border-color: var(--input-focus-border);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 0.2rem rgba(66, 153, 225, 0.25);
+}
+
+body[data-theme="dark"] .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+body[data-theme="dark"] .form-label {
+    color: var(--text-secondary);
+}
+
+/* ============================================================================
+   NAVIGATION
+   ============================================================================ */
+body[data-theme="dark"] .nav-link {
+    color: var(--text-secondary);
+}
+
+body[data-theme="dark"] .nav-link:hover {
+    color: var(--text-primary);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+body[data-theme="dark"] .nav-link.active {
+    color: var(--text-primary);
+    background-color: rgba(66, 153, 225, 0.2);
+}
+
+/* ============================================================================
+   MODALS
+   ============================================================================ */
+body[data-theme="dark"] .modal-content {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+body[data-theme="dark"] .modal-header,
+body[data-theme="dark"] .modal-footer {
+    border-color: var(--border-color);
+}
+
+body[data-theme="dark"] .modal-header .btn-close {
+    filter: invert(1);
+}
+
+/* ============================================================================
+   ALERTS
+   ============================================================================ */
+body[data-theme="dark"] .alert {
+    border-color: var(--border-color);
+}
+
+body[data-theme="dark"] .alert-info {
+    background-color: rgba(13, 202, 240, 0.2);
+    color: #79d7f0;
+}
+
+body[data-theme="dark"] .alert-success {
+    background-color: rgba(25, 135, 84, 0.2);
+    color: #75d99c;
+}
+
+body[data-theme="dark"] .alert-warning {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #ffda6a;
+}
+
+body[data-theme="dark"] .alert-danger {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #ea868f;
+}
+
+/* ============================================================================
+   TABLES
+   ============================================================================ */
+body[data-theme="dark"] .table {
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+body[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+body[data-theme="dark"] .table-hover > tbody > tr:hover > * {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ============================================================================
+   BADGES
+   ============================================================================ */
+body[data-theme="dark"] .badge {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+body[data-theme="dark"] .btn-outline-primary {
+    color: #4299e1;
+    border-color: #4299e1;
+}
+
+body[data-theme="dark"] .btn-outline-primary:hover {
+    background-color: #4299e1;
+    color: #fff;
+}
+
+body[data-theme="dark"] .btn-outline-danger {
+    color: #f56565;
+    border-color: #f56565;
+}
+
+body[data-theme="dark"] .btn-outline-danger:hover {
+    background-color: #f56565;
+    color: #fff;
+}
+
+body[data-theme="dark"] .btn-outline-secondary {
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+
+/* ============================================================================
+   TEXT
+   ============================================================================ */
+body[data-theme="dark"] .text-muted {
+    color: var(--text-muted) !important;
+}
+
+body[data-theme="dark"] h1,
+body[data-theme="dark"] h2,
+body[data-theme="dark"] h3,
+body[data-theme="dark"] h4,
+body[data-theme="dark"] h5,
+body[data-theme="dark"] h6 {
+    color: var(--text-primary);
+}
+
+/* ============================================================================
+   LOADING STATES
+   ============================================================================ */
+body[data-theme="dark"] .loading-spinner {
+    border-color: rgba(255, 255, 255, 0.1);
+    border-top-color: #4299e1;
+}
+
+/* ============================================================================
+   PROGRESS BARS
+   ============================================================================ */
+body[data-theme="dark"] .progress {
+    background-color: var(--input-bg);
+}
+
+/* ============================================================================
+   CUSTOM SCROLLBAR
+   ============================================================================ */
+body[data-theme="dark"] ::-webkit-scrollbar {
+    width: 12px;
+}
+
+body[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+body[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+}
+
+body[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* ============================================================================
+   TRANSITIONS
+   ============================================================================ */
+body,
+.card,
+.form-control,
+.form-select,
+.btn {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+#themeToggle {
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    padding: 5px 10px;
+    transition: all 0.3s ease;
+}
+
+#themeToggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+body[data-theme="dark"] #themeToggle {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+}

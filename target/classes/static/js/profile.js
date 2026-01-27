@@ -7,19 +7,14 @@ const state = {
 };
 
 // ============================================================================
-// CONSTANTS
+// CONSTANTS - Use SharedConfig
 // ============================================================================
 const API_ENDPOINTS = {
-    PROFILE: '/api/user/profile',
-    CHANGE_PASSWORD: '/api/user/change-password'
+    PROFILE: SharedConfig.API_ENDPOINTS.USER_PROFILE,
+    CHANGE_PASSWORD: SharedConfig.API_ENDPOINTS.USER_PASSWORD
 };
 
-const ALERT_TYPES = {
-    SUCCESS: 'success',
-    DANGER: 'danger',
-    INFO: 'info',
-    WARNING: 'warning'
-};
+const ALERT_TYPES = SharedConfig.ALERT_TYPES;
 
 const ELEMENTS = {
     viewMode: 'viewMode',
@@ -189,16 +184,16 @@ async function handleProfileUpdate() {
         });
 
         if (response.ok) {
-            showAlert('Profile updated successfully!', ALERT_TYPES.SUCCESS);
+            showAlert(SuccessMessages.PROFILE_UPDATED, ALERT_TYPES.SUCCESS);
             await loadUserProfile();
             toggleEditMode();
         } else {
             const errorData = await response.json();
-            showAlert(errorData.message || 'Failed to update profile', ALERT_TYPES.DANGER);
+            showAlert(errorData.message || ErrorMessages.UPDATE_FAILED('profile'), ALERT_TYPES.DANGER);
         }
     } catch (error) {
         console.error('Error updating profile:', error);
-        showAlert('Error updating profile', ALERT_TYPES.DANGER);
+        showAlert(ErrorMessages.UPDATE_FAILED('profile'), ALERT_TYPES.DANGER);
     }
 }
 
@@ -218,26 +213,26 @@ async function handlePasswordChange() {
         });
 
         if (response.ok) {
-            showAlert('Password updated successfully!', ALERT_TYPES.SUCCESS);
+            showAlert(SuccessMessages.PASSWORD_CHANGED, ALERT_TYPES.SUCCESS);
             clearPasswordForm();
         } else {
             const errorData = await response.json();
-            showAlert(errorData.message || 'Failed to update password', ALERT_TYPES.DANGER);
+            showAlert(errorData.message || ErrorMessages.UPDATE_FAILED('password'), ALERT_TYPES.DANGER);
         }
     } catch (error) {
         console.error('Error changing password:', error);
-        showAlert('The current Password is incorrect', ALERT_TYPES.DANGER);
+        showAlert(ErrorMessages.UPDATE_FAILED('password'), ALERT_TYPES.DANGER);
     }
 }
 
 function validatePasswordChange(newPassword, confirmPassword) {
     if (newPassword !== confirmPassword) {
-        showAlert('New passwords do not match!', ALERT_TYPES.DANGER);
+        showAlert(ErrorMessages.PASSWORD_MISMATCH, ALERT_TYPES.DANGER);
         return false;
     }
 
     if (newPassword.length < 6) {
-        showAlert('Password must be at least 6 characters long!', ALERT_TYPES.DANGER);
+        showAlert(ErrorMessages.PASSWORD_TOO_SHORT, ALERT_TYPES.DANGER);
         return false;
     }
 
@@ -257,57 +252,21 @@ function getInputValue(elementId) {
 }
 
 // ============================================================================
-// UTILITY FUNCTIONS
+// UTILITY FUNCTIONS - Use SharedUtils
 // ============================================================================
 function formatDate(dateString) {
-    if (!dateString) return 'Unknown';
-
-    try {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    } catch (error) {
-        return 'Invalid date';
-    }
+    return SharedUtils.formatDate(dateString, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
 }
 
 function showAlert(message, type = ALERT_TYPES.INFO) {
-    const alertDiv = createAlertElement(message, type);
-    const container = document.querySelector('.main-content');
-
-    if (!container) return;
-
-    container.insertBefore(alertDiv, container.firstChild);
-
-    setTimeout(() => {
-        alertDiv.remove();
-    }, 5000);
+    SharedUtils.showAlert(message, type);
 }
 
-function createAlertElement(message, type) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-    alertDiv.role = 'alert';
-    alertDiv.innerHTML = `
-        ${escapeHtml(message)}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-    return alertDiv;
-}
-
-function escapeHtml(text) {
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return text.replace(/[&<>"']/g, m => map[m]);
-}
+const escapeHtml = SharedUtils.escapeHtml;
 
 // ============================================================================
 // LOGOUT

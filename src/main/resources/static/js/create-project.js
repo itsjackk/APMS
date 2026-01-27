@@ -252,8 +252,26 @@ function getElementValue(elementId) {
 }
 
 function validateProjectData(projectData) {
-    if (!projectData.name) {
-        return ErrorMessages.PROJECT_NAME_REQUIRED;
+    // Use FormValidator for comprehensive validation
+    const rules = {
+        name: {
+            required: true,
+            minLength: 1,
+            maxLength: 100
+        },
+        description: {
+            maxLength: 500
+        }
+    };
+    
+    const validation = FormValidator.validate({
+        name: projectData.name,
+        description: projectData.description
+    }, rules);
+    
+    if (!validation.isValid) {
+        const firstError = Object.values(validation.errors)[0];
+        return firstError;
     }
 
     // Validate date logic

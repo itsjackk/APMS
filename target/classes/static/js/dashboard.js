@@ -1,16 +1,7 @@
 // ==================== CONFIGURATION ====================
 const CONFIG = {
     TOKEN_REFRESH_INTERVAL: 20 * 60 * 1000, // 20 minutes
-    API_ENDPOINTS: {
-        ADMIN_STATS: '/api/admin/stats',
-        PROJECT_STATS: '/api/projects/stats',
-        ASSIGNED_COUNT: '/api/projects/assigned/count',
-        PROJECTS: '/api/projects'
-    },
-    ROUTES: {
-        PROJECTS_CREATE: '/ConsoleApp/projects/create',
-        PROJECTS_EDIT: '/ConsoleApp/projects/edit'
-    }
+    // Use SharedConfig for API endpoints and routes
 };
 
 // ==================== STATE MANAGEMENT ====================
@@ -42,70 +33,13 @@ const AppState = {
     }
 };
 
-// ==================== UTILITY FUNCTIONS ====================
-const Utils = {
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    },
-
-    formatDate(dateString) {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    },
-
-    getStatusColor(status) {
-        const colors = {
-            'COMPLETED': 'success',
-            'IN_PROGRESS': 'primary',
-            'ON_HOLD': 'warning',
-            'CANCELLED': 'danger',
-            'PLANNING': 'info'
-        };
-        return colors[status] || 'secondary';
-    },
-
-    getProgressColor(progress) {
-        if (progress < 30) return 'danger';
-        if (progress < 70) return 'warning';
-        return 'success';
-    },
-
-    getPriorityColor(priority) {
-        const colors = {
-            'LOW': 'success',
-            'MEDIUM': 'primary',
-            'HIGH': 'warning',
-            'CRITICAL': 'danger'
-        };
-        return colors[priority] || 'secondary';
-    }
-};
+// Use SharedUtils instead of local Utils
+const Utils = SharedUtils;
 
 // ==================== UI MANAGER ====================
 const UIManager = {
     showAlert(message, type) {
-        const alertHtml = `
-            <div class="alert alert-${type} alert-dismissible fade show alert-custom" role="alert">
-                <i class="fas fa-${type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `;
-        const alertContainer = document.createElement('div');
-        alertContainer.innerHTML = alertHtml;
-        document.body.appendChild(alertContainer);
-
-        setTimeout(() => {
-            if (alertContainer.parentNode) {
-                alertContainer.parentNode.removeChild(alertContainer);
-            }
-        }, 5000);
+        SharedUtils.showAlert(message, type);
     },
 
     displayRecentProjects(projects) {
@@ -117,7 +51,7 @@ const UIManager = {
                     <i class="fas fa-project-diagram fa-3x mb-3"></i>
                     <h5>No Projects Yet</h5>
                     <p class="">Create your first project to get started!</p>
-                    <a href="${CONFIG.ROUTES.PROJECTS_CREATE}" class="btn btn-outline-primary">
+                    <a href="${SharedConfig.ROUTES.PROJECTS_CREATE}" class="btn btn-outline-primary">
                         <i class="fas fa-plus-circle me-2"></i> Create Project
                     </a>
                 </div>
@@ -149,7 +83,7 @@ const UIManager = {
                                 <span class="badge bg-${Utils.getStatusColor(project.status)}">
                                     ${project.status || 'PLANNING'}
                                 </span>
-                                <a href="${CONFIG.ROUTES.PROJECTS_EDIT}/${project.id}" class="btn btn-sm btn-outline-primary">
+                                <a href="${SharedConfig.ROUTES.PROJECTS_EDIT(project.id)}" class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
                             </div>
@@ -201,8 +135,8 @@ async function loadDashboardData() {
 
     } catch (error) {
         console.error('Error loading dashboard data:', error);
-        if (!AppState.isRedirecting) {  // Changed from: if (!isRedirecting)
-            UIManager.showAlert('Error loading dashboard data', 'danger');
+        if (!AppState.isRedirecting) {
+            UIManager.showAlert(ErrorMessages.LOAD_FAILED('dashboard data'), SharedConfig.ALERT_TYPES.DANGER);
         }
     } finally {
         AppState.setLoadingData(false);  // Changed from: isLoadingData = false;
@@ -214,7 +148,7 @@ async function loadAdminStats() {
     if (AppState.isRedirecting) return;
 
     try {
-        const response = await AuthUtils.makeAuthenticatedRequest(CONFIG.API_ENDPOINTS.ADMIN_STATS);
+        const response = await AuthUtils.makeAuthenticatedRequest(SharedConfig.API_ENDPOINTS.ADMIN_STATS);
 
         if (response.ok) {
             const stats = await response.json();
@@ -234,7 +168,7 @@ async function loadProjectStats() {
 
     try {
         // Make both requests in parallel to reduce redundancy
-        const statsResponse = await AuthUtils.makeAuthenticatedRequest(CONFIG.API_ENDPOINTS.PROJECT_STATS);
+        const statsResponse = await AuthUtils.makeAuthenticatedRequest(SharedConfig.API_ENDPOINTS.PROJECT_STATS);
 
         if (statsResponse.ok ) {
             const stats = await statsResponse.json();
@@ -259,7 +193,7 @@ async function loadRecentProjects() {
     }
 
     try {
-        const response = await AuthUtils.makeAuthenticatedRequest(CONFIG.API_ENDPOINTS.PROJECTS + '?limit=6');
+        const response = await AuthUtils.makeAuthenticatedRequest(SharedConfig.API_ENDPOINTS.PROJECTS + '?limit=6');
 
         if (response.ok) {
             const projects = await response.json();

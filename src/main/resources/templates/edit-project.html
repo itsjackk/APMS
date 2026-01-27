@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>APMS - Edit Project</title>
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <meta name="theme-color" content="#1a1a2e" media="(prefers-color-scheme: dark)">
+
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/icon-192x192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="APMS">
 
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -20,6 +30,7 @@
 
     <link rel="stylesheet" th:href="@{/css/snowflakes.css}">
     <link rel="stylesheet" th:href="@{/css/edit-project.css}">
+    <link rel="stylesheet" th:href="@{/css/theme-dark.css}">
 
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" as="script">
     <link rel="preload" th:href="@{/js/auth-utils.js}" as="script">
@@ -149,6 +160,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" defer></script>
 <script th:src="@{/js/shared-utils.js}" defer></script>
+<script th:src="@{/js/theme-manager.js}" defer></script>
+<script th:src="@{/js/pwa-init.js}" defer></script>
 <script th:src="@{/js/auth-utils.js}" defer></script>
 <script th:src="@{/js/visual-effects.js}" defer></script>
 <script th:src="@{/js/edit-project.js}" defer></script>

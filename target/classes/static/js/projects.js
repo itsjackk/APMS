@@ -12,24 +12,10 @@ const state = {
 // CONSTANTS
 // ============================================================================
 
-const API_ENDPOINTS = {
-    PROJECTS: '/api/projects',
-    PROJECTS_UPDATED: '/api/projects/projects-updated',
-    PROJECT_PROGRESS: (id) => `/api/projects/${id}/progress`,
-    PROJECT_BY_ID: (id) => `/api/projects/${id}`
-};
-
-const ROUTES = {
-    CREATE_PROJECT: '/ConsoleApp/projects/create',
-    EDIT_PROJECT: (id) => `/ConsoleApp/projects/edit/${id}`
-};
-
-const ALERT_TYPES = {
-    SUCCESS: 'success',
-    DANGER: 'danger',
-    INFO: 'info',
-    WARNING: 'warning'
-};
+// Use SharedConfig for API endpoints, routes, and alert types
+const API_ENDPOINTS = SharedConfig.API_ENDPOINTS;
+const ROUTES = SharedConfig.ROUTES;
+const ALERT_TYPES = SharedConfig.ALERT_TYPES;
 
 const ELEMENTS = {
     projectsList: 'projectsList',
@@ -46,39 +32,13 @@ const ELEMENTS = {
     snowflakes: 'snowflakes'
 };
 
-const STATUS_COLORS = {
-    COMPLETED: 'success',
-    IN_PROGRESS: 'primary',
-    ON_HOLD: 'warning',
-    CANCELLED: 'danger',
-    PLANNING: 'info'
-};
+// Use SharedConfig for colors and orders
+const STATUS_COLORS = SharedConfig.STATUS_COLORS;
+const PRIORITY_COLORS = SharedConfig.PRIORITY_COLORS;
+const PRIORITY_ORDER = SharedConfig.PRIORITY_ORDER;
+const STATUS_ORDER = SharedConfig.STATUS_ORDER;
 
-const PRIORITY_COLORS = {
-    LOW: 'success',
-    MEDIUM: 'primary',
-    HIGH: 'warning',
-    CRITICAL: 'danger'
-};
-
-const PRIORITY_ORDER = {
-    HIGH: 3,
-    MEDIUM: 2,
-    LOW: 1
-};
-
-const STATUS_ORDER = {
-    PLANNING: 1,
-    IN_PROGRESS: 2,
-    ON_HOLD: 3,
-    COMPLETED: 4,
-    CANCELLED: 5
-};
-
-const PROGRESS_THRESHOLDS = {
-    LOW: 30,
-    MEDIUM: 70
-};
+const PROGRESS_THRESHOLDS = SharedConfig.PROGRESS_THRESHOLDS;
 
 const SNOWFLAKE_CONFIG = {
     COUNT: 50,
@@ -193,11 +153,11 @@ async function loadProjects() {
             displayProjects(state.allProjects);
         } else {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `Failed to load projects (Status: ${response.status})`);
+            throw new Error(errorData.message || ErrorMessages.PROJECT_LOAD_FAILED);
         }
     } catch (error) {
         console.error('Error loading projects:', error);
-        showError(`Error loading projects: ${error.message}`);
+        showError(ErrorMessages.PROJECT_LOAD_FAILED);
     }
 }
 
@@ -357,25 +317,13 @@ function createActions(project) {
 }
 
 // ============================================================================
-// UTILITY FUNCTIONS
+// UTILITY FUNCTIONS - Now using SharedUtils
 // ============================================================================
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function getProgressColor(progress) {
-    if (progress < PROGRESS_THRESHOLDS.LOW) return 'danger';
-    if (progress < PROGRESS_THRESHOLDS.MEDIUM) return 'warning';
-    return 'success';
-}
-
-function formatDate(dateString) {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-}
+// Use SharedUtils functions
+const escapeHtml = SharedUtils.escapeHtml;
+const getProgressColor = SharedUtils.getProgressColor;
+const formatDate = SharedUtils.formatDate;
 
 // ============================================================================
 // FILTERING AND SORTING
@@ -471,12 +419,11 @@ async function saveProgress() {
             await loadProjects();
         } else {
             const errorData = await response.json().catch(() => ({}));
-            const errorMessage = errorData.message || `Failed to update progress (Status: ${response.status})`;
-            throw new Error(errorMessage);
+            throw new Error(errorData.message || ErrorMessages.PROJECT_UPDATE_FAILED);
         }
     } catch (error) {
         console.error('Error updating progress:', error);
-        showToast(`Error updating progress: ${error.message}`, ALERT_TYPES.DANGER);
+        showToast(ErrorMessages.PROJECT_UPDATE_FAILED, ALERT_TYPES.DANGER);
     } finally {
         saveBtn.disabled = false;
         saveBtn.innerHTML = '<i class="fas fa-save me-2"></i> Save Progress';
@@ -502,14 +449,14 @@ async function deleteProject(projectId) {
         if (response.ok) {
             state.allProjects = state.allProjects.filter(p => p.id !== projectId);
             displayProjects(state.allProjects);
-            showToast('Project deleted successfully!', ALERT_TYPES.SUCCESS);
+            showToast(SuccessMessages.PROJECT_DELETED, ALERT_TYPES.SUCCESS);
         } else {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `Failed to delete project (Status: ${response.status})`);
+            throw new Error(errorData.message || ErrorMessages.PROJECT_DELETE_FAILED);
         }
     } catch (error) {
         console.error('Error deleting project:', error);
-        showToast(`Failed to delete project: ${error.message}`, ALERT_TYPES.DANGER);
+        showToast(ErrorMessages.PROJECT_DELETE_FAILED, ALERT_TYPES.DANGER);
     }
 }
 
