@@ -5,12 +5,13 @@ const state = {
     dataLoaded: false
 };
 
+// Use SharedConfig for API endpoints
 const API_ENDPOINTS = {
-    USER_STATS: '/api/admin/users/stats',
-    USERS: '/api/admin/users',
-    USER_ROLE: (userId) => `/api/admin/users/${userId}/role`,
-    DELETE_USER: (userId) => `/api/admin/users/${userId}`,
-    REGISTER: '/api/auth/register'
+    USER_STATS: SharedConfig.API_ENDPOINTS.ADMIN_USER_STATS,
+    USERS: SharedConfig.API_ENDPOINTS.ADMIN_USERS,
+    USER_ROLE: SharedConfig.API_ENDPOINTS.ADMIN_USER_ROLE,
+    DELETE_USER: SharedConfig.API_ENDPOINTS.ADMIN_DELETE_USER,
+    REGISTER: SharedConfig.API_ENDPOINTS.REGISTER
 };
 
 const ELEMENTS = {
@@ -33,12 +34,7 @@ const ROLE_CLASSES = {
     USER: 'bg-success'
 };
 
-const ALERT_TYPES = {
-    SUCCESS: 'success',
-    DANGER: 'danger',
-    WARNING: 'warning',
-    INFO: 'info'
-};
+const ALERT_TYPES = SharedConfig.ALERT_TYPES;
 
 const SNOWFLAKE_CONFIG = {
     COUNT: 50,
@@ -132,7 +128,7 @@ async function loadUserStatistics() {
         updateStatistics(data);
     } catch (error) {
         console.error('Error loading user statistics:', error);
-        showAlert('Error loading user statistics', ALERT_TYPES.DANGER);
+        showAlert(ErrorMessages.LOAD_FAILED('user statistics'), ALERT_TYPES.DANGER);
     }
 };
 
@@ -158,7 +154,7 @@ async function loadAllUsers() {
         displayUsers(state.allUsers);
     } catch (error) {
         console.error('Error loading users:', error);
-        showAlert('Error loading users', ALERT_TYPES.DANGER);
+        showAlert(ErrorMessages.USER_LOAD_FAILED, ALERT_TYPES.DANGER);
         state.allUsers = [];
         displayUsers([]);
     }
@@ -286,16 +282,16 @@ async function confirmRoleChange() {
         );
 
         if (response.ok) {
-            showAlert('User role updated successfully!', ALERT_TYPES.SUCCESS);
+            showAlert(SuccessMessages.ROLE_UPDATED, ALERT_TYPES.SUCCESS);
             hideModal(ELEMENTS.editRoleModal);
             await loadUserStatistics();
             await loadAllUsers();
         } else {
-            throw new Error('Failed to update user role');
+            throw new Error(ErrorMessages.USER_UPDATE_FAILED);
         }
     } catch (error) {
         console.error('Error updating user role:', error);
-        showAlert('Error updating user role', ALERT_TYPES.DANGER);
+        showAlert(ErrorMessages.USER_UPDATE_FAILED, ALERT_TYPES.DANGER);
     }
 };
 
@@ -309,16 +305,16 @@ async function confirmDeleteUser() {
         );
 
         if (response.ok) {
-            showAlert('User deleted successfully!', ALERT_TYPES.SUCCESS);
+            showAlert(SuccessMessages.USER_DELETED, ALERT_TYPES.SUCCESS);
             hideModal(ELEMENTS.deleteUserModal);
             await loadUserStatistics();
             await loadAllUsers();
         } else {
-            throw new Error('Failed to delete user');
+            throw new Error(ErrorMessages.USER_DELETE_FAILED);
         }
     } catch (error) {
         console.error('Error deleting user:', error);
-        showAlert('Error deleting user', ALERT_TYPES.DANGER);
+        showAlert(ErrorMessages.USER_DELETE_FAILED, ALERT_TYPES.DANGER);
     }
 };
 
@@ -336,17 +332,8 @@ function searchUsers() {
     displayUsers(filteredUsers);
 };
 
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-};
+// Use SharedUtils.debounce
+const debounce = SharedUtils.debounce;
 
 function handleKeyboardShortcuts(event) {
     // ESC key to close modals
@@ -361,11 +348,8 @@ function handleKeyboardShortcuts(event) {
     }
 };
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-};
+// Use SharedUtils.escapeHtml
+const escapeHtml = SharedUtils.escapeHtml;
 
 // ==================== CREATE USER ====================
 
@@ -457,13 +441,13 @@ async function createNewUser(event) {
 
         if (!username || !email || !password) {
             console.log('Please fill in all required fields');
-            showAlert('Please fill in all required fields', ALERT_TYPES.DANGER);
+            showAlert(ErrorMessages.REQUIRED_FIELD('all'), ALERT_TYPES.DANGER);
             return;
         }
 
         if (password !== confirmPassword) {
             console.log('Passwords do not match');
-            showAlert('Passwords do not match', ALERT_TYPES.DANGER);
+            showAlert(ErrorMessages.PASSWORD_MISMATCH, ALERT_TYPES.DANGER);
             return;
         }
 
@@ -476,7 +460,7 @@ async function createNewUser(event) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             console.log('Please enter a valid email address');
-            showAlert('Please enter a valid email address', ALERT_TYPES.DANGER);
+            showAlert(ErrorMessages.INVALID_EMAIL, ALERT_TYPES.DANGER);
             return;
         }
 
@@ -512,7 +496,7 @@ async function createNewUser(event) {
 
         if (response.ok) {
             console.log('User created successfully:');
-            showAlert('User created successfully!', ALERT_TYPES.SUCCESS);
+            showAlert(SuccessMessages.USER_CREATED, ALERT_TYPES.SUCCESS);
 
             const modalElement = document.getElementById(ELEMENTS.createUserModal);
             const modal = bootstrap.Modal.getInstance(modalElement);
@@ -525,13 +509,13 @@ async function createNewUser(event) {
             await loadUserStatistics();
             await loadAllUsers();
         } else {
-            const errorMessage = data.message || data.error || 'Failed to create user';
+            const errorMessage = data.message || data.error || ErrorMessages.USER_CREATE_FAILED;
             console.error('Error creating user:', errorMessage);
             showAlert(errorMessage, ALERT_TYPES.DANGER);
         }
     } catch (error) {
         console.error('Error creating user:', error);
-        showAlert('An unexpected error occurred. Please try again.', ALERT_TYPES.DANGER);
+        showAlert(ErrorMessages.UNEXPECTED_ERROR, ALERT_TYPES.DANGER);
     } finally {
         if (submitButton) {
             submitButton.disabled = false;
@@ -593,33 +577,7 @@ function isPasswordStrong(password) {
     return true;
 };
 
-/**
- * Show alert message
- */
+// Use SharedUtils.showAlert instead
 function showAlert(message, type) {
-    const alertContainer = document.getElementById('alertContainer') || createAlertContainer();
-
-    alertContainer.innerHTML = '';
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type} alert-dismissible fade show`;
-    alert.role = 'alert';
-    alert.innerHTML = `
-        ${escapeHtml(message)}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-
-    alertContainer.appendChild(alert);
-
-    setTimeout(() => {
-        alert.classList.remove('show');
-        setTimeout(() => alert.remove(), 150);
-    }, 5000);
-}
-
-function createAlertContainer() {
-    const container = document.createElement('div');
-    container.id = 'alertContainer';
-    container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
-    document.body.appendChild(container);
-    return container;
+    SharedUtils.showAlert(message, type);
 }

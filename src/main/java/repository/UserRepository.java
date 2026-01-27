@@ -30,5 +30,5 @@ public interface UserRepository extends JpaRepository<Users, UUID> {
 
     long countByRole(Users.Role role);
 
-    List<Users> findByRoleAndEnabledTrue(Users.Role role, Boolean enabled);
+    List<Users> findByRoleAndEnabledTrue(Users.Role role);
 }

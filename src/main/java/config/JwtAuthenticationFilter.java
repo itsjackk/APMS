@@ -77,37 +77,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private boolean isPublicEndpoint(String requestURI) {
-        if (isStaticResource(requestURI)) {
+        if (StaticResourceUtils.isStaticResource(requestURI)) {
             return true;
         }
         return requestURI.startsWith("/api/auth/login") ||
+                requestURI.startsWith("/api/auth/register") ||
+                requestURI.startsWith("/api/auth/logout") ||
+                requestURI.startsWith("/api/auth/refresh") ||
                 requestURI.startsWith("/swagger-ui/") ||
                 requestURI.startsWith("/v3/api-docs/") ||
                 requestURI.equals("/swagger-ui.html") ||
                 requestURI.startsWith("/ConsoleApp/") ||
                 requestURI.equals("/favicon.ico") ||
                 requestURI.startsWith("/.well-known/");
-    }
-
-    private boolean isStaticResource(String uri) {
-        return uri.startsWith("/css/") ||
-                uri.startsWith("/js/") ||
-                uri.startsWith("/images/") ||
-                uri.startsWith("/webjars/") ||
-                uri.startsWith("/static/") ||
-                uri.endsWith(".css") ||
-                uri.endsWith(".js") ||
-                uri.endsWith(".ico") ||
-                uri.endsWith(".png") ||
-                uri.endsWith(".jpg") ||
-                uri.endsWith(".jpeg") ||
-                uri.endsWith(".gif") ||
-                uri.endsWith(".svg") ||
-                uri.endsWith(".woff") ||
-                uri.endsWith(".woff2") ||
-                uri.endsWith(".ttf") ||
-                uri.endsWith(".eot") ||
-                uri.endsWith(".map") ||
-                uri.endsWith(".json");
     }
 }

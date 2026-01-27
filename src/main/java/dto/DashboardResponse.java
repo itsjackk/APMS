@@ -1,5 +1,8 @@
 package dto;
 
+import lombok.Data;
+
+@Data
 public class DashboardResponse {
     private String message;
     private String username;

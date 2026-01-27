@@ -8,15 +8,15 @@ const state = {
 };
 
 // ============================================================================
-// CONSTANTS
+// CONSTANTS - Use SharedConfig
 // ============================================================================
 const API_ENDPOINTS = {
-    USERS: '/api/admin/users',
-    PROJECTS: '/api/projects'
+    USERS: SharedConfig.API_ENDPOINTS.ADMIN_USERS,
+    PROJECTS: SharedConfig.API_ENDPOINTS.PROJECTS
 };
 
 const ROUTES = {
-    PROJECTS: '/ConsoleApp/projects'
+    PROJECTS: SharedConfig.ROUTES.PROJECTS
 };
 
 const ELEMENTS = {
@@ -39,12 +39,7 @@ const ELEMENTS = {
     projectPriority: 'projectPriority'
 };
 
-const ALERT_TYPES = {
-    SUCCESS: 'success',
-    DANGER: 'danger',
-    WARNING: 'warning',
-    INFO: 'info'
-};
+const ALERT_TYPES = SharedConfig.ALERT_TYPES;
 
 const PROJECT_TYPES = {
     GLOBAL: 'global',
@@ -215,7 +210,7 @@ async function handleFormSubmit(event) {
         // Validate form data
         const validationError = validateProjectData(projectData);
         if (validationError) {
-            showAlert(validationError, ALERT_TYPES.DANGER);
+            SharedUtils.showAlert(validationError, ALERT_TYPES.DANGER);
             return;
         }
 
@@ -224,7 +219,7 @@ async function handleFormSubmit(event) {
 
     } catch (error) {
         console.error('Error creating project:', error);
-        showAlert('An error occurred while creating the project. Please try again.', ALERT_TYPES.DANGER);
+        SharedUtils.showAlert(ErrorMessages.PROJECT_CREATE_FAILED, ALERT_TYPES.DANGER);
     } finally {
         // Reset loading state
         setLoadingState(submitBtn, submitText, submitSpinner, false);
@@ -258,7 +253,7 @@ function getElementValue(elementId) {
 
 function validateProjectData(projectData) {
     if (!projectData.name) {
-        return 'Project name is required';
+        return ErrorMessages.PROJECT_NAME_REQUIRED;
     }
 
     // Validate date logic
@@ -266,7 +261,7 @@ function validateProjectData(projectData) {
         const start = new Date(projectData.startDate);
         const end = new Date(projectData.endDate);
         if (end < start) {
-            return 'End date cannot be before start date';
+            return ErrorMessages.END_BEFORE_START;
         }
     }
 
@@ -282,7 +277,7 @@ async function submitProject(projectData) {
     const result = await response.json();
 
     if (response.ok) {
-        showAlert('Project created successfully!', ALERT_TYPES.SUCCESS);
+        SharedUtils.showAlert(SuccessMessages.PROJECT_CREATED, ALERT_TYPES.SUCCESS);
 
         // Reset form
         document.getElementById(ELEMENTS.createProjectForm).reset();
@@ -295,12 +290,12 @@ async function submitProject(projectData) {
         }, 1500);
     } else {
         if (response.status === 401) {
-            showAlert('Session expired. Please log in again.', ALERT_TYPES.DANGER);
+            SharedUtils.showAlert(ErrorMessages.SESSION_EXPIRED, ALERT_TYPES.DANGER);
             setTimeout(() => {
                 AuthUtils.redirectToLogin();
             }, 2000);
         } else {
-            showAlert(result.message || 'Failed to create project', ALERT_TYPES.DANGER);
+            SharedUtils.showAlert(result.message || ErrorMessages.PROJECT_CREATE_FAILED, ALERT_TYPES.DANGER);
         }
     }
 }
@@ -311,23 +306,7 @@ function setLoadingState(submitBtn, submitText, submitSpinner, isLoading) {
     submitSpinner.style.display = isLoading ? 'inline' : 'none';
 }
 
-function showAlert(message, type) {
-    const alertContainer = document.getElementById(ELEMENTS.alertContainer);
-
-    // Remove existing alerts
-    alertContainer.innerHTML = '';
-
-    // Create new alert
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-    alertDiv.role = 'alert';
-    alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-
-    alertContainer.appendChild(alertDiv);
-}
+// Use SharedUtils.showAlert instead
 
 async function logout() {
     try {

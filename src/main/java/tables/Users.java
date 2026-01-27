@@ -1,6 +1,9 @@
 package tables;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -11,7 +14,16 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_users_username", columnList = "username", unique = true),
+    @Index(name = "idx_users_email", columnList = "email", unique = true),
+    @Index(name = "idx_users_username_ghub", columnList = "username_ghub"),
+    @Index(name = "idx_users_role", columnList = "role"),
+    @Index(name = "idx_users_enabled", columnList = "enabled")
+})
+@Getter
+@Setter
+@NoArgsConstructor
 public class Users {
 
     @Id
@@ -31,36 +43,26 @@ public class Users {
     private Boolean enabled = true;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private Role role = Role.USER;
 
-    // Updated to match your new database column name
     @Column(name = "username_ghub", nullable = true, unique = true)
     private String usernameGHUB;
 
-    // Enum for roles
     public enum Role {
         USER, ADMIN
     }
 
-    // Constructors
-    public Users() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
     public Users(String username, String email, String password, String usernameGHUB) {
-        this();
         this.username = username;
         this.email = email;
         this.password = password;
-        this.role = Role.USER;
         this.usernameGHUB = usernameGHUB;
     }
 
@@ -69,7 +71,6 @@ public class Users {
         this.role = role;
     }
 
-    // Methods
     public boolean isAccountEnabled() {
         return this.enabled != null && this.enabled;
     }
@@ -85,79 +86,6 @@ public class Users {
 
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
-    }
-
-    // Getters and Setters
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Boolean getEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(Boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public String getUsernameGHUB() {
-        return usernameGHUB;
-    }
-
-    public void setUsernameGHUB(String usernameGHUB) {
-        this.usernameGHUB = usernameGHUB;
     }
 
     @Override

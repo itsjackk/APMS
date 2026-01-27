@@ -44,16 +44,7 @@ public class SecurityConfig {
                         .anyRequest().permitAll()
                 )
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            String requestURI = request.getRequestURI();
-                            if (requestURI.startsWith("/api/")) {
-                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                                response.setContentType("application/json");
-                                response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}");
-                            } else {
-                                response.sendRedirect("/ConsoleApp/login");
-                            }
-                        })
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 

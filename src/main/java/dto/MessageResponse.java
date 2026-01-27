@@ -1,5 +1,8 @@
 package dto;
 
+import lombok.Data;
+
+@Data
 public class MessageResponse {
     public MessageResponse(String passwordChangedSuccessfully) {
     }

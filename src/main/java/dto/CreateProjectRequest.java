@@ -2,11 +2,13 @@ package dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 import tables.Projects;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
+@Data
 public class CreateProjectRequest {
 
     @NotBlank(message = "Project name is required")

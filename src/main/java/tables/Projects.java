@@ -1,6 +1,9 @@
 package tables;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -9,7 +12,18 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "projects")
+@Table(name = "projects", indexes = {
+    @Index(name = "idx_projects_created_by", columnList = "created_by"),
+    @Index(name = "idx_projects_assigned_to", columnList = "assigned_to"),
+    @Index(name = "idx_projects_is_global", columnList = "is_global"),
+    @Index(name = "idx_projects_status", columnList = "status"),
+    @Index(name = "idx_projects_priority", columnList = "priority"),
+    @Index(name = "idx_projects_github_url", columnList = "github_url", unique = true),
+    @Index(name = "idx_projects_created_at", columnList = "created_at")
+})
+@Getter
+@Setter
+@NoArgsConstructor
 public class Projects {
 
     @Id
@@ -24,11 +38,11 @@ public class Projects {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ProjectStatus status = ProjectStatus.PLANNING;
+    private ProjectStatus status;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ProjectPriority priority = ProjectPriority.LOW;
+    private ProjectPriority priority;
 
     @Column(name = "progress", nullable = false)
     private Integer progress = 0;
@@ -63,24 +77,6 @@ public class Projects {
     @Column(name = "is_github_import")
     private Boolean isGithubImport = false;
 
-    // Getters and Setters
-    public String getGithubUrl() {
-        return githubUrl;
-    }
-
-    public void setGithubUrl(String githubUrl) {
-        this.githubUrl = githubUrl;
-    }
-
-    public Boolean getIsGithubImport() {
-        return isGithubImport;
-    }
-
-    public void setIsGithubImport(Boolean isGithubImport) {
-        this.isGithubImport = isGithubImport;
-    }
-
-    // Enums
     public enum ProjectStatus {
         PLANNING,
         IN_PROGRESS,
@@ -96,10 +92,6 @@ public class Projects {
         CRITICAL
     }
 
-    // Constructors
-    public Projects() {
-    }
-
     public Projects(String name, String description, ProjectStatus status,
                     ProjectPriority priority, LocalDate startDate, LocalDate endDate,
                     Users createdBy, Boolean isGlobal) {
@@ -111,110 +103,5 @@ public class Projects {
         this.endDate = endDate;
         this.createdBy = createdBy;
         this.isGlobal = isGlobal;
-    }
-
-    // Getters and Setters
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public ProjectStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(ProjectStatus status) {
-        this.status = status;
-    }
-
-    public ProjectPriority getPriority() {
-        return priority;
-    }
-
-    public void setPriority(ProjectPriority priority) {
-        this.priority = priority;
-    }
-
-    public LocalDate getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
-    }
-
-    public LocalDate getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
-
-    public Users getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(Users createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public Boolean getIsGlobal() {
-        return isGlobal;
-    }
-
-    public void setIsGlobal(Boolean isGlobal) {
-        this.isGlobal = isGlobal;
-    }
-
-    public UUID getAssignedTo() {
-        return assignedTo;
-    }
-
-    public void setAssignedTo(UUID assignedTo) {
-        this.assignedTo = assignedTo;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public Integer getProgress() {
-        return progress;
-    }
-
-    public void setProgress(Integer progress) {
-        this.progress = progress;
     }
 }

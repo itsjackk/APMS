@@ -1,5 +1,8 @@
 package dto;
 
+import lombok.Data;
+
+@Data
 public class UserStats {
     private long totalUsers;
     private long adminUsers;

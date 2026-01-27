@@ -2,10 +2,11 @@
 // CONFIGURATION
 // ============================================================================
 
+// Use SharedConfig
 const CONFIG = {
     API_ENDPOINTS: {
-        PROJECTS: '/api/admin/projects',
-        USERS: '/api/admin/users'
+        PROJECTS: SharedConfig.API_ENDPOINTS.ADMIN_PROJECTS,
+        USERS: SharedConfig.API_ENDPOINTS.ADMIN_USERS
     },
     UI: {
         SNOWFLAKE_COUNT: 50
@@ -31,50 +32,16 @@ const AppState = {
 };
 
 // ============================================================================
-// UTILITY FUNCTIONS
+// UTILITY FUNCTIONS - Use SharedUtils
 // ============================================================================
 
 const Utils = {
-    formatDate(dateString) {
-        return new Date(dateString).toLocaleDateString();
-    },
-
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    },
-
-    getStatusColor(status) {
-        const colors = {
-            'PLANNING': 'secondary',
-            'IN_PROGRESS': 'primary',
-            'ON_HOLD': 'warning',
-            'COMPLETED': 'success',
-            'CANCELLED': 'danger'
-        };
-        return colors[status] || 'secondary';
-    },
-
-    getPriorityColor(priority) {
-        const colors = {
-            'LOW': 'success',
-            'MEDIUM': 'info',
-            'HIGH': 'warning',
-            'CRITICAL': 'danger'
-        };
-        return colors[priority] || 'secondary';
-    },
-
-    getPriorityOrder(priority) {
-        const order = { 'LOW': 1, 'MEDIUM': 2, 'HIGH': 3, 'CRITICAL': 4 };
-        return order[priority] || 0;
-    },
-
-    getStatusOrder(status) {
-        const order = { 'PLANNING': 1, 'IN_PROGRESS': 2, 'ON_HOLD': 3, 'COMPLETED': 4, 'CANCELLED': 5 };
-        return order[status] || 0;
-    }
+    formatDate: SharedUtils.formatDate,
+    escapeHtml: SharedUtils.escapeHtml,
+    getStatusColor: SharedUtils.getStatusColor,
+    getPriorityColor: SharedUtils.getPriorityColor,
+    getPriorityOrder: (priority) => SharedConfig.PRIORITY_ORDER[priority] || 0,
+    getStatusOrder: (status) => SharedConfig.STATUS_ORDER[status] || 0
 };
 
 // ============================================================================
@@ -267,10 +234,10 @@ const UIManager = {
 };
 
 // ============================================================================
-// MODAL MANAGEMENT
+// MODAL MANAGEMENT - Renamed to avoid conflict with global ModalManager
 // ============================================================================
 
-const ModalManager = {
+const ProjectModalManager = {
     editModal: null,
     
     init() {
@@ -420,12 +387,12 @@ const ProjectManager = {
         if (project.isGlobal) {
             assignUserSection.style.display = 'block';
             const assignedUserName = project.assignedToName || null;
-            ModalManager.populateUsersDropdown(assignedUserName);
+            ProjectModalManager.populateUsersDropdown(assignedUserName);
         } else {
             assignUserSection.style.display = 'none';
         }
 
-        ModalManager.show();
+        ProjectModalManager.show();
     },
 
     async saveProjectChanges() {
@@ -450,7 +417,7 @@ const ProjectManager = {
         }
         try {
             await APIService.updateProject(projectId, updatedProject);
-            ModalManager.hide();
+            ProjectModalManager.hide();
             await this.loadProjects();
         } catch (error) {
             alert('Failed to update project. Please try again.',error);
@@ -513,7 +480,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         return;
     }
 
-    ModalManager.init();
+    ProjectModalManager.init();
     VisualEffects.createSnowflakes();
 
     ProjectManager.loadProjects();

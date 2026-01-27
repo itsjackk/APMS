@@ -1,10 +1,11 @@
 package dto;
 
-
+import lombok.Data;
 import tables.Users;
 
 import java.time.LocalDateTime;
 
+@Data
 public class UserProfileResponse {
 
     private String username;

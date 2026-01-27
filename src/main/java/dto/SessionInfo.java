@@ -1,5 +1,8 @@
 package dto;
 
+import lombok.Data;
+
+@Data
 public class SessionInfo {
     private long activeTokens;
     private long totalRotations;

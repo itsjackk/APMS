@@ -1,12 +1,21 @@
 package tables;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "refresh_tokens")
+@Table(name = "refresh_tokens", indexes = {
+    @Index(name = "idx_refresh_tokens_user_id", columnList = "user_id"),
+    @Index(name = "idx_refresh_tokens_token_family", columnList = "token_family"),
+    @Index(name = "idx_refresh_tokens_expires_at", columnList = "expires_at"),
+    @Index(name = "idx_refresh_tokens_previous_token", columnList = "previous_token")
+})
+@Getter
+@Setter
 public class RefreshTokens {
 
     @Id
@@ -30,7 +39,6 @@ public class RefreshTokens {
 
     @Column(name = "remember_me", nullable = false)
     private boolean rememberMe = false;
-
 
     @Column(name = "token_family", nullable = false)
     private String tokenFamily;
@@ -68,7 +76,6 @@ public class RefreshTokens {
         this.rememberMe = rememberMe;
     }
 
-    // New constructor with token family
     public RefreshTokens(UUID userId, String token, LocalDateTime expiresAt, boolean rememberMe, String tokenFamily) {
         this(userId, token, expiresAt, rememberMe);
         this.tokenFamily = tokenFamily;
@@ -87,124 +94,14 @@ public class RefreshTokens {
         this.revokedAt = LocalDateTime.now();
     }
 
-    /**
-     * Revoke token due to reuse detection
-     */
     public void revokeForReuse() {
         this.isRevoked = true;
         this.revokedDueToReuse = true;
         this.revokedAt = LocalDateTime.now();
     }
 
-    /**
-     * Increment rotation count and update timestamp
-     */
     public void incrementRotation() {
         this.rotationCount++;
         this.lastRotatedAt = LocalDateTime.now();
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public void setUserId(UUID userId) {
-        this.userId = userId;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public LocalDateTime getExpiresAt() {
-        return expiresAt;
-    }
-
-    public void setExpiresAt(LocalDateTime expiresAt) {
-        this.expiresAt = expiresAt;
-    }
-
-    public boolean isRevoked() {
-        return isRevoked;
-    }
-
-    public void setRevoked(boolean revoked) {
-        isRevoked = revoked;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public boolean isRememberMe() {
-        return rememberMe;
-    }
-
-    public void setRememberMe(boolean rememberMe) {
-        this.rememberMe = rememberMe;
-    }
-
-    public String getTokenFamily() {
-        return tokenFamily;
-    }
-
-    public void setTokenFamily(String tokenFamily) {
-        this.tokenFamily = tokenFamily;
-    }
-
-    public Integer getRotationCount() {
-        return rotationCount;
-    }
-
-    public void setRotationCount(Integer rotationCount) {
-        this.rotationCount = rotationCount;
-    }
-
-    public LocalDateTime getLastRotatedAt() {
-        return lastRotatedAt;
-    }
-
-    public void setLastRotatedAt(LocalDateTime lastRotatedAt) {
-        this.lastRotatedAt = lastRotatedAt;
-    }
-
-    public String getPreviousToken() {
-        return previousToken;
-    }
-
-    public void setPreviousToken(String previousToken) {
-        this.previousToken = previousToken;
-    }
-
-    public boolean isRevokedDueToReuse() {
-        return revokedDueToReuse;
-    }
-
-    public void setRevokedDueToReuse(boolean revokedDueToReuse) {
-        this.revokedDueToReuse = revokedDueToReuse;
-    }
-
-    public LocalDateTime getRevokedAt() {
-        return revokedAt;
-    }
-
-    public void setRevokedAt(LocalDateTime revokedAt) {
-        this.revokedAt = revokedAt;
     }
 }

@@ -1,10 +1,12 @@
 package dto;
 
+import lombok.Data;
 import tables.Users;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Data
 public class UserResponse {
     private UUID id;
     private String username;

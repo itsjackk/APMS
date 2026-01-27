@@ -69,10 +69,7 @@ public class UserService {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Delete all refresh tokens for this user
         refreshTokensRepository.deleteByUserId(userId);
-
-        // Delete the user
         userRepository.delete(user);
     }
 

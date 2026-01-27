@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @Tag(name = "Admin", description = "Admin management APIs")
 public class AdminController {
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
     @Autowired
     private ProjectService projectService;

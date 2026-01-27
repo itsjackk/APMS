@@ -1,5 +1,8 @@
 package dto;
 
+import lombok.Data;
+
+@Data
 public class AdminProjectStats {
     private Long totalProjects;
     private Long planningProjects;

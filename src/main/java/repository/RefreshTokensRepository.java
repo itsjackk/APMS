@@ -34,10 +34,6 @@ public interface RefreshTokensRepository extends JpaRepository<RefreshTokens, UU
     @Query("DELETE FROM RefreshTokens rt WHERE rt.userId = :userId")
     void deleteByUserId(@Param("userId") UUID userId);
 
-    @Modifying
-    @Query("DELETE FROM RefreshTokens rt WHERE rt.expiresAt < :now OR rt.isRevoked = true")
-    int deleteRevokedTokens(@Param("now") LocalDateTime now);
-
     List<RefreshTokens> findByTokenFamily(String tokenFamily);
 
     Optional<RefreshTokens> findByPreviousToken(String previousToken);
@@ -61,9 +57,6 @@ public interface RefreshTokensRepository extends JpaRepository<RefreshTokens, UU
 
     @Query("SELECT rt FROM RefreshTokens rt WHERE rt.revokedDueToReuse = true AND rt.revokedAt > :since")
     List<RefreshTokens> findTokensRevokedForReuse(@Param("since") LocalDateTime since);
-
-    @Query("SELECT rt FROM RefreshTokens rt WHERE rt.tokenFamily = :tokenFamily ORDER BY rt.createdAt DESC LIMIT 1")
-    Optional<RefreshTokens> findLatestTokenInFamily(@Param("tokenFamily") String tokenFamily);
 
     @Query("SELECT SUM(rt.rotationCount) FROM RefreshTokens rt WHERE rt.userId = :userId")
     Long getTotalRotationCountForUser(@Param("userId") UUID userId);

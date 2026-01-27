@@ -1,12 +1,14 @@
 package dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 import tables.Projects;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Data
 public class ProjectsResponse {
     private UUID id;
     private String name;

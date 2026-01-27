@@ -63,60 +63,27 @@ public class AuthController {
         try {
             log.info("Registration attempt for username: {}", registerRequest.getUsername());
 
-            synchronized (this) {
-                if (userRepository.findByUsername(registerRequest.getUsername()).isPresent()) {
-                    log.warn("Registration failed: Username '{}' already exists", registerRequest.getUsername());
-                    return ResponseEntity
-                            .status(HttpStatus.BAD_REQUEST)
-                            .body(Map.of(
-                                    "error", "Username already exists",
-                                    "message", "A user with this username already exists. Please choose a different username."
-                            ));
-                }
+            // Create new user - let database constraints handle uniqueness
+            Users newUser = new Users();
+            newUser.setUsername(registerRequest.getUsername());
+            newUser.setEmail(registerRequest.getEmail());
+            newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+            newUser.setRole(Users.Role.USER);
+            newUser.setEnabled(true);
+            newUser.setCreatedAt(LocalDateTime.now());
+            newUser.setUpdatedAt(LocalDateTime.now());
 
-                if (userRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
-                    log.warn("Registration failed: Email '{}' already exists", registerRequest.getEmail());
-                    return ResponseEntity
-                            .status(HttpStatus.BAD_REQUEST)
-                            .body(Map.of(
-                                    "error", "Email already exists",
-                                    "message", "A user with this email already exists. Please use a different email address."
-                            ));
-                }
-
-                if (registerRequest.getUsernameGHUB() != null && !registerRequest.getUsernameGHUB().trim().isEmpty()) {
-                    if (userRepository.findByUsernameGHUB(registerRequest.getUsernameGHUB()).isPresent()) {
-                        log.warn("Registration failed: GitHub username '{}' already exists", registerRequest.getUsernameGHUB());
-                        return ResponseEntity
-                                .status(HttpStatus.BAD_REQUEST)
-                                .body(Map.of(
-                                        "error", "GitHub username already exists",
-                                        "message", "A user with this GitHub username already exists. Please use a different GitHub username."
-                                ));
-                    }
-                }
-
-                Users newUser = new Users();
-                newUser.setUsername(registerRequest.getUsername());
-                newUser.setEmail(registerRequest.getEmail());
-                newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-                newUser.setRole(Users.Role.USER);
-                newUser.setEnabled(true);
-                newUser.setCreatedAt(LocalDateTime.now());
-                newUser.setUpdatedAt(LocalDateTime.now());
-
-                if (registerRequest.getUsernameGHUB() != null && !registerRequest.getUsernameGHUB().trim().isEmpty()) {
-                    newUser.setUsernameGHUB(registerRequest.getUsernameGHUB());
-                }
-
-                userRepository.save(newUser);
-                log.info("User registered successfully: {}", registerRequest.getUsername());
-
-                return ResponseEntity.ok(Map.of(
-                        "message", "User registered successfully",
-                        "username", newUser.getUsername()
-                ));
+            if (registerRequest.getUsernameGHUB() != null && !registerRequest.getUsernameGHUB().trim().isEmpty()) {
+                newUser.setUsernameGHUB(registerRequest.getUsernameGHUB());
             }
+
+            userRepository.save(newUser);
+            log.info("User registered successfully: {}", registerRequest.getUsername());
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "User registered successfully",
+                    "username", newUser.getUsername()
+            ));
 
         } catch (DataIntegrityViolationException e) {
             log.error("Data integrity violation during registration: {}", e.getMessage());

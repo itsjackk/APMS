@@ -18,9 +18,6 @@ import java.util.Collection;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    @Autowired
-    private UserRepository usersRepository;
-
     private static final Logger log = LoggerFactory.getLogger(CustomUserDetailsService.class);
 
     @Autowired

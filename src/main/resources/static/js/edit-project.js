@@ -1,7 +1,6 @@
 // ============================================================================
 // CONFIGURATION & INITIALIZATION
 // ============================================================================
-
 const projectId = window.PROJECT_CONFIG?.projectId;
 const userRole = window.PROJECT_CONFIG?.userRole || 'USER';
 const username = window.PROJECT_CONFIG?.username;
@@ -91,7 +90,7 @@ async function loadProjectDetails() {
         }
     } catch (error) {
         if (error.message.includes('Authentication failed') || error.message.includes('Unauthorized')) {
-            return; // AuthUtils already handles redirect
+            return;
         }
         showError(error.message);
     }
@@ -137,7 +136,7 @@ async function updateProject(projectData) {
         }
     } catch (error) {
         if (error.message.includes('Authentication failed') || error.message.includes('Unauthorized')) {
-            return; // AuthUtils already handles redirect
+            return;
         }
         throw error;
     }
@@ -197,7 +196,7 @@ async function handleFormSubmit(e) {
         await updateProject(projectData);
     } catch (error) {
         if (error.message.includes('Authentication failed') || error.message.includes('Unauthorized')) {
-            return; // AuthUtils already handles redirect
+            return;
         }
         showAlert(error.message, 'danger');
     } finally {

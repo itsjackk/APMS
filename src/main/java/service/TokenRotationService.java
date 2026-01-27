@@ -58,7 +58,7 @@ public class TokenRotationService {
         LocalDateTime expiresAt;
 
         if (rememberMe) {
-            newRefreshTokenJwt = jwtService.generateRefreshToken(userId, username, role, 30); // 30 days
+            newRefreshTokenJwt = jwtService.generateRefreshToken(userId, username, role, 30);
             expiresAt = jwtService.getRefreshTokenExpirationTime(30);
         } else {
             newRefreshTokenJwt = jwtService.generateRefreshToken(userId, username, role);
@@ -86,6 +86,7 @@ public class TokenRotationService {
         return newTokenEntity;
     }
 
+    @Transactional
     private void checkForTokenReuse(String token, String tokenFamily) {
         Optional<RefreshTokens> successorToken = refreshTokensRepository.findByPreviousToken(token);
 
